@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "91836535518",
+    "project_id": "associacao-fornecedores-6bf90",
+    "storage_bucket": "associacao-fornecedores-6bf90.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91836535518:android:79a7ffb5dc8842aed8e84f",
+        "android_client_info": {
+          "package_name": "com.example.associacaofornecedorescana"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "91836535518-75nrv9hifc30mfgu1425e8j1c44hhb3v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.associacaofornecedorescana",
+            "certificate_hash": "0a4f62b226fdee3aae9a7932f0e152fd226a3253"
+          }
+        },
+        {
+          "client_id": "91836535518-hkc0m20s7ctas0et439d0h8p9ugg6bco.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKzT0z4VFWyP8p0Gq3y_XLaB3cYZDbiK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "91836535518-hkc0m20s7ctas0et439d0h8p9ugg6bco.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
