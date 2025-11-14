@@ -3,15 +3,18 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'constants/app_colors.dart';
 import 'screens/login_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/database_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inicializar Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  
+  // Conectar ao Supabase
+  await Supabase.initialize(
+    url: DatabaseConfig.supabaseUrl,
+    anonKey: DatabaseConfig.supabaseAnonKey,
   );
-
+  
   runApp(const MyApp());
 }
 
