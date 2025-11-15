@@ -1,9 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Proprietario {
   final String id;
   final String nome;
-  final String cpfCnpj;
+  final String documento;
   final String? telefone;
   final String? email;
   final String? endereco;
@@ -11,13 +9,13 @@ class Proprietario {
   final String? estado;
   final String? cep;
   final bool ativo;
-  final DateTime criadoEm;
-  final DateTime atualizadoEm;
+  final DateTime dataCriacao;
+  final DateTime dataAtualizacao;
 
   Proprietario({
     required this.id,
     required this.nome,
-    required this.cpfCnpj,
+    required this.documento,
     this.telefone,
     this.email,
     this.endereco,
@@ -25,41 +23,46 @@ class Proprietario {
     this.estado,
     this.cep,
     this.ativo = true,
-    required this.criadoEm,
-    required this.atualizadoEm,
+    required this.dataCriacao,
+    required this.dataAtualizacao,
   });
 
-  factory Proprietario.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+  factory Proprietario.fromJson(Map<String, dynamic> json) {
     return Proprietario(
-      id: doc.id,
-      nome: data['nome'] ?? '',
-      cpfCnpj: data['cpfCnpj'] ?? '',
-      telefone: data['telefone'],
-      email: data['email'],
-      endereco: data['endereco'],
-      cidade: data['cidade'],
-      estado: data['estado'],
-      cep: data['cep'],
-      ativo: data['ativo'] ?? true,
-      criadoEm: (data['criadoEm'] as Timestamp).toDate(),
-      atualizadoEm: (data['atualizadoEm'] as Timestamp).toDate(),
+      id: json['id'] as String,
+      nome: json['nome'] as String,
+      documento: json['documento'] as String,
+      telefone: json['telefone'] as String?,
+      email: json['email'] as String?,
+      endereco: json['endereco'] as String?,
+      cidade: json['cidade'] as String?,
+      estado: json['estado'] as String?,
+      cep: json['cep'] as String?,
+      ativo: json['ativo'] as bool? ?? true,
+      dataCriacao: DateTime.parse(json['data_criacao']),
+      dataAtualizacao: DateTime.parse(json['data_atualizacao']),
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toJson() {
     return {
+      if (id.isNotEmpty) 'id': id,
       'nome': nome,
-      'cpfCnpj': cpfCnpj,
-      'telefone': telefone,
-      'email': email,
-      'endereco': endereco,
-      'cidade': cidade,
-      'estado': estado,
-      'cep': cep,
+      'documento': documento,
+      if (telefone != null && telefone!.isNotEmpty) 'telefone': telefone,
+      if (email != null && email!.isNotEmpty) 'email': email,
+      if (endereco != null && endereco!.isNotEmpty) 'endereco': endereco,
+      if (cidade != null && cidade!.isNotEmpty) 'cidade': cidade,
+      if (estado != null && estado!.isNotEmpty) 'estado': estado,
+      if (cep != null && cep!.isNotEmpty) 'cep': cep,
       'ativo': ativo,
-      'criadoEm': Timestamp.fromDate(criadoEm),
-      'atualizadoEm': Timestamp.fromDate(atualizadoEm),
+      'data_criacao': dataCriacao.toUtc().toIso8601String(),
+      'data_atualizacao': dataAtualizacao.toUtc().toIso8601String(),
     };
   }
+
+  // Getters para compatibilidade com código antigo
+  String get cpfCnpj => documento;
+  DateTime get criadoEm => dataCriacao;
+  DateTime get atualizadoEm => dataAtualizacao;
 }

@@ -1,104 +1,94 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
-import '../services/propriedade_service.dart';
 import '../services/proprietario_service.dart';
 
-class PropriedadeFormScreen extends StatefulWidget {
-  final Propriedade? propriedade;
+class ProprietarioFormScreen extends StatefulWidget {
+  final Proprietario? proprietario;
 
-  const PropriedadeFormScreen({
+  const ProprietarioFormScreen({
     super.key,
-    this.propriedade,
+    this.proprietario,
   });
 
   @override
-  State<PropriedadeFormScreen> createState() => _PropriedadeFormScreenState();
+  State<ProprietarioFormScreen> createState() => _ProprietarioFormScreenState();
 }
 
-class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
+class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _propriedadeService = PropriedadeService();
-  final _proprietarioService = ProprietarioService();
-
+  final _service = ProprietarioService();
+  
   late TextEditingController _nomeController;
-  late TextEditingController _numeroFAController;
-  late TextEditingController _inscricaoEstadualController;
-  late TextEditingController _municipioController;
-  late TextEditingController _coordenadasController;
-
-  String? _proprietarioSelecionado;
+  late TextEditingController _cpfCnpjController;
+  late TextEditingController _telefoneController;
+  late TextEditingController _emailController;
+  late TextEditingController _enderecoController;
+  late TextEditingController _cidadeController;
+  late TextEditingController _estadoController;
+  late TextEditingController _cepController;
+  
   bool _isLoading = false;
-  List<Proprietario> _proprietarios = [];
+  bool _isCPF = true;
 
   @override
   void initState() {
     super.initState();
-    final p = widget.propriedade;
-
-    _nomeController = TextEditingController(text: p?.nomePropriedade);
-    _numeroFAController = TextEditingController(text: p?.numeroFA);
-    _inscricaoEstadualController = TextEditingController(text: p?.inscricaoEstadual);
-    _municipioController = TextEditingController(text: p?.municipio);
-    _coordenadasController = TextEditingController(text: p?.coordenadasGPS);
-
-    _proprietarioSelecionado = p?.proprietarioId;
-
-    _loadProprietarios();
-  }
-
-  Future<void> _loadProprietarios() async {
-    _proprietarioService.getProprietariosStream().listen((proprietarios) {
-      if (mounted) {
-        setState(() {
-          _proprietarios = proprietarios;
-        });
-      }
-    });
+    final p = widget.proprietario;
+    
+    _nomeController = TextEditingController(text: p?.nome);
+    _cpfCnpjController = TextEditingController(text: p?.documento);
+    _telefoneController = TextEditingController(text: p?.telefone);
+    _emailController = TextEditingController(text: p?.email);
+    _enderecoController = TextEditingController(text: p?.endereco);
+    _cidadeController = TextEditingController(text: p?.cidade);
+    _estadoController = TextEditingController(text: p?.estado);
+    _cepController = TextEditingController(text: p?.cep);
+    
+    if (p != null) {
+      _isCPF = p.documento.length == 11;
+    }
   }
 
   @override
   void dispose() {
     _nomeController.dispose();
-    _numeroFAController.dispose();
-    _inscricaoEstadualController.dispose();
-    _municipioController.dispose();
-    _coordenadasController.dispose();
+    _cpfCnpjController.dispose();
+    _telefoneController.dispose();
+    _emailController.dispose();
+    _enderecoController.dispose();
+    _cidadeController.dispose();
+    _estadoController.dispose();
+    _cepController.dispose();
     super.dispose();
   }
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_proprietarioSelecionado == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecione um proprietário'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     try {
-      final propriedade = Propriedade(
-        id: widget.propriedade?.id ?? '',
-        proprietarioId: _proprietarioSelecionado!,
-        nomePropriedade: _nomeController.text.trim(),
-        numeroFA: _numeroFAController.text.trim(),
-        inscricaoEstadual: _inscricaoEstadualController.text.trim(),
-        municipio: _municipioController.text.trim(),
-        coordenadasGPS: _coordenadasController.text.trim(),
-        criadoEm: widget.propriedade?.criadoEm ?? DateTime.now(),
-        atualizadoEm: DateTime.now(),
+      final proprietario = Proprietario(
+        id: widget.proprietario?.id ?? '',
+        nome: _nomeController.text.trim(),
+        documento: _cpfCnpjController.text.replaceAll(RegExp(r'\D'), ''),
+        telefone: _telefoneController.text.trim().isEmpty ? null : _telefoneController.text.trim(),
+        email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+        endereco: _enderecoController.text.trim().isEmpty ? null : _enderecoController.text.trim(),
+        cidade: _cidadeController.text.trim().isEmpty ? null : _cidadeController.text.trim(),
+        estado: _estadoController.text.trim().isEmpty ? null : _estadoController.text.trim(),
+        cep: _cepController.text.replaceAll(RegExp(r'\D'), '').isEmpty ? null : _cepController.text.replaceAll(RegExp(r'\D'), ''),
+        ativo: widget.proprietario?.ativo ?? true,
+        dataCriacao: widget.proprietario?.dataCriacao ?? DateTime.now(),
+        dataAtualizacao: DateTime.now(),
       );
 
-      if (widget.propriedade == null) {
-        await _propriedadeService.addPropriedade(propriedade);
+      if (widget.proprietario == null) {
+        await _service.addProprietario(proprietario);
       } else {
-        await _propriedadeService.updatePropriedade(propriedade);
+        await _service.updateProprietario(proprietario);
       }
 
       if (mounted) {
@@ -106,9 +96,9 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.propriedade == null
-                  ? 'Propriedade cadastrada com sucesso!'
-                  : 'Propriedade atualizada com sucesso!',
+              widget.proprietario == null
+                  ? 'Proprietário cadastrado com sucesso!'
+                  : 'Proprietário atualizado com sucesso!',
             ),
             backgroundColor: AppColors.success,
           ),
@@ -132,18 +122,17 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isEdicao = widget.propriedade != null;
+    final isEdicao = widget.proprietario != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdicao ? 'Editar Propriedade' : 'Nova Propriedade'),
+        title: Text(isEdicao ? 'Editar Proprietário' : 'Novo Proprietário'),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Card Proprietário
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -151,121 +140,233 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Proprietário',
+                      'Dados Básicos',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: _proprietarioSelecionado,
-                      decoration: const InputDecoration(
-                        labelText: 'Selecione o Proprietário *',
-                        prefixIcon: Icon(Icons.person),
+                        color: AppColors.primary,
                       ),
-                      items: _proprietarios
-                          .map((p) => DropdownMenuItem(
-                                value: p.id,
-                                child: Text(p.nome),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _proprietarioSelecionado = value;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Selecione um proprietário';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Card Dados da Propriedade
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dados da Propriedade',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
                     ),
                     const SizedBox(height: 16),
+                    
                     TextFormField(
                       controller: _nomeController,
                       decoration: const InputDecoration(
-                        labelText: 'Nome da Propriedade *',
-                        hintText: 'Ex: Fazenda Santa Maria',
-                        prefixIcon: Icon(Icons.home_work),
+                        labelText: 'Nome Completo *',
+                        hintText: 'Digite o nome completo',
+                        prefixIcon: Icon(Icons.person),
                       ),
                       textCapitalization: TextCapitalization.words,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Campo obrigatório';
                         }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _numeroFAController,
-                      decoration: const InputDecoration(
-                        labelText: 'Número FA *',
-                        hintText: 'Ex: 12345',
-                        prefixIcon: Icon(Icons.numbers),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Campo obrigatório';
+                        if (value.trim().length < 3) {
+                          return 'Nome deve ter no mínimo 3 caracteres';
                         }
                         return null;
                       },
                     ),
+                    
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _inscricaoEstadualController,
-                      decoration: const InputDecoration(
-                        labelText: 'Inscrição Estadual',
-                        prefixIcon: Icon(Icons.description),
-                      ),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            title: const Text('CPF'),
+                            value: true,
+                            groupValue: _isCPF,
+                            onChanged: (value) {
+                              setState(() {
+                                _isCPF = value!;
+                                _cpfCnpjController.clear();
+                              });
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            title: const Text('CNPJ'),
+                            value: false,
+                            groupValue: _isCPF,
+                            onChanged: (value) {
+                              setState(() {
+                                _isCPF = value!;
+                                _cpfCnpjController.clear();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    
+                    const SizedBox(height: 8),
+                    
                     TextFormField(
-                      controller: _municipioController,
-                      decoration: const InputDecoration(
-                        labelText: 'Município',
-                        prefixIcon: Icon(Icons.location_city),
+                      controller: _cpfCnpjController,
+                      decoration: InputDecoration(
+                        labelText: '${_isCPF ? "CPF" : "CNPJ"} *',
+                        hintText: _isCPF ? '000.000.000-00' : '00.000.000/0000-00',
+                        prefixIcon: const Icon(Icons.badge),
                       ),
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _coordenadasController,
-                      decoration: const InputDecoration(
-                        labelText: 'Coordenadas GPS',
-                        hintText: 'Ex: -21.123456, -48.123456',
-                        prefixIcon: Icon(Icons.my_location),
-                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(_isCPF ? 11 : 14),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Campo obrigatório';
+                        }
+                        final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
+                        if (_isCPF && digitsOnly.length != 11) {
+                          return 'CPF deve ter 11 dígitos';
+                        }
+                        if (!_isCPF && digitsOnly.length != 14) {
+                          return 'CNPJ deve ter 14 dígitos';
+                        }
+                        return null;
+                      },
                     ),
                   ],
                 ),
               ),
             ),
-
+            
+            const SizedBox(height: 16),
+            
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Contato',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    TextFormField(
+                      controller: _telefoneController,
+                      decoration: const InputDecoration(
+                        labelText: 'Telefone',
+                        hintText: '(00) 00000-0000',
+                        prefixIcon: Icon(Icons.phone),
+                      ),
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(11),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'E-mail',
+                        hintText: 'email@exemplo.com',
+                        prefixIcon: Icon(Icons.email),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          if (!value.contains('@')) {
+                            return 'E-mail inválido';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Endereço',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    TextFormField(
+                      controller: _cepController,
+                      decoration: const InputDecoration(
+                        labelText: 'CEP',
+                        hintText: '00000-000',
+                        prefixIcon: Icon(Icons.location_on),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(8),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    TextFormField(
+                      controller: _enderecoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Endereço',
+                        hintText: 'Rua, número, complemento',
+                        prefixIcon: Icon(Icons.home),
+                      ),
+                      textCapitalization: TextCapitalization.words,
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: _cidadeController,
+                            decoration: const InputDecoration(
+                              labelText: 'Cidade',
+                              prefixIcon: Icon(Icons.location_city),
+                            ),
+                            textCapitalization: TextCapitalization.words,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _estadoController,
+                            decoration: const InputDecoration(
+                              labelText: 'UF',
+                              hintText: 'SP',
+                            ),
+                            textCapitalization: TextCapitalization.characters,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(2),
+                              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z]')),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
             const SizedBox(height: 24),
-
-            // Botões
+            
             Row(
               children: [
                 Expanded(
@@ -292,7 +393,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
                 ),
               ],
             ),
-
+            
             const SizedBox(height: 24),
           ],
         ),

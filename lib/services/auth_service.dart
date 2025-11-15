@@ -1,90 +1,84 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  Stream<User?> get userStream => _auth.authStateChanges();
-  User? get currentUser => _auth.currentUser;
+  Stream<User?> get userStream {
+    return _supabase.auth.onAuthStateChange.map((data) => data.session?.user);
+  }
+
+  User? get currentUser => _supabase.auth.currentUser;
 
   Future<User?> signInWithEmail(String email, String password) async {
     try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(
+      final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
-      return result.user;
-    } catch (e) {
+      return response.user;
+    } on AuthException catch (e) {
       throw _handleAuthError(e);
+    } catch (e) {
+      throw 'Erro desconhecido: $e';
     }
   }
 
   Future<User?> registerWithEmail(String email, String password) async {
     try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
+      final response = await _supabase.auth.signUp(
         email: email,
         password: password,
       );
-      return result.user;
-    } catch (e) {
+      return response.user;
+    } on AuthException catch (e) {
       throw _handleAuthError(e);
+    } catch (e) {
+      throw 'Erro desconhecido: $e';
     }
   }
 
   Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      await _supabase.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.afcrc.gestao://login-callback',
       );
-
-      UserCredential result = await _auth.signInWithCredential(credential);
-      return result.user;
-    } catch (e) {
+      return _supabase.auth.currentUser;
+    } on AuthException catch (e) {
       throw _handleAuthError(e);
+    } catch (e) {
+      throw 'Erro ao autenticar com Google: $e';
     }
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    await _supabase.auth.signOut();
   }
 
   Future<void> resetPassword(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } catch (e) {
+      await _supabase.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
       throw _handleAuthError(e);
+    } catch (e) {
+      throw 'Erro ao redefinir senha: $e';
     }
   }
 
-  String _handleAuthError(dynamic e) {
-    if (e is FirebaseAuthException) {
-      switch (e.code) {
-        case 'user-not-found':
-          return 'Usuário não encontrado';
-        case 'wrong-password':
-          return 'Senha incorreta';
-        case 'email-already-in-use':
-          return 'E-mail já está em uso';
-        case 'invalid-email':
-          return 'E-mail inválido';
-        case 'weak-password':
-          return 'Senha muito fraca';
-        case 'user-disabled':
-          return 'Usuário desabilitado';
-        case 'operation-not-allowed':
-          return 'Operação não permitida';
-        default:
-          return 'Erro ao autenticar: ${e.message}';
-      }
+  String _handleAuthError(AuthException e) {
+    switch (e.statusCode) {
+      case '400':
+        if (e.message.contains('Invalid login credentials')) {
+          return 'Credenciais inválidas. Verifique seu email e senha.';
+        }
+        if (e.message.contains('User already registered')) {
+          return 'E-mail já está em uso.';
+        }
+        return e.message;
+      case '429':
+        return 'Limite de requisições excedido. Tente novamente mais tarde.';
+      default:
+        return 'Erro de autenticação: ${e.message}';
     }
-    return 'Erro desconhecido: $e';
   }
 }

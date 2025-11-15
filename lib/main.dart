@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'constants/app_colors.dart';
 import 'screens/login_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'screens/home_screen.dart';
 import 'config/database_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Conectar ao Supabase
   await Supabase.initialize(
     url: DatabaseConfig.supabaseUrl,
     anonKey: DatabaseConfig.supabaseAnonKey,
@@ -27,30 +25,66 @@ class MyApp extends StatelessWidget {
       title: 'AFCRC - Catanduva',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: AppColors.verdeMusgo,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.verdeMusgo,
-          primary: AppColors.verdeMusgo,
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.verdeMusgo,
+        useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 2,
-          centerTitle: true,
+          elevation: 0,
         ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: AppColors.verdeMusgo,
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.verdeMusgo,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
-        useMaterial3: true,
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+        cardTheme: CardTheme(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
-      home: const LoginScreen(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final session = snapshot.data!.session;
+          if (session != null) {
+            return const HomeScreen();
+          }
+        }
+        return const LoginScreen();
+      },
     );
   }
 }

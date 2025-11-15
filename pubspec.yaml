@@ -4,20 +4,15 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.5.0 <4.0.0' # Compatível com Dart 3.5+ (Firebase moderno)
+  sdk: '>=3.5.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # 🔥 Firebase (versões compatíveis entre si)
-  firebase_core: ^3.6.0
-  firebase_auth: ^5.3.0
-  cloud_firestore: ^5.4.4
-  firebase_storage: ^12.2.0
-
-  # 🔑 Login com Google
-  google_sign_in: ^6.2.1
+  # 🚀 Supabase - Backend como Serviço
+  # Adiciona os pacotes principais do Supabase para Flutter
+  supabase_flutter: ^2.5.0 # Versão estável. Confirme a mais recente no pub.dev
 
   # 📦 Arquivos e compartilhamento
   file_picker: ^8.1.2

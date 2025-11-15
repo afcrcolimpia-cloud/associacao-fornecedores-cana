@@ -1,57 +1,67 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Propriedade {
   final String id;
   final String proprietarioId;
   final String nomePropriedade;
-  final String numeroFA;
-  final String? inscricaoEstadual;
   final String? municipio;
+  final String? estado;
+  final double areaTotalHectares;
+  final String? numeroFA;
+  final String? inscricaoEstadual;
   final String? coordenadasGPS;
   final bool ativa;
-  final DateTime criadoEm;
-  final DateTime atualizadoEm;
+  final DateTime dataCriacao;
+  final DateTime dataAtualizacao;
 
   Propriedade({
     required this.id,
     required this.proprietarioId,
     required this.nomePropriedade,
-    required this.numeroFA,
-    this.inscricaoEstadual,
     this.municipio,
+    this.estado,
+    required this.areaTotalHectares,
+    this.numeroFA,
+    this.inscricaoEstadual,
     this.coordenadasGPS,
     this.ativa = true,
-    required this.criadoEm,
-    required this.atualizadoEm,
+    required this.dataCriacao,
+    required this.dataAtualizacao,
   });
 
-  factory Propriedade.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+  factory Propriedade.fromJson(Map<String, dynamic> json) {
     return Propriedade(
-      id: doc.id,
-      proprietarioId: data['proprietarioId'] ?? '',
-      nomePropriedade: data['nomePropriedade'] ?? '',
-      numeroFA: data['numeroFA'] ?? '',
-      inscricaoEstadual: data['inscricaoEstadual'],
-      municipio: data['municipio'],
-      coordenadasGPS: data['coordenadasGPS'],
-      ativa: data['ativa'] ?? true,
-      criadoEm: (data['criadoEm'] as Timestamp).toDate(),
-      atualizadoEm: (data['atualizadoEm'] as Timestamp).toDate(),
+      id: json['id'] as String,
+      proprietarioId: json['proprietario_id'] as String,
+      nomePropriedade: json['nome'] as String,
+      municipio: json['municipio'] as String?,
+      estado: json['estado'] as String?,
+      areaTotalHectares: (json['area_total'] as num).toDouble(),
+      numeroFA: json['numero_fa'] as String?,
+      inscricaoEstadual: json['inscricao_estadual'] as String?,
+      coordenadasGPS: json['coordenadas_gps'] as String?,
+      ativa: json['ativa'] as bool? ?? true,
+      dataCriacao: DateTime.parse(json['created_at']),
+      dataAtualizacao: DateTime.parse(json['updated_at']),
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toJson() {
     return {
-      'proprietarioId': proprietarioId,
-      'nomePropriedade': nomePropriedade,
-      'numeroFA': numeroFA,
-      'inscricaoEstadual': inscricaoEstadual,
-      'municipio': municipio,
-      'coordenadasGPS': coordenadasGPS,
+      if (id.isNotEmpty) 'id': id,
+      'proprietario_id': proprietarioId,
+      'nome': nomePropriedade,
+      if (municipio != null && municipio!.isNotEmpty) 'municipio': municipio,
+      if (estado != null && estado!.isNotEmpty) 'estado': estado,
+      'area_total': areaTotalHectares,
+      if (numeroFA != null && numeroFA!.isNotEmpty) 'numero_fa': numeroFA,
+      if (inscricaoEstadual != null && inscricaoEstadual!.isNotEmpty) 'inscricao_estadual': inscricaoEstadual,
+      if (coordenadasGPS != null && coordenadasGPS!.isNotEmpty) 'coordenadas_gps': coordenadasGPS,
       'ativa': ativa,
-      'criadoEm': Timestamp.fromDate(criadoEm),
-      'atualizadoEm': Timestamp.fromDate(atualizadoEm),
+      'created_at': dataCriacao.toUtc().toIso8601String(),
+      'updated_at': dataAtualizacao.toUtc().toIso8601String(),
     };
   }
+
+  // Getters para compatibilidade
+  DateTime get criadoEm => dataCriacao;
+  DateTime get atualizadoEm => dataAtualizacao;
 }

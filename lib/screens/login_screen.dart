@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
-import 'home_screen.dart';
+// import 'home_screen.dart'; // Removido! A navegação é feita pelo AuthGate
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  // O ideal é inicializar o AuthService fora do build, como feito aqui.
   final _authService = AuthService();
 
   bool _isLoading = false;
@@ -26,6 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // A função de login agora apenas chama o serviço.
+  // Se for bem-sucedido, o AuthGate fará o redirecionamento.
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -35,14 +38,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
-
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      }
+      
+      // Sucesso: Não há pushReplacement. O Supabase Auth Stream 
+      // (observado pelo AuthGate no main.dart) muda e redireciona.
+      
     } catch (e) {
       if (mounted) {
+        // Exibe o erro de forma clara para o usuário
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
@@ -51,21 +53,19 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } finally {
+      // Importante: Desativar o loading em caso de sucesso (antes do redirecionamento) ou falha.
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  // O login com Google também é simplificado.
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
 
     try {
-      final user = await _authService.signInWithGoogle();
+      // Chama o método de serviço, o AuthGate trata a navegação.
+      await _authService.signInWithGoogle();
 
-      if (user != null && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const corTexto = AppColors.primary; // Tom metálico verde
+    const corTexto = AppColors.primary; 
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Logo
                   Image.asset(
                     'assets/logo/logo.png',
-                    width: 160, // 2x maior
+                    width: 160,
                     height: 160,
                   ),
                   const SizedBox(height: 16),
@@ -233,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: OutlinedButton.icon(
                             onPressed: _isLoading ? null : _loginWithGoogle,
                             icon: Image.asset(
-                              'assets/icons/google.png', // logo oficial
+                              'assets/icons/google.png',
                               width: 32,
                               height: 32,
                             ),
@@ -252,6 +252,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 24),
                         TextButton(
                           onPressed: () {
+                            // Você pode integrar o _authService.resetPassword() aqui:
+                            // await _authService.resetPassword(_emailController.text.trim());
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(

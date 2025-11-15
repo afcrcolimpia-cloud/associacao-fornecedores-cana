@@ -45,9 +45,7 @@ class HomeScreen extends StatelessWidget {
                 fontSize: 14,
               ),
             ),
-
             const SizedBox(height: 16),
-
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(16),
@@ -56,7 +54,6 @@ class HomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    // ignore: deprecated_member_use
                     color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
@@ -97,9 +94,7 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GridView.count(
@@ -164,75 +159,9 @@ class HomeScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildMenuCard(
-                    context,
-                    title: 'Anexos',
-                    icon: Icons.attach_file,
-                    color: AppColors.info,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Em desenvolvimento...'),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildMenuCard(
-                    context,
-                    title: 'Tratos Culturais',
-                    icon: Icons.agriculture,
-                    color: AppColors.success,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Em desenvolvimento...'),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildMenuCard(
-                    context,
-                    title: 'Operações',
-                    icon: Icons.settings,
-                    color: AppColors.warning,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Em desenvolvimento...'),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildMenuCard(
-                    context,
-                    title: 'Produtividade',
-                    icon: Icons.show_chart,
-                    color: AppColors.primary,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Em desenvolvimento...'),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildMenuCard(
-                    context,
-                    title: 'Precipitação',
-                    icon: Icons.water_drop,
-                    color: AppColors.info,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Em desenvolvimento...'),
-                        ),
-                      );
-                    },
-                  ),
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
           ],
         ),

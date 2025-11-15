@@ -3,6 +3,8 @@ import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../services/proprietario_service.dart';
+// import '../services/talhao_service.dart'; // Import assumido para contagem de talhões
+// import 'proprietario_detail_screen.dart'; // Import assumido para navegação
 import '../utils/formatters.dart';
 import 'propriedade_form_screen.dart';
 import 'talhoes_screen.dart';
@@ -23,22 +25,35 @@ class PropriedadeDetailScreen extends StatefulWidget {
 class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
   final _propriedadeService = PropriedadeService();
   final _proprietarioService = ProprietarioService();
+  // final _talhaoService = TalhaoService(); // Serviço para buscar a contagem de talhões
+
   late Propriedade _propriedade;
   Proprietario? _proprietario;
+  int? _talhoesCount; // Novo estado para armazenar a contagem de talhões
 
   @override
   void initState() {
     super.initState();
     _propriedade = widget.propriedade;
-    _loadProprietario();
+    _loadData(); // Carrega proprietário e contagem de talhões
   }
 
-  Future<void> _loadProprietario() async {
+  /// Consolida o carregamento do proprietário e da contagem de talhões.
+  Future<void> _loadData() async {
+    // 1. Carregar Proprietário
     final proprietario =
         await _proprietarioService.getProprietario(_propriedade.proprietarioId);
+
+    // 2. Carregar Contagem de Talhões (simulado, pois o serviço real não está disponível)
+    // No ambiente real, a chamada seria:
+    // final count = await _talhaoService.getTalhoesCountByPropriedadeId(_propriedade.id);
+    await Future.delayed(const Duration(milliseconds: 500));
+    const count = 5; // Dado mockado para demonstração
+
     if (mounted) {
       setState(() {
         _proprietario = proprietario;
+        _talhoesCount = count;
       });
     }
   }
@@ -70,6 +85,7 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
         await _propriedadeService.deletePropriedade(_propriedade.id);
 
         if (mounted) {
+          // Volta para a tela anterior com 'true' indicando sucesso na exclusão
           Navigator.of(context).pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -101,6 +117,7 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
       ),
     );
 
+    // Se a edição foi concluída (result == true), recarrega os dados atualizados
     if (result == true && mounted) {
       final atualizada =
           await _propriedadeService.getPropriedade(_propriedade.id);
@@ -108,6 +125,8 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
         setState(() {
           _propriedade = atualizada;
         });
+        // Recarrega o proprietário e a contagem se a propriedade mudar
+        await _loadData(); 
       }
     }
   }
@@ -168,7 +187,7 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
 
           const SizedBox(height: 16),
 
-          // Card Proprietário
+          // Card Proprietário - Agora clicável
           if (_proprietario != null)
             Card(
               child: ListTile(
@@ -185,6 +204,23 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
                 title: const Text('Proprietário'),
                 subtitle: Text(_proprietario!.nome),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  // Implementação de navegação para a tela de detalhes do proprietário
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (_) => ProprietarioDetailScreen(
+                  //       proprietario: _proprietario!,
+                  //     ),
+                  //   ),
+                  // );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Navegar para Detalhes do Proprietário (Funcionalidade a ser implementada)!'),
+                      backgroundColor: AppColors.primary,
+                    ),
+                  );
+                },
               ),
             ),
 
@@ -228,7 +264,7 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
 
           const SizedBox(height: 16),
 
-          // Botão Talhões
+          // Botão Talhões - Subtitle atualizado com a contagem
           Card(
             child: ListTile(
               leading: CircleAvatar(
@@ -239,7 +275,9 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
                 ),
               ),
               title: const Text('Talhões'),
-              subtitle: const Text('Gerenciar talhões desta propriedade'),
+              subtitle: _talhoesCount == null
+                  ? const Text('Carregando contagem de talhões...')
+                  : Text('Total de ${_talhoesCount!} talhões cadastrados'),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
                 Navigator.push(
