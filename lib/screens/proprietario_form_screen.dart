@@ -1,8 +1,10 @@
+// lib/screens/proprietario_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
+import '../utils/validators.dart';
 
 class ProprietarioFormScreen extends StatefulWidget {
   final Proprietario? proprietario;
@@ -74,12 +76,25 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
         id: widget.proprietario?.id ?? '',
         nome: _nomeController.text.trim(),
         cpfCnpj: _cpfCnpjController.text.replaceAll(RegExp(r'\D'), ''),
-        telefone: _telefoneController.text.trim(),
-        email: _emailController.text.trim(),
-        endereco: _enderecoController.text.trim(),
-        cidade: _cidadeController.text.trim(),
-        estado: _estadoController.text.trim(),
-        cep: _cepController.text.replaceAll(RegExp(r'\D'), ''),
+        telefone: _telefoneController.text.trim().isNotEmpty 
+            ? _telefoneController.text.trim() 
+            : null,
+        email: _emailController.text.trim().isNotEmpty 
+            ? _emailController.text.trim() 
+            : null,
+        endereco: _enderecoController.text.trim().isNotEmpty 
+            ? _enderecoController.text.trim() 
+            : null,
+        cidade: _cidadeController.text.trim().isNotEmpty 
+            ? _cidadeController.text.trim() 
+            : null,
+        estado: _estadoController.text.trim().isNotEmpty 
+            ? _estadoController.text.trim() 
+            : null,
+        cep: _cepController.text.replaceAll(RegExp(r'\D'), '').isNotEmpty
+            ? _cepController.text.replaceAll(RegExp(r'\D'), '')
+            : null,
+        ativo: widget.proprietario?.ativo ?? true,
         criadoEm: widget.proprietario?.criadoEm ?? DateTime.now(),
         atualizadoEm: DateTime.now(),
       );
@@ -221,11 +236,20 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
                           return 'Campo obrigatório';
                         }
                         final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
-                        if (_isCPF && digitsOnly.length != 11) {
-                          return 'CPF deve ter 11 dígitos';
-                        }
-                        if (!_isCPF && digitsOnly.length != 14) {
-                          return 'CNPJ deve ter 14 dígitos';
+                        if (_isCPF) {
+                          if (digitsOnly.length != 11) {
+                            return 'CPF deve ter 11 dígitos';
+                          }
+                          if (!BrazilianValidators.isValidCPF(digitsOnly)) {
+                            return 'CPF inválido';
+                          }
+                        } else {
+                          if (digitsOnly.length != 14) {
+                            return 'CNPJ deve ter 14 dígitos';
+                          }
+                          if (!BrazilianValidators.isValidCNPJ(digitsOnly)) {
+                            return 'CNPJ inválido';
+                          }
                         }
                         return null;
                       },

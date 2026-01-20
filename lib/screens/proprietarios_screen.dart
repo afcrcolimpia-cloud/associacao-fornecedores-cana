@@ -1,3 +1,4 @@
+// lib/screens/proprietarios_screen.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
@@ -79,7 +80,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.error_outline,
                     size: 64,
                     color: AppColors.error,
@@ -149,7 +150,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                 color: AppColors.background,
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.people,
                       color: AppColors.primary,
                       size: 20,
@@ -201,7 +202,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 '${proprietario.cidade}, ${proprietario.estado ?? ""}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 12,
                                 ),
@@ -209,7 +210,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                             ],
                           ],
                         ),
-                        trailing: Icon(
+                        trailing: const Icon(
                           Icons.arrow_forward_ios,
                           size: 16,
                           color: AppColors.textSecondary,

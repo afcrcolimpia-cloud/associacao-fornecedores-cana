@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
-// import 'home_screen.dart'; // Removido! A navegação é feita pelo AuthGate
+// A navegação é delegada ao AuthGate que observa o stream de autenticação.
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,11 +14,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  // O ideal é inicializar o AuthService fora do build, como feito aqui.
   final _authService = AuthService();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
+  
+  // Variável para controle de estado do botão de recuperar senha
+  bool _isResettingPassword = false; 
 
   @override
   void dispose() {
@@ -26,9 +28,21 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+  
+  // Função auxiliar para exibir mensagens (melhora a padronização e a leitura)
+  void _showSnackbar(String message, {Color color = AppColors.primary}) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   // A função de login agora apenas chama o serviço.
-  // Se for bem-sucedido, o AuthGate fará o redirecionamento.
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -39,21 +53,16 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       
-      // Sucesso: Não há pushReplacement. O Supabase Auth Stream 
-      // (observado pelo AuthGate no main.dart) muda e redireciona.
+      // Sucesso: O AuthGate fará o redirecionamento.
       
     } catch (e) {
-      if (mounted) {
-        // Exibe o erro de forma clara para o usuário
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      // Tratamento de erro refinado para feedback mais claro
+      final errorMessage = e.toString().contains('user-not-found')
+          ? 'E-mail ou senha inválidos.'
+          : 'Ocorreu um erro no login. Verifique sua conexão ou tente novamente.';
+      _showSnackbar(errorMessage, color: AppColors.error);
+
     } finally {
-      // Importante: Desativar o loading em caso de sucesso (antes do redirecionamento) ou falha.
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -63,26 +72,43 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Chama o método de serviço, o AuthGate trata a navegação.
       await _authService.signInWithGoogle();
 
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao fazer login com Google: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      _showSnackbar('Erro ao fazer login com Google: Por favor, tente novamente.', color: AppColors.error);
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+  
+  // Esqueleto para a recuperação de senha
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showSnackbar('Por favor, preencha o campo de e-mail primeiro.', color: AppColors.warning);
+      return;
+    }
+    
+    setState(() => _isResettingPassword = true);
+    
+    try {
+      await _authService.resetPassword(email);
+      _showSnackbar('Link de recuperação enviado para $email. Verifique sua caixa de entrada.');
+      
+    } catch (e) {
+      _showSnackbar('Erro ao enviar link de recuperação. Verifique se o e-mail está correto.', color: AppColors.error);
+    } finally {
+      if (mounted) setState(() => _isResettingPassword = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     const corTexto = AppColors.primary; 
+    
+    // Define se qualquer ação de autenticação está em andamento
+    final isAnyLoading = _isLoading || _isResettingPassword;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -104,6 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   // Logo
                   Image.asset(
+                    // Lembrete: Certifique-se de que este asset existe em pubspec.yaml
                     'assets/logo/logo.png',
                     width: 160,
                     height: 160,
@@ -141,6 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
+                          enabled: !isAnyLoading, // Desabilita durante o loading
                           decoration: const InputDecoration(
                             labelText: 'E-mail',
                             hintText: 'seu@email.com',
@@ -150,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Digite seu e-mail';
                             }
-                            if (!value.contains('@')) {
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                               return 'Digite um e-mail válido';
                             }
                             return null;
@@ -160,6 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          enabled: !isAnyLoading, // Desabilita durante o loading
                           decoration: InputDecoration(
                             labelText: 'Senha',
                             hintText: '••••••••',
@@ -170,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
                               ),
-                              onPressed: () {
+                              onPressed: isAnyLoading ? null : () {
                                 setState(() => _obscurePassword = !_obscurePassword);
                               },
                             ),
@@ -209,12 +238,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
+                        
+                        // --- LINHAS ADAPTADAS CONFORME SUA SOLICITAÇÃO ---
                         const SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(child: Divider(color: corTexto.withOpacity(0.5))),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 'OU',
                                 style: TextStyle(
@@ -231,40 +262,47 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           height: 50,
                           child: OutlinedButton.icon(
+                            // Ajustado para o onPressed solicitado (_isResettingPassword foi removido do check)
                             onPressed: _isLoading ? null : _loginWithGoogle,
                             icon: Image.asset(
                               'assets/icons/google.png',
                               width: 32,
                               height: 32,
+                              // Adicionado o errorBuilder para fallback visual
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.login, size: 24);
+                              },
                             ),
-                            label: Text(
+                            label: const Text( // Mantido const para otimização, pois corTexto é constante
                               'Entrar com Google',
                               style: TextStyle(color: corTexto),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: corTexto),
+                              // Cor da borda alterada para corTexto total (sem opacidade)
+                              side: const BorderSide(color: corTexto), 
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                           ),
                         ),
+                        // --- FIM DAS LINHAS ADAPTADAS ---
+                        
                         const SizedBox(height: 24),
                         TextButton(
-                          onPressed: () {
-                            // Você pode integrar o _authService.resetPassword() aqui:
-                            // await _authService.resetPassword(_emailController.text.trim());
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Funcionalidade de recuperação de senha em desenvolvimento'),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Esqueci minha senha',
-                            style: TextStyle(color: corTexto),
-                          ),
+                          onPressed: _isResettingPassword ? null : _resetPassword,
+                          child: _isResettingPassword 
+                            ? SizedBox(
+                                width: 14, height: 14, 
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2, 
+                                  color: corTexto.withOpacity(0.7)
+                                )
+                              )
+                            : const Text(
+                              'Esqueci minha senha',
+                              style: TextStyle(color: corTexto),
+                            ),
                         ),
                       ],
                     ),

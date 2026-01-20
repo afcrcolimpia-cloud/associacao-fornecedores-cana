@@ -1,40 +1,43 @@
-name: afcrc_app
-description: Sistema de Gestão Agrícola - AFCRC Catanduva
+name: gestao_cana_app
+description: Sistema de Gestão de Cana-de-açúcar - AFCRC Catanduva
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # 🚀 Supabase - Backend como Serviço
-  # Adiciona os pacotes principais do Supabase para Flutter
-  supabase_flutter: ^2.5.0 # Versão estável. Confirme a mais recente no pub.dev
+  flutter_localizations:
+    sdk: flutter
 
-  # 📦 Arquivos e compartilhamento
-  file_picker: ^8.1.2
-  path_provider: ^2.1.4
-  share_plus: ^10.0.2
-  url_launcher: ^6.3.1
+  # Supabase (APENAS ESTE)
+  supabase_flutter: ^2.5.6
 
-  # 🌍 Internacionalização e ícones
-  intl: ^0.19.0
-  cupertino_icons: ^1.0.8
+  # HTTP (opcional, mas OK manter)
+  http: ^0.13.6
 
-  # 📊 Gráficos
-  fl_chart: ^0.69.0
+  # UI
+  cupertino_icons: ^1.0.2
+  fl_chart: ^0.66.0
+  table_calendar: ^3.2.0
+
+  # Utilidades
+  intl: ^0.20.2
+  file_picker: ^8.0.0
+  url_launcher: ^6.1.10
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/logo/logo.png
-    - assets/icons/google.png
+    - assets/logo/
+    - assets/icons/

@@ -1,7 +1,8 @@
+// lib/models/proprietario.dart
 class Proprietario {
   final String id;
   final String nome;
-  final String documento;
+  final String cpfCnpj;
   final String? telefone;
   final String? email;
   final String? endereco;
@@ -9,13 +10,13 @@ class Proprietario {
   final String? estado;
   final String? cep;
   final bool ativo;
-  final DateTime dataCriacao;
-  final DateTime dataAtualizacao;
+  final DateTime criadoEm;
+  final DateTime atualizadoEm;
 
   Proprietario({
     required this.id,
     required this.nome,
-    required this.documento,
+    required this.cpfCnpj,
     this.telefone,
     this.email,
     this.endereco,
@@ -23,24 +24,31 @@ class Proprietario {
     this.estado,
     this.cep,
     this.ativo = true,
-    required this.dataCriacao,
-    required this.dataAtualizacao,
+    required this.criadoEm,
+    required this.atualizadoEm,
   });
+
+  static DateTime _parseDate(dynamic value) {
+    if (value is String) {
+      return DateTime.parse(value).toLocal();
+    }
+    return DateTime.now();
+  }
 
   factory Proprietario.fromJson(Map<String, dynamic> json) {
     return Proprietario(
       id: json['id'] as String,
       nome: json['nome'] as String,
-      documento: json['documento'] as String,
+      cpfCnpj: json['cpf_cnpj'] as String,
       telefone: json['telefone'] as String?,
       email: json['email'] as String?,
       endereco: json['endereco'] as String?,
       cidade: json['cidade'] as String?,
       estado: json['estado'] as String?,
       cep: json['cep'] as String?,
-      ativo: json['ativo'] as bool? ?? true,
-      dataCriacao: DateTime.parse(json['data_criacao']),
-      dataAtualizacao: DateTime.parse(json['data_atualizacao']),
+      ativo: json['ativo'] ?? true,
+      criadoEm: _parseDate(json['criado_em'] ?? json['data_criacao']),
+      atualizadoEm: _parseDate(json['atualizado_em'] ?? json['data_atualizacao']),
     );
   }
 
@@ -48,21 +56,46 @@ class Proprietario {
     return {
       if (id.isNotEmpty) 'id': id,
       'nome': nome,
-      'documento': documento,
-      if (telefone != null && telefone!.isNotEmpty) 'telefone': telefone,
-      if (email != null && email!.isNotEmpty) 'email': email,
-      if (endereco != null && endereco!.isNotEmpty) 'endereco': endereco,
-      if (cidade != null && cidade!.isNotEmpty) 'cidade': cidade,
-      if (estado != null && estado!.isNotEmpty) 'estado': estado,
-      if (cep != null && cep!.isNotEmpty) 'cep': cep,
+      'cpf_cnpj': cpfCnpj,
+      'telefone': telefone,
+      'email': email,
+      'endereco': endereco,
+      'cidade': cidade,
+      'estado': estado,
+      'cep': cep,
       'ativo': ativo,
-      'data_criacao': dataCriacao.toUtc().toIso8601String(),
-      'data_atualizacao': dataAtualizacao.toUtc().toIso8601String(),
+      'criado_em': criadoEm.toUtc().toIso8601String(),
+      'atualizado_em': atualizadoEm.toUtc().toIso8601String(),
     };
   }
 
-  // Getters para compatibilidade com código antigo
-  String get cpfCnpj => documento;
-  DateTime get criadoEm => dataCriacao;
-  DateTime get atualizadoEm => dataAtualizacao;
+  Proprietario copyWith({
+    String? id,
+    String? nome,
+    String? cpfCnpj,
+    String? telefone,
+    String? email,
+    String? endereco,
+    String? cidade,
+    String? estado,
+    String? cep,
+    bool? ativo,
+    DateTime? criadoEm,
+    DateTime? atualizadoEm,
+  }) {
+    return Proprietario(
+      id: id ?? this.id,
+      nome: nome ?? this.nome,
+      cpfCnpj: cpfCnpj ?? this.cpfCnpj,
+      telefone: telefone ?? this.telefone,
+      email: email ?? this.email,
+      endereco: endereco ?? this.endereco,
+      cidade: cidade ?? this.cidade,
+      estado: estado ?? this.estado,
+      cep: cep ?? this.cep,
+      ativo: ativo ?? this.ativo,
+      criadoEm: criadoEm ?? this.criadoEm,
+      atualizadoEm: atualizadoEm ?? this.atualizadoEm,
+    );
+  }
 }

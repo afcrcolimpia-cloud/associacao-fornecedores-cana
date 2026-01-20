@@ -1,3 +1,4 @@
+// lib/screens/talhao_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
@@ -33,6 +34,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
 
   bool _isLoading = false;
   bool _calculandoArea = false;
+  String _tipoTalhao = 'producao'; // 'producao' ou 'reforma'
 
   @override
   void initState() {
@@ -41,21 +43,21 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
 
     _numeroTalhaoController = TextEditingController(text: t?.numeroTalhao);
     _areaHectaresController = TextEditingController(
-      text: t?.areaHectares.toString(),
+      text: t?.areaHa?.toString(),
     );
     _areaAlqueiresController = TextEditingController(
-      text: t?.areaAlqueires.toString(),
+      text: t?.areaAlqueires?.toString(),
     );
     _variedadeController = TextEditingController(text: t?.variedade);
     _anoPlantioController = TextEditingController(
-      text: t?.anoPlantio.toString() ?? DateTime.now().year.toString(),
+      text: t?.anoPlantio?.toString() ?? DateTime.now().year.toString(),
     );
     _corteController = TextEditingController(
-      text: t?.corte.toString() ?? '1',
+      text: t?.corte?.toString() ?? '1',
     );
     _observacoesController = TextEditingController(text: t?.observacoes);
+    _tipoTalhao = t?.tipoTalhao ?? 'producao';
 
-    // Listeners para cálculo automático
     _areaHectaresController.addListener(_onHectaresChanged);
     _areaAlqueiresController.addListener(_onAlqueiresChanged);
   }
@@ -104,16 +106,24 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final anoPlantio = int.parse(_anoPlantioController.text);
+      final dataPlantio = DateTime(anoPlantio, 1, 1);
+
       final talhao = Talhao(
         id: widget.talhao?.id ?? '',
         propriedadeId: widget.propriedade.id,
         numeroTalhao: _numeroTalhaoController.text.trim(),
-        areaHectares: double.parse(_areaHectaresController.text),
+        cultura: 'Cana-de-açúcar',
+        areaHa: double.parse(_areaHectaresController.text),
         areaAlqueires: double.parse(_areaAlqueiresController.text),
         variedade: _variedadeController.text.trim(),
-        anoPlantio: int.parse(_anoPlantioController.text),
+        anoPlantio: anoPlantio,
         corte: int.parse(_corteController.text),
-        observacoes: _observacoesController.text.trim(),
+        tipoTalhao: _tipoTalhao,
+        observacoes: _observacoesController.text.trim().isNotEmpty 
+            ? _observacoesController.text.trim() 
+            : null,
+        dataPlantio: dataPlantio,
         criadoEm: widget.talhao?.criadoEm ?? DateTime.now(),
         atualizadoEm: DateTime.now(),
       );
@@ -166,7 +176,6 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Card Propriedade
             Card(
               color: AppColors.primary.withOpacity(0.1),
               child: Padding(
@@ -176,7 +185,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.home_work, color: AppColors.primary),
+                        const Icon(Icons.home_work, color: AppColors.primary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -201,7 +210,6 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
 
             const SizedBox(height: 16),
 
-            // Card Identificação
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -252,7 +260,52 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
 
             const SizedBox(height: 16),
 
-            // Card Área
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tipo de Talhão',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.primary,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SegmentedButton<String>(
+                            segments: const <ButtonSegment<String>>[
+                              ButtonSegment<String>(
+                                value: 'producao',
+                                label: Text('Produção'),
+                                icon: Icon(Icons.grain),
+                              ),
+                              ButtonSegment<String>(
+                                value: 'reforma',
+                                label: Text('Reforma'),
+                                icon: Icon(Icons.agriculture),
+                              ),
+                            ],
+                            selected: <String>{_tipoTalhao},
+                            onSelectionChanged: (Set<String> newSelection) {
+                              setState(() {
+                                _tipoTalhao = newSelection.first;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -331,7 +384,6 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
 
             const SizedBox(height: 16),
 
-            // Card Cultivo
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -416,7 +468,6 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
 
             const SizedBox(height: 24),
 
-            // Botões
             Row(
               children: [
                 Expanded(

@@ -1,67 +1,427 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../constants/app_colors.dart';
 import '../models/models.dart';
+import '../services/propriedade_service.dart';
 import '../services/proprietario_service.dart';
 
-class ProprietarioFormScreen extends StatefulWidget {
-  final Proprietario? proprietario;
+class PropriedadeFormScreen extends StatefulWidget {
+  final Propriedade? propriedade;
+  final String? proprietarioId;
 
-  const ProprietarioFormScreen({
+  const PropriedadeFormScreen({
     super.key,
-    this.proprietario,
+    this.propriedade,
+    this.proprietarioId,
   });
 
   @override
-  State<ProprietarioFormScreen> createState() => _ProprietarioFormScreenState();
+  State<PropriedadeFormScreen> createState() => _PropriedadeFormScreenState();
 }
 
-class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
+class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _service = ProprietarioService();
-  
-  late TextEditingController _nomeController;
-  late TextEditingController _cpfCnpjController;
-  late TextEditingController _telefoneController;
-  late TextEditingController _emailController;
-  late TextEditingController _enderecoController;
-  late TextEditingController _cidadeController;
-  late TextEditingController _estadoController;
-  late TextEditingController _cepController;
-  
+  final _propriedadeService = PropriedadeService();
+  final _proprietarioService = ProprietarioService();
+
+  // Controllers
+  final _nomeController = TextEditingController();
+  final _faController = TextEditingController();
+  final _enderecoController = TextEditingController();
+  final _cidadeController = TextEditingController();
+  final _estadoController = TextEditingController();
+  final _cepController = TextEditingController();
+  final _areaHaController = TextEditingController();
+  final _areaAlqController = TextEditingController();
+
+  // Variáveis
+  String? _proprietarioSelecionado;
   bool _isLoading = false;
-  bool _isCPF = true;
+  bool _isAtiva = true;
+  List<Proprietario> _proprietarios = [];
 
   @override
   void initState() {
     super.initState();
-    final p = widget.proprietario;
+    _carregarProprietarios();
     
-    _nomeController = TextEditingController(text: p?.nome);
-    _cpfCnpjController = TextEditingController(text: p?.documento);
-    _telefoneController = TextEditingController(text: p?.telefone);
-    _emailController = TextEditingController(text: p?.email);
-    _enderecoController = TextEditingController(text: p?.endereco);
-    _cidadeController = TextEditingController(text: p?.cidade);
-    _estadoController = TextEditingController(text: p?.estado);
-    _cepController = TextEditingController(text: p?.cep);
-    
-    if (p != null) {
-      _isCPF = p.documento.length == 11;
+    if (widget.propriedade != null) {
+      _carregarDados();
+    } else if (widget.proprietarioId != null) {
+      _proprietarioSelecionado = widget.proprietarioId;
     }
   }
 
   @override
   void dispose() {
     _nomeController.dispose();
-    _cpfCnpjController.dispose();
-    _telefoneController.dispose();
-    _emailController.dispose();
+    _faController.dispose();
     _enderecoController.dispose();
     _cidadeController.dispose();
     _estadoController.dispose();
     _cepController.dispose();
+    _areaHaController.dispose();
+    _areaAlqController.dispose();
     super.dispose();
+  }
+
+  void _carregarDados() {
+    final prop = widget.propriedade!;
+    _nomeController.text = prop.nome ?? '';
+    _faController.text = prop.fa ?? '';
+    _enderecoController.text = prop.endereco ?? '';
+    _cidadeController.text = prop.cidade ?? '';
+    _estadoController.text = prop.estado ?? '';
+    _cepController.text = prop.cep ?? '';
+    _areaHaController.text = prop.areaHa?.toString() ?? '';
+    _areaAlqController.text = prop.areaAlqueires?.toString() ?? '';
+    _proprietarioSelecionado = prop.proprietarioId;
+    _isAtiva = prop.ativa ?? true;
+  }
+
+  Future<void> _carregarProprietarios() async {
+    try {
+      final proprietarios = await _proprietarioService.getProprietarios();
+      setState(() => _proprietarios = proprietarios);
+    } catch (e) {
+      _mostrarErro('Erro ao carregar proprietários: $e');
+    }
+  }
+
+  // Calcular área em alqueires quando digitar hectares
+  void _calcularAreaAlqueires(String hectares) {
+    if (hectares.isEmpty) {
+      _areaAlqController.clear();
+      return;
+    }
+    
+    final ha = double.tryParse(hectares);
+    if (ha != null) {
+      // 1 alqueire paulista = 2.42 hectares
+      final alqueires = ha / 2.42;
+      _areaAlqController.text = alqueires.toStringAsFixed(2);
+    }
+  }
+
+  // Calcular área em hectares quando digitar alqueires
+  void _calcularAreaHectares(String alqueires) {
+    if (alqueires.isEmpty) {
+      _areaHaController.clear();
+      return;
+    }
+    
+    final alq = double.tryParse(alqueires);
+    if (alq != null) {
+      // 1 alqueire paulista = 2.42 hectares
+      final hectares = alq * 2.42;
+      _areaHaController.text = hectares.toStringAsFixed(2);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.propriedade == null 
+            ? 'Nova Propriedade' 
+            : 'Editar Propriedade'),
+        actions: [
+          if (widget.propriedade != null)
+            IconButton(
+              icon: Icon(_isAtiva ? Icons.toggle_on : Icons.toggle_off),
+              tooltip: _isAtiva ? 'Ativa' : 'Inativa',
+              onPressed: () {
+                setState(() => _isAtiva = !_isAtiva);
+              },
+            ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Status da propriedade
+                  if (widget.propriedade != null) ...[
+                    Card(
+                      color: _isAtiva ? Colors.green.shade50 : Colors.red.shade50,
+                      child: ListTile(
+                        leading: Icon(
+                          _isAtiva ? Icons.check_circle : Icons.cancel,
+                          color: _isAtiva ? Colors.green : Colors.red,
+                        ),
+                        title: Text(_isAtiva ? 'Propriedade Ativa' : 'Propriedade Inativa'),
+                        subtitle: Text(_isAtiva 
+                            ? 'Propriedade disponível para uso'
+                            : 'Propriedade desativada'),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Dados Principais
+                  const Text(
+                    'Dados Principais',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16),
+
+                  _buildProprietarioField(),
+                  const SizedBox(height: 16),
+
+                  _buildNomeField(),
+                  const SizedBox(height: 16),
+
+                  _buildFAField(),
+                  const SizedBox(height: 24),
+
+                  // Localização
+                  const Text(
+                    'Localização',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16),
+
+                  _buildEnderecoField(),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(child: _buildCidadeField()),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: 100,
+                        child: _buildEstadoField(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildCEPField(),
+                  const SizedBox(height: 24),
+
+                  // Área
+                  const Text(
+                    'Área',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(child: _buildAreaHaField()),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildAreaAlqField()),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildBotoes(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildProprietarioField() {
+    return DropdownButtonFormField<String>(
+      value: _proprietarioSelecionado,
+      decoration: const InputDecoration(
+        labelText: 'Proprietário',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.person),
+      ),
+      items: _proprietarios.map((proprietario) {
+        return DropdownMenuItem(
+          value: proprietario.id,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(proprietario.nome),
+              Text(
+                proprietario.cpfCnpj,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() => _proprietarioSelecionado = value);
+      },
+      validator: (value) => value == null ? 'Selecione um proprietário' : null,
+    );
+  }
+
+  Widget _buildNomeField() {
+    return TextFormField(
+      controller: _nomeController,
+      decoration: const InputDecoration(
+        labelText: 'Nome da Propriedade',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.home),
+        hintText: 'Ex: Fazenda São João',
+      ),
+      textCapitalization: TextCapitalization.words,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Digite o nome da propriedade';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildFAField() {
+    return TextFormField(
+      controller: _faController,
+      decoration: const InputDecoration(
+        labelText: 'F.A (Número de Identificação)',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.tag),
+        hintText: 'Ex: FA-001',
+        helperText: 'Identificador único da propriedade',
+      ),
+      textCapitalization: TextCapitalization.characters,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Digite o número F.A';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildEnderecoField() {
+    return TextFormField(
+      controller: _enderecoController,
+      decoration: const InputDecoration(
+        labelText: 'Endereço',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.location_on),
+        hintText: 'Ex: Rodovia SP-310, Km 45',
+      ),
+      textCapitalization: TextCapitalization.words,
+    );
+  }
+
+  Widget _buildCidadeField() {
+    return TextFormField(
+      controller: _cidadeController,
+      decoration: const InputDecoration(
+        labelText: 'Cidade',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.location_city),
+      ),
+      textCapitalization: TextCapitalization.words,
+    );
+  }
+
+  Widget _buildEstadoField() {
+    return TextFormField(
+      controller: _estadoController,
+      decoration: const InputDecoration(
+        labelText: 'UF',
+        border: OutlineInputBorder(),
+        hintText: 'SP',
+      ),
+      textCapitalization: TextCapitalization.characters,
+      maxLength: 2,
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z]')),
+        UpperCaseTextFormatter(),
+      ],
+    );
+  }
+
+  Widget _buildCEPField() {
+    return TextFormField(
+      controller: _cepController,
+      decoration: const InputDecoration(
+        labelText: 'CEP',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.pin_drop),
+        hintText: '00000-000',
+      ),
+      keyboardType: TextInputType.number,
+      maxLength: 9,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        CepInputFormatter(),
+      ],
+    );
+  }
+
+  Widget _buildAreaHaField() {
+    return TextFormField(
+      controller: _areaHaController,
+      decoration: const InputDecoration(
+        labelText: 'Área (ha)',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.straighten),
+        suffixText: 'hectares',
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+      ],
+      onChanged: _calcularAreaAlqueires,
+    );
+  }
+
+  Widget _buildAreaAlqField() {
+    return TextFormField(
+      controller: _areaAlqController,
+      decoration: const InputDecoration(
+        labelText: 'Área (Alqs)',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.straighten),
+        suffixText: 'alqueires',
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+      ],
+      onChanged: _calcularAreaHectares,
+    );
+  }
+
+  Widget _buildBotoes() {
+    return Row(
+      children: [
+        if (widget.propriedade != null) ...[
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: _confirmarExclusao,
+              icon: const Icon(Icons.delete),
+              label: const Text('Excluir'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+        ],
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _salvar,
+            child: const Text('Salvar'),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _salvar() async {
@@ -70,49 +430,48 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final proprietario = Proprietario(
-        id: widget.proprietario?.id ?? '',
-        nome: _nomeController.text.trim(),
-        documento: _cpfCnpjController.text.replaceAll(RegExp(r'\D'), ''),
-        telefone: _telefoneController.text.trim().isEmpty ? null : _telefoneController.text.trim(),
-        email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-        endereco: _enderecoController.text.trim().isEmpty ? null : _enderecoController.text.trim(),
-        cidade: _cidadeController.text.trim().isEmpty ? null : _cidadeController.text.trim(),
-        estado: _estadoController.text.trim().isEmpty ? null : _estadoController.text.trim(),
-        cep: _cepController.text.replaceAll(RegExp(r'\D'), '').isEmpty ? null : _cepController.text.replaceAll(RegExp(r'\D'), ''),
-        ativo: widget.proprietario?.ativo ?? true,
-        dataCriacao: widget.proprietario?.dataCriacao ?? DateTime.now(),
-        dataAtualizacao: DateTime.now(),
+      final propriedade = Propriedade(
+        id: widget.propriedade?.id ?? '',
+        proprietarioId: _proprietarioSelecionado!,
+        nomePropriedade: _nomeController.text,
+        numeroFA: _faController.text,
+        endereco: _enderecoController.text.isNotEmpty 
+            ? _enderecoController.text 
+            : null,
+        cidade: _cidadeController.text.isNotEmpty 
+            ? _cidadeController.text 
+            : null,
+        estado: _estadoController.text.isNotEmpty 
+            ? _estadoController.text 
+            : null,
+        cep: _cepController.text.isNotEmpty 
+            ? _cepController.text 
+            : null,
+        areaHa: _areaHaController.text.isNotEmpty
+            ? double.parse(_areaHaController.text)
+            : null,
+        areaAlqueires: _areaAlqController.text.isNotEmpty
+            ? double.parse(_areaAlqController.text)
+            : null,
+        ativa: _isAtiva,
+        criadoEm: widget.propriedade?.criadoEm ?? DateTime.now(),
+        atualizadoEm: DateTime.now(),
       );
 
-      if (widget.proprietario == null) {
-        await _service.addProprietario(proprietario);
+      if (widget.propriedade == null) {
+        await _propriedadeService.addPropriedade(propriedade);
       } else {
-        await _service.updateProprietario(proprietario);
+        await _propriedadeService.updatePropriedade(propriedade);
       }
 
       if (mounted) {
-        Navigator.of(context).pop(true);
+        Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.proprietario == null
-                  ? 'Proprietário cadastrado com sucesso!'
-                  : 'Proprietário atualizado com sucesso!',
-            ),
-            backgroundColor: AppColors.success,
-          ),
+          const SnackBar(content: Text('Propriedade salva com sucesso!')),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      _mostrarErro('Erro ao salvar: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -120,284 +479,96 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isEdicao = widget.proprietario != null;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdicao ? 'Editar Proprietário' : 'Novo Proprietário'),
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dados Básicos',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _nomeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nome Completo *',
-                        hintText: 'Digite o nome completo',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      textCapitalization: TextCapitalization.words,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Campo obrigatório';
-                        }
-                        if (value.trim().length < 3) {
-                          return 'Nome deve ter no mínimo 3 caracteres';
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    Row(
-                      children: [
-                        Expanded(
-                          child: RadioListTile<bool>(
-                            title: const Text('CPF'),
-                            value: true,
-                            groupValue: _isCPF,
-                            onChanged: (value) {
-                              setState(() {
-                                _isCPF = value!;
-                                _cpfCnpjController.clear();
-                              });
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: RadioListTile<bool>(
-                            title: const Text('CNPJ'),
-                            value: false,
-                            groupValue: _isCPF,
-                            onChanged: (value) {
-                              setState(() {
-                                _isCPF = value!;
-                                _cpfCnpjController.clear();
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    TextFormField(
-                      controller: _cpfCnpjController,
-                      decoration: InputDecoration(
-                        labelText: '${_isCPF ? "CPF" : "CNPJ"} *',
-                        hintText: _isCPF ? '000.000.000-00' : '00.000.000/0000-00',
-                        prefixIcon: const Icon(Icons.badge),
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(_isCPF ? 11 : 14),
-                      ],
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Campo obrigatório';
-                        }
-                        final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
-                        if (_isCPF && digitsOnly.length != 11) {
-                          return 'CPF deve ter 11 dígitos';
-                        }
-                        if (!_isCPF && digitsOnly.length != 14) {
-                          return 'CNPJ deve ter 14 dígitos';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Contato',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _telefoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Telefone',
-                        hintText: '(00) 00000-0000',
-                        prefixIcon: Icon(Icons.phone),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(11),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'E-mail',
-                        hintText: 'email@exemplo.com',
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value != null && value.isNotEmpty) {
-                          if (!value.contains('@')) {
-                            return 'E-mail inválido';
-                          }
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Endereço',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _cepController,
-                      decoration: const InputDecoration(
-                        labelText: 'CEP',
-                        hintText: '00000-000',
-                        prefixIcon: Icon(Icons.location_on),
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(8),
-                      ],
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
-                      controller: _enderecoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Endereço',
-                        hintText: 'Rua, número, complemento',
-                        prefixIcon: Icon(Icons.home),
-                      ),
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: TextFormField(
-                            controller: _cidadeController,
-                            decoration: const InputDecoration(
-                              labelText: 'Cidade',
-                              prefixIcon: Icon(Icons.location_city),
-                            ),
-                            textCapitalization: TextCapitalization.words,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _estadoController,
-                            decoration: const InputDecoration(
-                              labelText: 'UF',
-                              hintText: 'SP',
-                            ),
-                            textCapitalization: TextCapitalization.characters,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(2),
-                              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z]')),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: const Text('CANCELAR'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _salvar,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(isEdicao ? 'ATUALIZAR' : 'SALVAR'),
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 24),
-          ],
+  Future<void> _confirmarExclusao() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: const Text(
+          'Deseja realmente excluir esta propriedade?\n\n'
+          'ATENÇÃO: Todos os talhões e dados relacionados também serão excluídos!',
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Excluir'),
+          ),
+        ],
       ),
+    );
+
+    if (confirmar == true && widget.propriedade != null) {
+      setState(() => _isLoading = true);
+
+      try {
+        await _propriedadeService.deletePropriedade(widget.propriedade!.id);
+        
+        if (mounted) {
+          Navigator.pop(context, true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Propriedade excluída com sucesso')),
+          );
+        }
+      } catch (e) {
+        _mostrarErro('Erro ao excluir: $e');
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    }
+  }
+
+  void _mostrarErro(String mensagem) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
+// Formatador para CEP
+class CepInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    
+    if (text.length > 8) {
+      return oldValue;
+    }
+
+    if (text.length <= 5) {
+      return newValue;
+    }
+
+    return TextEditingValue(
+      text: '${text.substring(0, 5)}-${text.substring(5)}',
+      selection: TextSelection.collapsed(offset: newValue.text.length + 1),
+    );
+  }
+}
+
+// Formatador para maiúsculas
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }

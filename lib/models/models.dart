@@ -1,3 +1,9 @@
 export 'proprietario.dart';
 export 'propriedade.dart';
 export 'talhao.dart';
+export 'anexo.dart';
+export 'operacao_cultivo.dart';
+export 'models.dart';
+export 'produtividade.dart';
+export 'precipitacao.dart';
+export 'tratos_culturais.dart';

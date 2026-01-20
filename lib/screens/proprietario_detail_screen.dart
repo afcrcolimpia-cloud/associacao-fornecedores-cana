@@ -1,3 +1,4 @@
+// lib/screens/proprietario_detail_screen.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
@@ -14,7 +15,8 @@ class ProprietarioDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ProprietarioDetailScreen> createState() => _ProprietarioDetailScreenState();
+  State<ProprietarioDetailScreen> createState() =>
+      _ProprietarioDetailScreenState();
 }
 
 class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
@@ -49,10 +51,10 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
       ),
     );
 
-    if (confirm == true) {
+    if (confirm == true && mounted) {
       try {
         await _service.deleteProprietario(_proprietario.id);
-        
+
         if (mounted) {
           Navigator.of(context).pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -76,6 +78,8 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
   }
 
   Future<void> _editar() async {
+    if (!mounted) return;
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -86,9 +90,8 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
     );
 
     if (result == true && mounted) {
-      // Recarregar dados
       final atualizado = await _service.getProprietario(_proprietario.id);
-      if (atualizado != null) {
+      if (atualizado != null && mounted) {
         setState(() {
           _proprietario = atualizado;
         });
@@ -117,7 +120,6 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Card do Cabeçalho
           Card(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -143,7 +145,8 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: _proprietario.ativo
                           ? AppColors.success.withOpacity(0.1)
@@ -153,7 +156,9 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
                     child: Text(
                       _proprietario.ativo ? 'ATIVO' : 'INATIVO',
                       style: TextStyle(
-                        color: _proprietario.ativo ? AppColors.success : AppColors.error,
+                        color: _proprietario.ativo
+                            ? AppColors.success
+                            : AppColors.error,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -166,7 +171,6 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
 
           const SizedBox(height: 16),
 
-          // Card de Documentos
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -175,13 +179,13 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.badge, color: AppColors.primary),
+                      const Icon(Icons.badge, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Text(
                         'Documentos',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.primary,
-                        ),
+                              color: AppColors.primary,
+                            ),
                       ),
                     ],
                   ),
@@ -200,7 +204,6 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
 
           const SizedBox(height: 16),
 
-          // Card de Contato
           if (_proprietario.telefone != null || _proprietario.email != null)
             Card(
               child: Padding(
@@ -210,32 +213,34 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.contact_phone, color: AppColors.primary),
+                        const Icon(Icons.contact_phone, color: AppColors.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Contato',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppColors.primary,
+                                  ),
                         ),
                       ],
                     ),
                     const Divider(height: 24),
-                    if (_proprietario.telefone != null)
+                    if (_proprietario.telefone != null) ...[
                       _buildInfoRow(
                         context,
                         label: 'Telefone',
                         value: _proprietario.telefone!,
                         icon: Icons.phone,
                       ),
-                    if (_proprietario.telefone != null)
                       const SizedBox(height: 12),
-                    _buildInfoRow(
-                      context,
-                      label: 'E-mail',
-                      value: _proprietario.email ?? '',
-                      icon: Icons.email,
-                    ),
+                    ],
+                    if (_proprietario.email != null)
+                      _buildInfoRow(
+                        context,
+                        label: 'E-mail',
+                        value: _proprietario.email!,
+                        icon: Icons.email,
+                      ),
                   ],
                 ),
               ),
@@ -243,7 +248,6 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
 
           const SizedBox(height: 16),
 
-          // Card de Endereço
           if (_proprietario.endereco != null ||
               _proprietario.cidade != null ||
               _proprietario.estado != null ||
@@ -256,41 +260,41 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.location_on, color: AppColors.primary),
+                        const Icon(Icons.location_on, color: AppColors.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Endereço',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppColors.primary,
+                                  ),
                         ),
                       ],
                     ),
                     const Divider(height: 24),
-                    if (_proprietario.cep != null)
+                    if (_proprietario.cep != null) ...[
                       _buildInfoRow(
                         context,
                         label: 'CEP',
                         value: _proprietario.cep!,
                       ),
-                    if (_proprietario.cep != null && _proprietario.endereco != null)
                       const SizedBox(height: 12),
-                    if (_proprietario.endereco != null)
+                    ],
+                    if (_proprietario.endereco != null) ...[
                       _buildInfoRow(
                         context,
                         label: 'Endereço',
                         value: _proprietario.endereco!,
                       ),
-                    if (_proprietario.endereco != null &&
-                        (_proprietario.cidade != null || _proprietario.estado != null))
                       const SizedBox(height: 12),
-                    if (_proprietario.cidade != null || _proprietario.estado != null)
+                    ],
+                    if (_proprietario.cidade != null ||
+                        _proprietario.estado != null)
                       _buildInfoRow(
                         context,
                         label: 'Cidade/UF',
                         value:
-                            '${_proprietario.cidade ?? ''}, ${_proprietario.estado ?? ''}'
-                                .trim(),
+                            '${_proprietario.cidade ?? ""}, ${_proprietario.estado ?? ""}',
                       ),
                   ],
                 ),
@@ -299,7 +303,6 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
 
           const SizedBox(height: 16),
 
-          // Card de Informações do Sistema
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -308,13 +311,13 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: AppColors.primary),
+                      const Icon(Icons.info_outline, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Text(
                         'Informações do Sistema',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.primary,
-                        ),
+                              color: AppColors.primary,
+                            ),
                       ),
                     ],
                   ),
@@ -328,7 +331,8 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
                   _buildInfoRow(
                     context,
                     label: 'Última atualização',
-                    value: Formatters.formatDateTime(_proprietario.atualizadoEm),
+                    value:
+                        Formatters.formatDateTime(_proprietario.atualizadoEm),
                   ),
                 ],
               ),
@@ -359,9 +363,9 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ),
         Expanded(

@@ -3,8 +3,8 @@
 
 class DatabaseConfig {
   // 🔑 SUBSTITUA COM SUAS CHAVES DO SUPABASE
-  static const String supabaseUrl = 'https://SEU_PROJETO.supabase.co';
-  static const String supabaseAnonKey = 'SUA_CHAVE_ANON_AQUI';
+  static const String supabaseUrl = 'https://abc123xyz.supabase.co';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiYzEyM3h5eiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjk1MDAwMDAwLCJleHAiOjIwMTA1NzYwMDB9.abcdefghijklmnopqrstuvwxyz123456789';
   
   // 📋 Nomes das tabelas (não precisa mudar)
   static const String tabelaProprietarios = 'proprietarios';
