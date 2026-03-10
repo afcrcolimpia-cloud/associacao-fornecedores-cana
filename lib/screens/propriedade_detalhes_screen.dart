@@ -139,7 +139,7 @@ class PropriedadeDetalhesScreen extends StatelessWidget {
         'cor': Colors.cyan,
         'descricao': 'Dados de chuva',
         'onTap': () => _navegarPara(context,
-          PrecipitacaoScreen(propriedade: propriedade)),
+          const PrecipitacaoScreen()),
       },
       {
         'titulo': 'Custo Operacional',
