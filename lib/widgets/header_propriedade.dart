@@ -6,10 +6,12 @@ import '../constants/app_colors.dart';
 /// Deve ser colocado no topo de TODAS as telas operacionais
 class HeaderPropriedade extends StatelessWidget {
   final ContextoPropriedade contexto;
+  final List<MapEntry<String, String>> infoExtra;
 
   const HeaderPropriedade({
     super.key,
     required this.contexto,
+    this.infoExtra = const [],
   });
 
   @override
@@ -27,6 +29,7 @@ class HeaderPropriedade extends StatelessWidget {
           _info('FA', contexto.numeroFA),
           _info('Município', contexto.municipio),
           _info('Área', contexto.areaHa),
+          ...infoExtra.map((e) => _info(e.key, e.value)),
         ],
       ),
     );

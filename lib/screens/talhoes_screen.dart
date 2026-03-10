@@ -32,15 +32,32 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
       },
       showBackButton: true,
       title: 'Talhões',
-      child: Column(
-        children: [
-          HeaderPropriedade(contexto: widget.contexto),
-          _buildFiltros(),
-          Expanded(
-            child: _buildTalhoes(),
-          ),
-        ],
-      ),
+      child: _buildConteudo(),
+    );
+  }
+
+  Widget _buildConteudo() {
+    return StreamBuilder<List<Talhao>>(
+      stream: _service.getTalhoesStream(widget.contexto.propriedade.id),
+      builder: (context, snapshot) {
+        final todosTalhoes = snapshot.data ?? [];
+        final somaArea = _calcularSomaArea(todosTalhoes);
+        return Column(
+          children: [
+            HeaderPropriedade(
+              contexto: widget.contexto,
+              infoExtra: [
+                MapEntry('Área Talhões', '${somaArea.toStringAsFixed(1)} ha'),
+                MapEntry('Qtd Talhões', '${todosTalhoes.length}'),
+              ],
+            ),
+            _buildFiltros(),
+            Expanded(
+              child: _buildTalhoesFiltrados(todosTalhoes, snapshot),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -92,19 +109,20 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
     );
   }
 
-  Widget _buildTalhoes() {
-    return StreamBuilder<List<Talhao>>(
-      stream: _service.getTalhoesStream(widget.contexto.propriedade.id),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  double _calcularSomaArea(List<Talhao> talhoes) {
+    return talhoes.fold<double>(0, (soma, t) => soma + (t.areaHa ?? 0));
+  }
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Erro: ${snapshot.error}'));
-        }
+  Widget _buildTalhoesFiltrados(List<Talhao> todosTalhoes, AsyncSnapshot<List<Talhao>> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        var talhoes = snapshot.data ?? [];
+    if (snapshot.hasError) {
+      return Center(child: Text('Erro: ${snapshot.error}'));
+    }
+
+    var talhoes = List<Talhao>.from(todosTalhoes);
 
         // Filtrar por status
         if (_filtro == 'ativos') {
@@ -146,175 +164,101 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: talhoes.length,
           itemBuilder: (context, index) {
             final talhao = talhoes[index];
             return _buildTalhaoCard(talhao);
           },
         );
-      },
-    );
   }
 
   Widget _buildTalhaoCard(Talhao talhao) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 4),
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: InkWell(
         onTap: () => _mostrarFormulario(talhao: talhao),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Talhão ${talhao.numeroTalhao}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        if (talhao.cultura != null)
-                          Text(
-                            talhao.cultura!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        if (talhao.variedade != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              'Variedade: ${talhao.variedade}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[700],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+              // Número do talhão
+              SizedBox(
+                width: 90,
+                child: Text(
+                  'Talhão ${talhao.numeroTalhao}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: talhao.ativo ? Colors.green[100] : Colors.red[100],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      talhao.ativo ? 'Ativo' : 'Inativo',
-                      style: TextStyle(
-                        color: talhao.ativo ? Colors.green[700] : Colors.red[700],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoItem(
-                      Icons.agriculture,
-                      'Área',
-                      '${talhao.areaHa} ha',
-                    ),
-                  ),
-                  if (talhao.areaAlqueires != null)
-                    Expanded(
-                      child: _buildInfoItem(
-                        Icons.agriculture,
-                        'Alqueires',
-                        '${talhao.areaAlqueires} alq',
-                      ),
-                    ),
-                ],
+              // Área
+              SizedBox(
+                width: 80,
+                child: Text(
+                  '${talhao.areaHa ?? 0} ha',
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Tooltip(
-                    message: 'Editar',
-                    child: IconButton(
-                      icon: const Icon(Icons.edit),
-                      color: Colors.blue,
-                      iconSize: 20,
-                      onPressed: () => _mostrarFormulario(talhao: talhao),
-                    ),
+              // Cultura
+              Expanded(
+                child: Text(
+                  talhao.cultura ?? '',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Variedade
+              Expanded(
+                child: Text(
+                  talhao.variedade ?? '',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Status
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: talhao.ativo ? Colors.green[100] : Colors.red[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  talhao.ativo ? 'Ativo' : 'Inativo',
+                  style: TextStyle(
+                    color: talhao.ativo ? Colors.green[700] : Colors.red[700],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
-                  Tooltip(
-                    message: 'Deletar',
-                    child: IconButton(
-                      icon: const Icon(Icons.delete),
-                      color: Colors.red,
-                      iconSize: 20,
-                      onPressed: () => _confirmarExclusao(talhao.id),
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              // Ações
+              IconButton(
+                icon: const Icon(Icons.edit, size: 18),
+                color: Colors.blue,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Editar',
+                onPressed: () => _mostrarFormulario(talhao: talhao),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, size: 18),
+                color: Colors.red,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Deletar',
+                onPressed: () => _confirmarExclusao(talhao.id),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoItem(IconData icon, String label, String? value) {
-    if (value == null) {
-      return const SizedBox.shrink();
-    }
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
