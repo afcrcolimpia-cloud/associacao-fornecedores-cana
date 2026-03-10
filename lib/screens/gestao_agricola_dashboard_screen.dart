@@ -1,9 +1,106 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../widgets/app_bar_afcrc.dart';
+import '../models/models.dart';
+import '../services/talhao_service.dart';
+import '../services/variedade_service.dart';
+import '../services/anexo_service.dart';
 
-class GestaoAgricolaDashboardScreen extends StatelessWidget {
+class GestaoAgricolaDashboardScreen extends StatefulWidget {
   const GestaoAgricolaDashboardScreen({super.key});
+
+  @override
+  State<GestaoAgricolaDashboardScreen> createState() => _GestaoAgricolaDashboardScreenState();
+}
+
+class _GestaoAgricolaDashboardScreenState extends State<GestaoAgricolaDashboardScreen> {
+  late TalhaoService _talhaoService;
+  late VariedadeService _variedadeService;
+  late AnexoService _anexoService;
+
+  List<Talhao> _talhoes = [];
+  List<Variedade> _variedades = [];
+  List<Anexo> _anexos = [];
+  
+  bool _loadingTalhoes = true;
+  bool _loadingVariedades = true;
+  bool _loadingAnexos = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _talhaoService = TalhaoService();
+    _variedadeService = VariedadeService();
+    _anexoService = AnexoService();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await Future.wait([
+      _loadTalhoes(),
+      _loadVariedades(),
+      _loadAnexos(),
+    ]);
+  }
+
+  Future<void> _loadTalhoes() async {
+    try {
+      final talhoes = await _talhaoService.getTalhoesPorPropriedade('');
+      if (mounted) {
+        setState(() {
+          _talhoes = talhoes;
+          _loadingTalhoes = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingTalhoes = false);
+      }
+    }
+  }
+
+  Future<void> _loadVariedades() async {
+    try {
+      final variedades = await _variedadeService.getAllVariedades();
+      if (mounted) {
+        setState(() {
+          _variedades = variedades;
+          _loadingVariedades = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingVariedades = false);
+      }
+    }
+  }
+
+  Future<void> _loadAnexos() async {
+    try {
+      final anexos = await _anexoService.getAnexosByPropriedade('');
+      if (mounted) {
+        setState(() {
+          _anexos = anexos;
+          _loadingAnexos = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingAnexos = false);
+      }
+    }
+  }
+
+  double _getTotalArea() {
+    if (_talhoes.isEmpty) return 0;
+    return _talhoes.fold<double>(0, (sum, t) => sum + (t.areaHa ?? 0));
+  }
+
+  int _getTotalTalhoes() => _talhoes.length;
+
+  int _getRelatoriosPragas() {
+    return _anexos.where((a) => a.tipoAnexo.contains('praga')).length;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,13 +154,7 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
                       // Coluna Direita (Maior)
                       Expanded(
                         flex: 7,
-                        child: Column(
-                          children: [
-                            _buildAnexosArea(),
-                            const SizedBox(height: 32),
-                            _buildAnaliseSoloArea(),
-                          ],
-                        ),
+                        child: _buildAnexosArea(),
                       ),
                     ],
                   );
@@ -76,8 +167,6 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
                       _buildCensoVarietalCard(),
                       const SizedBox(height: 24),
                       _buildAnexosArea(),
-                      const SizedBox(height: 24),
-                      _buildAnaliseSoloArea(),
                     ],
                   );
                 }
@@ -146,6 +235,57 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildTalhoesCard() {
+    if (_loadingTalhoes) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+        child: const Padding(
+          padding: EdgeInsets.all(24.0),
+          child: SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+        ),
+      );
+    }
+
+    if (_talhoes.isEmpty) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.map, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Text('Talhões', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Icon(Icons.arrow_forward, color: Colors.grey[400]),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[200]!, style: BorderStyle.solid),
+                ),
+                child: const Center(
+                  child: Text('Nenhum talhão cadastrado', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
@@ -195,7 +335,7 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
                   children: [
                     Text('TOTAL DE ÁREA', style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    const Text('450 ha', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                    Text('${_getTotalArea().toStringAsFixed(1)} ha', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ],
                 ),
                 Column(
@@ -203,7 +343,7 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
                   children: [
                     Text('TOTAL TALHÕES', style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    const Text('24', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                    Text('${_getTotalTalhoes()}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ],
                 ),
               ],
@@ -215,6 +355,57 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildCensoVarietalCard() {
+    if (_loadingVariedades) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+        child: const Padding(
+          padding: EdgeInsets.all(24.0),
+          child: SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+        ),
+      );
+    }
+
+    if (_variedades.isEmpty) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.eco, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Text('Censo Varietal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Icon(Icons.arrow_forward, color: Colors.grey[400]),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[200]!, style: BorderStyle.solid),
+                ),
+                child: const Center(
+                  child: Text('Nenhuma variedade cadastrada', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
@@ -256,13 +447,36 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _buildProgressBar('CTC 4', 0.45, '45%', AppColors.primary),
-            const SizedBox(height: 16),
-            _buildProgressBar('RB 966928', 0.30, '30%', Colors.grey),
+            ..._buildVariedadesProgressBars(),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildVariedadesProgressBars() {
+    final total = _variedades.length;
+    if (total == 0) return [const SizedBox.shrink()];
+
+    final colors = [AppColors.primary, Colors.grey, Colors.orange, Colors.blue, Colors.red];
+    final widgets = <Widget>[];
+
+    for (int i = 0; i < _variedades.length && i < 5; i++) {
+      final variedade = _variedades[i];
+      final percentage = ((1 / total) * 100).toStringAsFixed(0);
+      final progress = 1 / total;
+
+      if (i > 0) widgets.add(const SizedBox(height: 16));
+
+      widgets.add(_buildProgressBar(
+        variedade.nome,
+        progress,
+        '$percentage%',
+        colors[i % colors.length],
+      ));
+    }
+
+    return widgets;
   }
 
   Widget _buildProgressBar(String label, double progress, String percentageText, Color color) {
@@ -289,6 +503,19 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildAnexosArea() {
+    if (_loadingAnexos) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
+        child: const Padding(
+          padding: EdgeInsets.all(24.0),
+          child: SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+        ),
+      );
+    }
+
+    final pragas = _getRelatoriosPragas();
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
@@ -311,310 +538,74 @@ class GestaoAgricolaDashboardScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[200]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
-                              child: const Icon(Icons.bug_report, color: Colors.red),
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Relatórios de Pragas', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text('2 documentos arquivados', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Icon(Icons.chevron_right, color: Colors.grey[400]),
-                      ],
-                    ),
+            if (pragas > 0)
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[200]!),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[200]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)),
-                              child: const Icon(Icons.trending_up, color: Colors.blue),
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Estimativa de Produtividade', style: TextStyle(fontWeight: FontWeight.bold)),
-                                Text('Última atualização: Out/2023', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Icon(Icons.chevron_right, color: Colors.grey[400]),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnaliseSoloArea() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          child: Text('DOCUMENTO ATIVO: ANÁLISE DE SOLO', style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Análise de Solo: Método Boletim 100', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                Text('Referência técnica para Catanduva e região.', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-              ],
-            ),
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.download, size: 16),
-                  label: const Text('Exportar PDF'),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.edit, size: 16, color: Colors.white),
-                  label: const Text('Editar', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                ),
-              ],
-            )
-          ],
-        ),
-        const SizedBox(height: 24),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Dados Gerais
-            Expanded(
-              flex: 4,
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.assignment, color: AppColors.primary, size: 18),
-                        SizedBox(width: 8),
-                        Text('Dados Gerais', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    _buildDataRow('PROPRIEDADE', 'Fazenda Santa Rita'),
-                    const SizedBox(height: 16),
-                    _buildDataRow('TALHÃO / LOTE', 'T-104 (Setor Norte)'),
-                    const SizedBox(height: 16),
-                    _buildDataRow('DATA DE AMOSTRAGEM', '12/10/2023'),
-                    const SizedBox(height: 16),
-                    _buildDataRow('PROFUNDIDADE', '0 - 20 cm'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 24),
-            // Caracterização Física
-            Expanded(
-              flex: 6,
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.landscape, color: AppColors.primary, size: 18),
-                        SizedBox(width: 8),
-                        Text('Caracterização Física', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildFisicaBox('ARGILA', '28%'),
-                        _buildFisicaBox('SILTE', '12%'),
-                        _buildFisicaBox('AREIA', '60%'),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        border: const Border(left: BorderSide(color: AppColors.primary, width: 4)),
-                      ),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
                         children: [
-                          Text('CLASSIFICAÇÃO', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                          SizedBox(height: 4),
-                          Text('Franco-Arenoso', style: TextStyle(fontSize: 14)),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
+                            child: const Icon(Icons.bug_report, color: Colors.red),
+                          ),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Relatórios de Pragas', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text('$pragas documento${pragas != 1 ? 's' : ''} arquivado${pragas != 1 ? 's' : ''}', 
+                                style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                            ],
+                          ),
                         ],
                       ),
-                    ),
-                  ],
+                      Icon(Icons.chevron_right, color: Colors.grey[400]),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        // Análise Química Table
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[200]!),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.white,
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[200]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.science, color: AppColors.primary, size: 18),
-                        SizedBox(width: 8),
-                        Text('Resultados da Análise Química', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                          child: Icon(Icons.bug_report, color: Colors.grey[400]),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Relatórios de Pragas', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text('Nenhum documento arquivado', 
+                              style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                          ],
+                        ),
                       ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(16)),
-                      child: const Text('BOLETIM 100', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                    )
+                    Icon(Icons.chevron_right, color: Colors.grey[400]),
                   ],
                 ),
               ),
-              const Divider(height: 1),
-              _buildQuimicaRowHeader(),
-              const Divider(height: 1),
-              _buildQuimicaRow('pH (CaCl₂)', '5.2', 'MÉDIO', Colors.amber),
-              const Divider(height: 1),
-              _buildQuimicaRow('P (Resina)', '14.0', 'BAIXO', Colors.red),
-              const Divider(height: 1),
-              _buildQuimicaRow('K (Potássio)', '1.8', 'ADEQUADO', AppColors.success),
-            ],
-          ),
+          ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildDataRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11, fontWeight: FontWeight.bold)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
-
-  Widget _buildFisicaBox(String label, String value) {
-    return Container(
-      width: 100,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4)],
-      ),
-      child: Column(
-        children: [
-          Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuimicaRowHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(flex: 3, child: Text('PARÂMETRO', style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('VALOR', style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold))),
-          Expanded(flex: 3, child: Text('STATUS', style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.bold))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuimicaRow(String label, String value, String status, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
-      child: Row(
-        children: [
-          Expanded(flex: 3, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500))),
-          Expanded(flex: 2, child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                Container(width: 24, height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
-                const SizedBox(width: 12),
-                Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
