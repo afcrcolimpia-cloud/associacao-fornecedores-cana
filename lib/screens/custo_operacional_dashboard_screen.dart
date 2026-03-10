@@ -5,6 +5,9 @@ import '../widgets/app_shell.dart';
 import '../widgets/kpi_card.dart';
 import '../constants/app_colors.dart';
 import '../services/custo_operacional_service.dart';
+import '../services/exportacao_pdf_service.dart';
+import '../models/models.dart';
+import 'custo_operacional_form_screen.dart';
 
 class CustoOperacionalDashboardScreen extends StatefulWidget {
   const CustoOperacionalDashboardScreen({super.key});
@@ -67,6 +70,49 @@ class _CustoOperacionalDashboardScreenState
           (item.totalOperacional ?? 0);
     }
     return safras;
+  }
+
+  Future<void> _generatePDF() async {
+    if (_cenarios.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nenhum dado disponível para gerar PDF')),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Criar propriedade dummy para fins de PDF
+      final propriedadeDummy = Propriedade(
+        id: 'dummy',
+        proprietarioId: 'dummy',
+        nomePropriedade: 'Propriedade',
+        numeroFA: 'FA001',
+        cidade: 'Catanduva',
+        areaHa: 100.0,
+        criadoEm: DateTime.now(),
+        atualizadoEm: DateTime.now(),
+      );
+
+      // Gerar e exibir PDF
+      await ExportacaoPDFService.exportarComparacao(
+        _cenarios,
+        propriedadeDummy,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF gerado com sucesso')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+        );
+      }
+    }
   }
 
   List<PieChartSectionData> _buildPieChartSections() {
@@ -259,7 +305,21 @@ class _CustoOperacionalDashboardScreenState
                   icon: const Icon(Icons.add),
                   label: const Text('Novo'),
                   onPressed: () {
-                    // TODO: Navegar para formulário de novo lançamento
+                    final propriedadeDummy = Propriedade(
+                      id: 'dummy',
+                      proprietarioId: 'dummy',
+                      nomePropriedade: 'Propriedade',
+                      numeroFA: 'FA001',
+                      cidade: 'Catanduva',
+                      areaHa: 100.0,
+                      criadoEm: DateTime.now(),
+                      atualizadoEm: DateTime.now(),
+                    );
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => CustoOperacionalFormScreen(
+                        propriedade: propriedadeDummy,
+                      ),
+                    ));
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.newPrimary,
@@ -277,9 +337,7 @@ class _CustoOperacionalDashboardScreenState
                 ElevatedButton.icon(
                   icon: const Icon(Icons.file_download_outlined),
                   label: const Text('PDF'),
-                  onPressed: () {
-                    // TODO: Implementar geração de PDF
-                  },
+                  onPressed: _generatePDF,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.newWarning,
                     foregroundColor: AppColors.bgDark,

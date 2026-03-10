@@ -4,6 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '../widgets/app_shell.dart';
 import '../constants/app_colors.dart';
 import '../services/custo_operacional_service.dart';
+import '../services/exportacao_pdf_service.dart';
+import '../models/models.dart';
 
 class HistoricoCustoOperacionalScreen extends StatefulWidget {
   const HistoricoCustoOperacionalScreen({super.key});
@@ -26,6 +28,49 @@ class _HistoricoCustoOperacionalScreenState
   void initState() {
     super.initState();
     _loadCenarios();
+  }
+
+  Future<void> _exportarPDF() async {
+    if (_cenarios.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nenhum dado disponível para exportar')),
+        );
+      }
+      return;
+    }
+
+    try {
+      // Criar propriedade dummy para fins de PDF
+      final propriedadeDummy = Propriedade(
+        id: 'dummy',
+        proprietarioId: 'dummy',
+        nomePropriedade: 'Propriedade',
+        numeroFA: 'FA001',
+        cidade: 'Catanduva',
+        areaHa: 100.0,
+        criadoEm: DateTime.now(),
+        atualizadoEm: DateTime.now(),
+      );
+
+      // Exportar PDF comparativo de todos os cenários
+      await ExportacaoPDFService.exportarComparacao(
+        _cenarios,
+        propriedadeDummy,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF exportado com sucesso')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao exportar PDF: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _loadCenarios() async {
@@ -597,9 +642,7 @@ class _HistoricoCustoOperacionalScreenState
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.file_download_outlined),
                 label: const Text('Exportar PDF'),
-                onPressed: () {
-                  // TODO: Implementar exportação de PDF usando ExportacaoPdfService
-                },
+                onPressed: _exportarPDF,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.newPrimary,
                   foregroundColor: AppColors.bgDark,
