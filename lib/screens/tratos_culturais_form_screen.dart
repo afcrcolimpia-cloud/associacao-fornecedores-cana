@@ -3,7 +3,6 @@ import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
-import '../services/tratos_culturais_service.dart';
 
 class TratosCulturaisFormScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -24,12 +23,7 @@ class TratosCulturaisFormScreen extends StatefulWidget {
 
 class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     with TickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final _service = TratosCulturaisService();
-
   late TabController _tabController;
-  late String _talhaoSelecionado;
-  late int _anoSafra;
   late List<Insumo> _adubos;
   late List<Insumo> _herbicidas;
   late List<Insumo> _inseticidas;
@@ -53,16 +47,11 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     _tabController = TabController(length: 4, vsync: this);
 
     if (widget.tratos != null) {
-      _talhaoSelecionado = widget.tratos!.talhaoId ?? '';
-      _anoSafra = int.tryParse(widget.tratos!.anoSafra) ?? DateTime.now().year;
       _adubos = List.from(widget.tratos!.adubos ?? []);
       _herbicidas = List.from(widget.tratos!.herbicidas ?? []);
       _inseticidas = List.from(widget.tratos!.inseticidas ?? []);
       _maturadores = List.from(widget.tratos!.maturadores ?? []);
     } else {
-      // Se houver talhões disponíveis, seleciona o primeiro; caso contrário, deixa vazio
-      _talhaoSelecionado = widget.talhoes.isNotEmpty ? widget.talhoes.first.id : '';
-      _anoSafra = DateTime.now().year;
       _adubos = [];
       _herbicidas = [];
       _inseticidas = [];

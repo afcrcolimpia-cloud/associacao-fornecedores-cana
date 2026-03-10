@@ -5,6 +5,12 @@ import '../models/models.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/exportacao_pdf_service.dart';
 import '../constants/app_colors.dart';
+import 'custo_operacional_form_screen.dart';
+import 'historico_custo_operacional_screen.dart';
+import 'matriz_sensibilidade_screen.dart';
+import 'projecao_financeira_screen.dart';
+import 'graficos_comparativo_screen.dart';
+import 'operacoes_detalhes_screen.dart';
 
 class CustoOperacionalScreen extends StatefulWidget {
   final ContextoPropriedade contexto;
