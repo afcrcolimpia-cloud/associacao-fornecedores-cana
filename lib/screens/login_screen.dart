@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
-// A navegação é delegada ao AuthGate que observa o stream de autenticação.
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,9 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  
-  // Variável para controle de estado do botão de recuperar senha
-  bool _isResettingPassword = false; 
+  bool _isResettingPassword = false;
 
   @override
   void dispose() {
@@ -28,13 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
-  
-  // Função auxiliar para exibir mensagens (melhora a padronização e a leitura)
-  void _showSnackbar(String message, {Color color = AppColors.primary}) {
+
+  void _showSnackbar(String message, {Color color = AppColors.newSuccess}) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: Text(message, style: GoogleFonts.inter()),
           backgroundColor: color,
           behavior: SnackBarBehavior.floating,
         ),
@@ -42,65 +39,48 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // A função de login agora apenas chama o serviço.
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
     try {
-      debugPrint('Tentando login com: ${_emailController.text.trim()}');
       await _authService.signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text,
       );
-      
-      debugPrint('Login bem-sucedido!');
-      // Sucesso: O AuthGate fará o redirecionamento.
-      
     } catch (e) {
-      debugPrint('Erro ao fazer login: $e');
-      // Tratamento de erro refinado para feedback mais claro
-      final errorMessage = e.toString();
-      _showSnackbar(errorMessage, color: AppColors.error);
-
+      _showSnackbar(e.toString(), color: AppColors.newDanger);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // O login com Google também é simplificado.
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
 
     try {
-      debugPrint('Tentando login com Google...');
       await _authService.signInWithGoogle();
-      debugPrint('Login com Google bem-sucedido!');
-
     } catch (e) {
-      debugPrint('Erro ao fazer login com Google: $e');
-      _showSnackbar('Erro ao fazer login com Google: $e', color: AppColors.error);
+      _showSnackbar('Erro ao fazer login com Google', color: AppColors.newDanger);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-  
-  // Esqueleto para a recuperação de senha
+
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      _showSnackbar('Por favor, preencha o campo de e-mail primeiro.', color: AppColors.warning);
+      _showSnackbar('Por favor, preencha o e-mail', color: AppColors.newWarning);
       return;
     }
-    
+
     setState(() => _isResettingPassword = true);
-    
+
     try {
       await _authService.resetPassword(email);
-      _showSnackbar('Link de recuperação enviado para $email. Verifique sua caixa de entrada.');
-      
+      _showSnackbar('Link enviado para $email');
     } catch (e) {
-      _showSnackbar('Erro ao enviar link de recuperação. Verifique se o e-mail está correto.', color: AppColors.error);
+      _showSnackbar('Erro ao enviar link de recuperação', color: AppColors.newDanger);
     } finally {
       if (mounted) setState(() => _isResettingPassword = false);
     }
@@ -108,226 +88,366 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const corTexto = AppColors.primary; 
-    
-    // Define se qualquer ação de autenticação está em andamento
     final isAnyLoading = _isLoading || _isResettingPassword;
-    
+    final isMobile = MediaQuery.of(context).size.width < 900;
+
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.background.withOpacity(0.3),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo
-                  Image.asset(
-                    // Lembrete: Certifique-se de que este asset existe em pubspec.yaml
-                    'assets/logo/logo.png',
-                    width: 160,
-                    height: 160,
-                  ),
-                  const SizedBox(height: 16),
-                  // Nome da empresa
-                  Text(
-                    'Associação dos Fornecedores de Cana da Região de Catanduva',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: corTexto,
-                        ),
-                  ),
-                  const SizedBox(height: 40),
-                  // Texto de boas-vindas
-                  Text(
-                    'Bem-vindo!',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: corTexto,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sistema de Gestão Agrícola',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: corTexto,
-                        ),
-                  ),
-                  const SizedBox(height: 40),
-                  Form(
-                    key: _formKey,
+      backgroundColor: AppColors.bgDark,
+      body: Row(
+        children: [
+          // Coluna esquerda — Info AFCRC (40%)
+          if (!isMobile)
+            Expanded(
+              flex: 2,
+              child: Container(
+                color: AppColors.newPrimary,
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(40),
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          enabled: !isAnyLoading, // Desabilita durante o loading
-                          decoration: const InputDecoration(
-                            labelText: 'E-mail',
-                            hintText: 'seu@email.com',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Digite seu e-mail';
-                            }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                              return 'Digite um e-mail válido';
-                            }
-                            return null;
-                          },
+                        // Logo
+                        Image.asset(
+                          'assets/logo/logo.png',
+                          width: 140,
+                          height: 140,
+                          colorBlendMode: BlendMode.multiply,
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          enabled: !isAnyLoading, // Desabilita durante o loading
-                          decoration: InputDecoration(
-                            labelText: 'Senha',
-                            hintText: '******',
-                            prefixIcon: const Icon(Icons.lock_outlined),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                              ),
-                              onPressed: isAnyLoading ? null : () {
-                                setState(() => _obscurePassword = !_obscurePassword);
-                              },
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Digite sua senha';
-                            }
-                            if (value.length < 6) {
-                              return 'Senha deve ter no mínimo 6 caracteres';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text(
-                                    'ENTRAR',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                        const SizedBox(height: 40),
+                        // Título
+                        Text(
+                          'Gestão Agrícola\nInteligente',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                            height: 1.2,
                           ),
                         ),
-                        
-                        // --- LINHAS ADAPTADAS CONFORME SUA SOLICITAÇÃO ---
-                        const SizedBox(height: 16),
-                        Row(
+                        const SizedBox(height: 20),
+                        // Descrição
+                        Text(
+                          'Sistema completo para gerenciar propriedades agrícolas com dados em tempo real',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black.withOpacity(0.8),
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        // Recursos
+                        Column(
                           children: [
-                            Expanded(child: Divider(color: corTexto.withOpacity(0.5))),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                'OU',
-                                style: TextStyle(
-                                  color: corTexto,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Expanded(child: Divider(color: corTexto.withOpacity(0.5))),
+                            _buildFeature('📊', 'Dados em Tempo Real'),
+                            const SizedBox(height: 16),
+                            _buildFeature('📈', 'Análises Detalhadas'),
+                            const SizedBox(height: 16),
+                            _buildFeature('📱', 'Acesso em Qualquer Lugar'),
                           ],
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: OutlinedButton.icon(
-                            // Ajustado para o onPressed solicitado (_isResettingPassword foi removido do check)
-                            onPressed: _isLoading ? null : _loginWithGoogle,
-                            icon: Image.asset(
-                              'assets/icons/google.png',
-                              width: 32,
-                              height: 32,
-                              // Adicionado o errorBuilder para fallback visual
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(Icons.login, size: 24);
-                              },
-                            ),
-                            label: const Text( // Mantido const para otimização, pois corTexto é constante
-                              'Entrar com Google',
-                              style: TextStyle(color: corTexto),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              // Cor da borda alterada para corTexto total (sem opacidade)
-                              side: const BorderSide(color: corTexto), 
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // --- FIM DAS LINHAS ADAPTADAS ---
-                        
-                        const SizedBox(height: 24),
-                        TextButton(
-                          onPressed: _isResettingPassword ? null : _resetPassword,
-                          child: _isResettingPassword 
-                            ? SizedBox(
-                                width: 14, height: 14, 
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2, 
-                                  color: corTexto.withOpacity(0.7)
-                                )
-                              )
-                            : const Text(
-                              'Esqueci minha senha',
-                              style: TextStyle(color: corTexto),
-                            ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'Desenvolvido por Rafael Henrique Vernici',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: corTexto.withOpacity(0.7),
-                      ),
+                ),
+              ),
+            ),
+          // Coluna direita — Formulário (60%)
+          Expanded(
+            flex: isMobile ? 5 : 3,
+            child: Container(
+              color: AppColors.bgDark,
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(40),
+                  child: SizedBox(
+                    width: 380,
+                    child: Column(
+                      children: [
+                        // Título
+                        Text(
+                          'Bem-vindo',
+                          style: GoogleFonts.inter(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.newTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Sistema de Gestão AFCRC',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.newTextSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        // Formulário
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              // Email Field
+                              _buildInputField(
+                                label: 'E-mail ou CPF',
+                                controller: _emailController,
+                                hint: 'seu@email.com',
+                                prefix: Icons.email_outlined,
+                                enabled: !isAnyLoading,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Campo obrigatório';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              // Password Field
+                              _buildInputField(
+                                label: 'Senha',
+                                controller: _passwordController,
+                                hint: '••••••••',
+                                prefix: Icons.lock_outlined,
+                                obscure: _obscurePassword,
+                                enabled: !isAnyLoading,
+                                onSuffixTap: isAnyLoading ? null : () {
+                                  setState(() => _obscurePassword = !_obscurePassword);
+                                },
+                                suffix: _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Campo obrigatório';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              // Botão Entrar
+                              _buildPrimaryButton(
+                                label: 'Entrar',
+                                onPressed: _isLoading ? null : _login,
+                                isLoading: _isLoading,
+                              ),
+                              const SizedBox(height: 20),
+                              // Divider
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Divider(
+                                      color: AppColors.borderDark,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      'OU',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.newTextSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Divider(
+                                      color: AppColors.borderDark,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              // Google Button
+                              _buildSecondaryButton(
+                                label: 'Entrar com Google',
+                                icon: Icons.login_outlined,
+                                onPressed: _isLoading ? null : _loginWithGoogle,
+                              ),
+                              const SizedBox(height: 24),
+                              // Link Recuperar Senha
+                              TextButton(
+                                onPressed: _isResettingPassword ? null : _resetPassword,
+                                child: Text(
+                                  'Esqueci minha senha',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.newPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    required IconData prefix,
+    bool obscure = false,
+    bool enabled = true,
+    IconData? suffix,
+    VoidCallback? onSuffixTap,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.newTextSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          obscureText: obscure,
+          enabled: enabled,
+          keyboardType: TextInputType.emailAddress,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppColors.newTextPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppColors.newTextMuted,
+            ),
+            filled: true,
+            fillColor: AppColors.bgDark,
+            prefixIcon: Icon(prefix, color: AppColors.newTextSecondary, size: 20),
+            suffixIcon: suffix != null
+                ? IconButton(
+                    icon: Icon(suffix, color: AppColors.newTextSecondary, size: 20),
+                    onPressed: onSuffixTap,
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.borderDark, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.borderDark, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.newPrimary, width: 1),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.newDanger, width: 1),
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          ),
+          validator: validator,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryButton({
+    required String label,
+    required VoidCallback? onPressed,
+    required bool isLoading,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 40,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.newPrimary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 0,
+        ),
+        child: isLoading
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.black,
+                ),
+              )
+            : Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 40,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: AppColors.newPrimary, size: 18),
+        label: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.newPrimary,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: AppColors.newPrimary, width: 1),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
+    );
+  }
+
+  Widget _buildFeature(String emoji, String text) {
+    return Row(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 24)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black.withOpacity(0.9),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
