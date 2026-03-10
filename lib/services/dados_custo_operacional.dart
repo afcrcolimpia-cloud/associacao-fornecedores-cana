@@ -545,13 +545,6 @@ class DadosCustoOperacional {
 
     return [
       ResumoEstagio(
-        estagio: 'Formação do canavial',
-        rHa: formHa,
-        rT: amort(formHa),
-        rKgATR: amort(formHa) / atr,
-        pct: pct(formHa),
-      ),
-      ResumoEstagio(
         estagio: 'Conservação de solo',
         rHa: conservHa,
         rT: amort(conservHa),

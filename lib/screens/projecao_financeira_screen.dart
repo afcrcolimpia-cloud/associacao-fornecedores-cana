@@ -30,6 +30,14 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
         CustoOperacionalAnalise.gerarProjecaoFinanceira(widget.cenario, _periodos);
   }
 
+  double _custoAnualizado() {
+    final cenario = widget.cenario;
+    final precoRT = cenario.atr.toDouble() * (cenario.precoAtr ?? 0.0);
+    final margemRT = cenario.margemLucroPorTonelada ?? 0.0;
+    final custoRT = precoRT - margemRT;
+    return custoRT * cenario.produtividade;
+  }
+
   void _atualizarProjecao(int novosPeriodos) {
     setState(() {
       _periodos = novosPeriodos;
@@ -83,7 +91,7 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
                           ),
                           _buildInfoCircle(
                             'Custo Anual',
-                            'R\$ ${(widget.cenario.totalOperacional ?? 0).toStringAsFixed(0)}',
+                            'R\$ ${_custoAnualizado().toStringAsFixed(0)}',
                             AppColors.error,
                           ),
                           _buildInfoCircle(

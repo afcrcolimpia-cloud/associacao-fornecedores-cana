@@ -13,19 +13,30 @@ class CustoOperacionalAnalise {
         (cenario.precoAtr ?? 0.0);
   }
 
-  static double _calcularMargemPorTonelada(CustoOperacionalCenario cenario) {
-    final produtividade = cenario.produtividade;
-    final custoTotal = cenario.totalOperacional ?? 0.0;
-    if (produtividade <= 0) return 0.0;
+  /// Calcula o custo anualizado R$/ha considerando amortização da formação.
+  /// Derivado do R$/t correto (preço - margem) × produtividade.
+  static double _custoAnualizadoRHa(CustoOperacionalCenario cenario) {
+    final precoRT = cenario.atr.toDouble() * (cenario.precoAtr ?? 0.0);
+    final margemRT = cenario.margemLucroPorTonelada ?? 0.0;
+    final custoRT = precoRT - margemRT;
+    return custoRT * cenario.produtividade;
+  }
 
+  static double _calcularMargemPorTonelada(CustoOperacionalCenario cenario) {
+    if (cenario.margemLucroPorTonelada != null) {
+      return cenario.margemLucroPorTonelada!;
+    }
+    final produtividade = cenario.produtividade;
+    if (produtividade <= 0) return 0.0;
+    final custoAnualizado = _custoAnualizadoRHa(cenario);
     final receitaPorHectare = _calcularReceitaPorHectare(cenario);
-    return (receitaPorHectare - custoTotal) / produtividade;
+    return (receitaPorHectare - custoAnualizado) / produtividade;
   }
   /// Matriz de sensibilidade - Preço vs Produtividade
   static MatrizSensibilidade gerarMatrizSensibilidade(
     CustoOperacionalCenario cenario,
   ) {
-    final custoTotal = cenario.totalOperacional ?? 0.0;
+    final custoAnualizado = _custoAnualizadoRHa(cenario);
     final precoAtrBase = cenario.precoAtr ?? 0.0;
     final produtividadeBase = cenario.produtividade;
     final atr = cenario.atr.toDouble();
@@ -47,7 +58,7 @@ class CustoOperacionalAnalise {
       final linha = <double>[];
       for (var preco in precosVariados) {
         final receita = produtividade * atr * preco;
-        final margem = receita > 0 ? (receita - custoTotal) / produtividade : 0.0;
+        final margem = receita > 0 ? (receita - custoAnualizado) / produtividade : 0.0;
         linha.add(margem);
       }
       matriz.add(linha);
@@ -68,14 +79,14 @@ class CustoOperacionalAnalise {
     int periodos,
   ) {
     final projecoes = <ProjecaoFinanceira>[];
-    final custoTotal = cenario.totalOperacional ?? 0.0;
+    final custoAnualizado = _custoAnualizadoRHa(cenario);
     final receita = cenario.produtividade *
         cenario.atr.toDouble() *
         (cenario.precoAtr ?? 0.0);
 
     for (int i = 1; i <= periodos; i++) {
       final receitaAcumulada = receita * i;
-      final custoAcumulado = custoTotal * i;
+      final custoAcumulado = custoAnualizado * i;
       final margem = receitaAcumulada - custoAcumulado;
       final margemPercentual =
           receita > 0 ? (margem / receitaAcumulada) * 100 : 0.0;
@@ -106,7 +117,7 @@ class CustoOperacionalAnalise {
       nomes.add(cenario.nomeCenario);
       margens.add(_calcularMargemPorTonelada(cenario));
       producoes.add(cenario.produtividade);
-      custos.add(cenario.totalOperacional ?? 0.0);
+      custos.add(_custoAnualizadoRHa(cenario));
     }
 
     return {
@@ -122,12 +133,12 @@ class CustoOperacionalAnalise {
     CustoOperacionalCenario cenario,
   ) {
     final margemPorTonelada = _calcularMargemPorTonelada(cenario);
-    final custoTotal = cenario.totalOperacional ?? 0.0;
+    final custoAnualizado = _custoAnualizadoRHa(cenario);
     final precoAtr = cenario.precoAtr ?? 0.0;
     final atr = cenario.atr.toDouble();
 
-    final produtividadeMinima = custoTotal / (atr * precoAtr);
-    final precoAtrMinimo = custoTotal / (atr * cenario.produtividade);
+    final produtividadeMinima = custoAnualizado / (atr * precoAtr);
+    final precoAtrMinimo = custoAnualizado / (atr * cenario.produtividade);
 
     final ehViavel = margemPorTonelada > 0;
 
@@ -150,7 +161,7 @@ class CustoOperacionalAnalise {
       margemProducao: margemProducao,
       margemPreco: margemPreco,
       receita: receita,
-      custoTotal: custoTotal,
+      custoTotal: custoAnualizado,
     );
   }
 
@@ -207,8 +218,8 @@ class CustoOperacionalAnalise {
                 'R\$ ${(cenario.precoAtr ?? 0).toStringAsFixed(4)}/kg',
               ),
               _buildPdfTableRow(
-                'Custo Total',
-                'R\$ ${(cenario.totalOperacional ?? 0).toStringAsFixed(2)}/ha',
+                'Custo Anualizado',
+                'R\$ ${analise.custoTotal.toStringAsFixed(2)}/ha',
               ),
               _buildPdfTableRow(
                 'Receita Total',

@@ -296,12 +296,9 @@ class CustoOperacionalService {
     final margemRT = precoRecebidoRT - totalRT;
     final margemRHa = margemRT * produtividade;
     final margemRKgAtr = atr > 0 ? margemRT / atr : 0.0;
-    final margemPercentual = _calcularMargemPercentual(
-      totalRHa,
-      precoAtr,
-      atr.toInt(),
-      produtividade,
-    );
+    final margemPercentual = precoRecebidoRT > 0
+        ? (margemRT / precoRecebidoRT) * 100
+        : 0.0;
 
     return ResumoCustoOperacionalCalculado(
       linhasResumo: linhasResumo,
@@ -798,24 +795,5 @@ class CustoOperacionalService {
     }
 
     return subtotalOperacionalHa * (custoAdministrativoInformado / 100);
-  }
-
-  double _calcularMargemPercentual(
-    double totalOperacional,
-    double precoAtr,
-    int atr,
-    double produtividade,
-  ) {
-    if (totalOperacional <= 0 ||
-        precoAtr <= 0 ||
-        atr == 0 ||
-        produtividade == 0) {
-      return 0.0;
-    }
-    // margem % = (margem R$/t / preço R$/t) × 100
-    final precoRpt = atr * precoAtr;
-    final totalRpt = totalOperacional / produtividade;
-    final margemRpt = precoRpt - totalRpt;
-    return (margemRpt / precoRpt) * 100;
   }
 }
