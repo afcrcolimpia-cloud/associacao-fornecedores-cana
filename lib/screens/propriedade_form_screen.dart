@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../services/proprietario_service.dart';
+import '../constants/app_colors.dart';
 
 class PropriedadeFormScreen extends StatefulWidget {
   final Propriedade? propriedade;
@@ -39,6 +41,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
 
   bool _isLoading = false;
   bool _ativa = true;
+  int _selectedNavigationIndex = 0;
 
   final List<String> _estados = [
     'SP',
@@ -129,114 +132,172 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: widget.propriedade == null ? 'Nova Propriedade' : 'Editar Propriedade',
-      ),
-      body: _isLoading
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: widget.propriedade == null ? 'Nova Propriedade' : 'Editar Propriedade',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  const Text(
-                    'Vinculo',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // SECTION 1: VÍNCULO
+                    _buildSectionTitle('Vínculo'),
+                    const SizedBox(height: 16),
+                    _buildProprietarioField(),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // SECTION 2: INFORMAÇÕES BÁSICAS
+                    _buildSectionTitle('Informações Básicas'),
+                    const SizedBox(height: 16),
+                    _buildNomeField(),
+                    const SizedBox(height: 16),
+                    _buildFAField(),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // SECTION 3: LOCALIZAÇÃO
+                    _buildSectionTitle('Localização'),
+                    const SizedBox(height: 16),
+                    _buildEnderecoField(),
+                    const SizedBox(height: 16),
+                    _buildCidadeField(),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: _buildEstadoField()),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildCEPField()),
+                      ],
                     ),
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  _buildProprietarioField(),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Informacoes Basicas',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    
+                    const SizedBox(height: 32),
+                    
+                    // SECTION 4: ÁREA
+                    _buildSectionTitle('Medidas de Área'),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: _buildAreaHaField()),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildAreaAlqueiresField()),
+                      ],
                     ),
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  _buildNomeField(),
-                  const SizedBox(height: 16),
-                  _buildFAField(),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Localizacao',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    
+                    const SizedBox(height: 32),
+                    
+                    // SECTION 5: STATUS
+                    _buildSectionTitle('Status'),
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceDark,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.borderDark),
+                      ),
+                      child: SwitchListTile(
+                        title: Text(
+                          'Propriedade Ativa',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.newTextPrimary,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Esta propriedade está em operação?',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppColors.newTextSecondary,
+                          ),
+                        ),
+                        value: _ativa,
+                        onChanged: (value) {
+                          setState(() => _ativa = value);
+                        },
+                        activeColor: AppColors.newPrimary,
+                      ),
                     ),
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  _buildEnderecoField(),
-                  const SizedBox(height: 16),
-                  _buildCidadeField(),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: _buildEstadoField()),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildCEPField()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Area',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: _buildAreaHaField()),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildAreaAlqueiresField()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SwitchListTile(
-                    title: const Text('Propriedade Ativa'),
-                    subtitle: const Text('A propriedade esta em operacao?'),
-                    value: _ativa,
-                    onChanged: (value) {
-                      setState(() => _ativa = value);
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  _buildBotoes(),
-                ],
+                    
+                    const SizedBox(height: 32),
+                    
+                    // BUTTONS
+                    _buildBotoes(),
+                    
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: AppColors.newTextPrimary,
+      ),
+    );
+  }
+
   Widget _buildProprietarioField() {
     if (_proprietarios.isEmpty) {
-      return const InputDecorator(
-        decoration: InputDecoration(
-          labelText: 'Proprietario',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.person),
+      return Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceDark,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.borderDark),
         ),
-        child: Text('Nenhum proprietario cadastrado'),
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          'Nenhum proprietário cadastrado',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: AppColors.newTextMuted,
+          ),
+        ),
       );
     }
 
     return DropdownButtonFormField<String>(
       value: _proprietarioSelecionadoId,
       isExpanded: true,
-      decoration: const InputDecoration(
-        labelText: 'Proprietario',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.person),
+      style: GoogleFonts.inter(
+        fontSize: 13,
+        color: AppColors.newTextPrimary,
+      ),
+      decoration: InputDecoration(
+        labelText: 'Proprietário',
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.person, color: AppColors.newTextSecondary, size: 20),
       ),
       items: _proprietarios
           .map(
@@ -253,7 +314,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
             },
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Selecione um proprietario';
+          return 'Selecione um proprietário';
         }
         return null;
       },
@@ -263,14 +324,33 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildNomeField() {
     return TextFormField(
       controller: _nomeController,
-      decoration: const InputDecoration(
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
         labelText: 'Nome da Propriedade',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.home),
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.home, color: AppColors.newTextSecondary, size: 20),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Nome e obrigatorio';
+          return 'Nome é obrigatório';
         }
         return null;
       },
@@ -280,18 +360,38 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildFAField() {
     return TextFormField(
       controller: _faController,
-      decoration: const InputDecoration(
-        labelText: 'Numero FA (Inscricao Estadual)',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.assignment),
-        helperText: 'Numero de inscricao estadual da propriedade',
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
+        labelText: 'Número FA (Inscrição Estadual)',
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
+        helperText: 'Número de inscrição estadual da propriedade',
+        helperStyle: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.assignment, color: AppColors.newTextSecondary, size: 20),
       ),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9\-.]')),
       ],
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Numero FA e obrigatorio';
+          return 'Número FA é obrigatório';
         }
         return null;
       },
@@ -301,11 +401,31 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildEnderecoField() {
     return TextFormField(
       controller: _enderecoController,
-      decoration: const InputDecoration(
-        labelText: 'Endereco',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.location_on),
-        hintText: 'Rua, numero, bairro',
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
+        labelText: 'Endereço',
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
+        hintText: 'Rua, número, bairro',
+        hintStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.newTextMuted),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.location_on, color: AppColors.newTextSecondary, size: 20),
       ),
     );
   }
@@ -313,10 +433,29 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildCidadeField() {
     return TextFormField(
       controller: _cidadeController,
-      decoration: const InputDecoration(
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
         labelText: 'Cidade',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.location_city),
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.location_city, color: AppColors.newTextSecondary, size: 20),
       ),
     );
   }
@@ -324,10 +463,29 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildEstadoField() {
     return DropdownButtonFormField<String>(
       value: _estadoController.text.isEmpty ? null : _estadoController.text,
-      decoration: const InputDecoration(
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
         labelText: 'Estado',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.map),
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.map, color: AppColors.newTextSecondary, size: 20),
       ),
       items: _estados
           .map(
@@ -346,11 +504,31 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildCEPField() {
     return TextFormField(
       controller: _cepController,
-      decoration: const InputDecoration(
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
         labelText: 'CEP',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.mail),
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
         hintText: '00000-000',
+        hintStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.newTextMuted),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.mail, color: AppColors.newTextSecondary, size: 20),
       ),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9\-]')),
@@ -359,7 +537,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         if (value != null && value.isNotEmpty) {
           final cepRegex = RegExp(r'^\d{5}-?\d{3}$');
           if (!cepRegex.hasMatch(value)) {
-            return 'CEP invalido';
+            return 'CEP inválido';
           }
         }
         return null;
@@ -370,11 +548,31 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildAreaHaField() {
     return TextFormField(
       controller: _areaHaController,
-      decoration: const InputDecoration(
-        labelText: 'Area (Hectares)',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.agriculture),
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
+        labelText: 'Área (Hectares)',
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
         suffixText: 'ha',
+        suffixStyle: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.agriculture, color: AppColors.newTextSecondary, size: 20),
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
@@ -384,7 +582,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         if (value != null &&
             value.isNotEmpty &&
             double.tryParse(value) == null) {
-          return 'Numero invalido';
+          return 'Número inválido';
         }
         return null;
       },
@@ -394,11 +592,31 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
   Widget _buildAreaAlqueiresField() {
     return TextFormField(
       controller: _areaAlqueiresController,
-      decoration: const InputDecoration(
-        labelText: 'Area (Alqueires)',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.agriculture),
+      style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
+        labelText: 'Área (Alqueires)',
+        labelStyle: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.newTextSecondary,
+        ),
         suffixText: 'alq',
+        suffixStyle: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.surfaceDark,
+        prefixIcon: Icon(Icons.agriculture, color: AppColors.newTextSecondary, size: 20),
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
@@ -408,7 +626,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         if (value != null &&
             value.isNotEmpty &&
             double.tryParse(value) == null) {
-          return 'Numero invalido';
+          return 'Número inválido';
         }
         return null;
       },
@@ -420,15 +638,38 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
       children: [
         Expanded(
           child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              side: BorderSide(color: AppColors.borderDark),
+            ),
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(
+              'Cancelar',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.newTextPrimary,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.newPrimary,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: _salvar,
-            child: const Text('Salvar'),
+            child: Text(
+              'Salvar',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
           ),
         ),
       ],
