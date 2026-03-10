@@ -1,376 +1,422 @@
-// lib/screens/propriedade_detail_screen.dart
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
-import '../utils/formatters.dart';
+import '../services/talhao_service.dart';
 import 'propriedade_form_screen.dart';
 import 'talhoes_screen.dart';
-import 'anexos_screen.dart';
-import 'precipitacao_screen.dart';
 
 class PropriedadeDetailScreen extends StatefulWidget {
-  final Propriedade propriedade;
+  final String propriedadeId;
 
   const PropriedadeDetailScreen({
     super.key,
-    required this.propriedade,
+    required this.propriedadeId,
   });
 
   @override
-  State<PropriedadeDetailScreen> createState() =>
-      _PropriedadeDetailScreenState();
+  State<PropriedadeDetailScreen> createState() => _PropriedadeDetailScreenState();
 }
 
 class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
-  final _service = PropriedadeService();
-  late Propriedade _propriedade;
-
-  @override
-  void initState() {
-    super.initState();
-    _propriedade = widget.propriedade;
-  }
-
-  Future<void> _deletar() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text(
-            'Deseja realmente excluir a propriedade ${_propriedade.nomePropriedade}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('CANCELAR'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
-            child: const Text('EXCLUIR'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      try {
-        await _service.deletePropriedade(_propriedade.id);
-
-        if (mounted) {
-          Navigator.of(context).pop(true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Propriedade excluída com sucesso!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao excluir: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _editar() async {
-    if (!mounted) return;
-
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PropriedadeFormScreen(
-          propriedade: _propriedade,
-        ),
-      ),
-    );
-
-    if (result == true && mounted) {
-      final atualizado = await _service.getPropriedade(_propriedade.id);
-      if (atualizado != null && mounted) {
-        setState(() {
-          _propriedade = atualizado;
-        });
-      }
-    }
-  }
+  final PropriedadeService _service = PropriedadeService();
+  final TalhaoService _talhaoService = TalhaoService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes da Propriedade'),
+      appBar: AppBarAfcrc(
+        title: 'Detalhes da Propriedade',
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            tooltip: 'Editar',
-            onPressed: _editar,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Excluir',
-            onPressed: _deletar,
+            onPressed: _editarPropriedade,
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Card Principal
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppColors.secondary,
-                    child: Text(
-                      _propriedade.nomePropriedade.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _propriedade.nomePropriedade,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: (_propriedade.ativa ?? true)
-                          ? AppColors.success.withOpacity(0.1)
-                          : AppColors.error.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      (_propriedade.ativa ?? true) ? 'ATIVA' : 'INATIVA',
-                      style: TextStyle(
-                        color: (_propriedade.ativa ?? true)
-                            ? AppColors.success
-                            : AppColors.error,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      body: FutureBuilder<Propriedade?>(
+        future: _service.getPropriedadeById(widget.propriedadeId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Erro: ${snapshot.error}'));
+          }
+
+          final propriedade = snapshot.data;
+
+          if (propriedade == null) {
+            return const Center(
+              child: Text('Propriedade não encontrada'),
+            );
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderCard(propriedade),
+                const SizedBox(height: 24),
+                _buildInfoCard(propriedade),
+                const SizedBox(height: 24),
+                _buildLocalizacaoCard(propriedade),
+                const SizedBox(height: 24),
+                _buildAreaCard(propriedade),
+                const SizedBox(height: 24),
+                _buildTalhoesSection(propriedade),
+              ],
             ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Card de Informações Básicas
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.info_outline, color: AppColors.secondary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Informações Básicas',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.secondary,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  _buildInfoRow(
-                    context,
-                    label: 'F.A',
-                    value: _propriedade.numeroFA,
-                  ),
-                  const SizedBox(height: 12),
-                  if (_propriedade.areaHa != null) ...[
-                    _buildInfoRow(
-                      context,
-                      label: 'Área Total',
-                      value: Formatters.formatHectares(
-                          _propriedade.areaHa!),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (_propriedade.cidade != null) ...[
-                    _buildInfoRow(
-                      context,
-                      label: 'Município',
-                      value: _propriedade.cidade!,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Card de Talhões
-          Card(
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.accent,
-                child: Icon(Icons.grid_on, color: Colors.white),
-              ),
-              title: const Text('Talhões'),
-              subtitle: const Text('Gerenciar talhões desta propriedade'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TalhoesScreen(
-                      propriedadeId: _propriedade.id,
-                      propriedadeNome: _propriedade.nomePropriedade,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Card de Anexos
-          Card(
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.info,
-                child: Icon(Icons.attach_file, color: Colors.white),
-              ),
-              title: const Text('Anexos'),
-              subtitle: const Text('Mapas, KML, Relatórios'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AnexosScreen(propriedade: _propriedade),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Card de Precipitação por Propriedade
-          Card(
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Colors.blue,
-                child: Icon(Icons.water_drop, color: Colors.white),
-              ),
-              title: const Text('PRECIPITAÇÃO POR PROPRIEDADES'),
-              subtitle: const Text('Dados pluviométricos da propriedade'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PrecipitacaoScreen(propriedade: _propriedade),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Card de Informações do Sistema
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.info_outline, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Informações do Sistema',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.primary,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  _buildInfoRow(
-                    context,
-                    label: 'Cadastrada em',
-                    value: Formatters.formatDateTime(_propriedade.criadoEm),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoRow(
-                    context,
-                    label: 'Última atualização',
-                    value: Formatters.formatDateTime(_propriedade.atualizadoEm),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildInfoRow(
-    BuildContext context, {
-    required String label,
-    required String value,
-    IconData? icon,
-  }) {
+  Widget _buildHeaderCard(Propriedade propriedade) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green[400]!, Colors.green[700]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              propriedade.nomePropriedade,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  propriedade.ativa ? Icons.check_circle : Icons.cancel,
+                  color: propriedade.ativa ? Colors.greenAccent : Colors.redAccent,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  propriedade.ativa ? 'Ativa' : 'Inativa',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(Propriedade propriedade) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Informações Básicas',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 12),
+            _buildInfoRow('Número FA', propriedade.numeroFA),
+            const SizedBox(height: 12),
+            _buildInfoRow('Proprietário ID', propriedade.proprietarioId),
+            const SizedBox(height: 12),
+            _buildInfoRow(
+              'Criado em',
+              _formatarData(propriedade.criadoEm),
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow(
+              'Atualizado em',
+              _formatarData(propriedade.atualizadoEm),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocalizacaoCard(Propriedade propriedade) {
+    final temLocalizacao = propriedade.endereco != null ||
+        propriedade.cidade != null ||
+        propriedade.estado != null ||
+        propriedade.cep != null;
+
+    if (!temLocalizacao) {
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Localização',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  'Nenhuma informação de localização',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Localização',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 12),
+            if (propriedade.endereco != null)
+              _buildInfoRow('Endereço', propriedade.endereco.toString()),
+            if (propriedade.endereco != null && (propriedade.cidade != null || propriedade.estado != null))
+              const SizedBox(height: 12),
+            if (propriedade.cidade != null && propriedade.estado != null)
+              _buildInfoRow(
+                'Cidade/Estado',
+                '${propriedade.cidade.toString()} - ${propriedade.estado.toString()}',
+              ),
+            if ((propriedade.cidade != null || propriedade.estado != null) && propriedade.cep != null)
+              const SizedBox(height: 12),
+            if (propriedade.cep != null)
+              _buildInfoRow('CEP', propriedade.cep.toString()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAreaCard(Propriedade propriedade) {
+    final temArea = propriedade.areaHa != null || propriedade.areaAlqueires != null;
+
+    if (!temArea) {
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Área',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  'Nenhuma informação de área',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Área',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 12),
+            if (propriedade.areaHa != null)
+              _buildInfoRow('Hectares', '${propriedade.areaHa} ha'),
+            if (propriedade.areaHa != null && propriedade.areaAlqueires != null)
+              const SizedBox(height: 12),
+            if (propriedade.areaAlqueires != null)
+              _buildInfoRow('Alqueires', '${propriedade.areaAlqueires} alq'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTalhoesSection(Propriedade propriedade) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Talhões',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('Novo'),
+              onPressed: () => _abrirTelasTalhoes(propriedade),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        FutureBuilder<List<Talhao>>(
+          future: _talhaoService.getTalhoesPorPropriedade(propriedade.id),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(child: Text('Erro: ${snapshot.error}'));
+            }
+
+            final talhoes = snapshot.data ?? [];
+
+            if (talhoes.isEmpty) {
+              return Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Text(
+                      'Nenhum talhão cadastrado',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: talhoes.length,
+              itemBuilder: (context, index) {
+                final talhao = talhoes[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      child: Text(talhao.numeroTalhao),
+                    ),
+                    title: Text(talhao.numeroTalhao),
+                    subtitle: Text('${talhao.areaHa} ha'),
+                    trailing: talhao.ativo
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : const Icon(Icons.cancel, color: Colors.red),
+                    onTap: () => _abrirTelasTalhoes(propriedade),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (icon != null) ...[
-          Icon(icon, size: 20, color: AppColors.textSecondary),
-          const SizedBox(width: 8),
-        ],
-        Expanded(
-          flex: 2,
+        SizedBox(
+          width: 120,
           child: Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
           ),
         ),
         Expanded(
-          flex: 3,
           child: Text(
             value,
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: const TextStyle(fontSize: 16),
           ),
         ),
       ],
+    );
+  }
+
+  String _formatarData(DateTime data) {
+    return '${data.day}/${data.month}/${data.year} ${data.hour}:${data.minute}';
+  }
+
+  Future<void> _editarPropriedade() async {
+    final propriedade = await _service.getPropriedadeById(widget.propriedadeId);
+    
+    if (propriedade != null && mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PropriedadeFormScreen(
+            propriedade: propriedade,
+          ),
+        ),
+      );
+      
+      setState(() {});
+    }
+  }
+
+  void _abrirTelasTalhoes(Propriedade propriedade) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TalhoesScreen(propriedade: propriedade),
+      ),
     );
   }
 }

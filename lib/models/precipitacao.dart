@@ -3,9 +3,11 @@
 class Precipitacao {
   final String id;
   final String propriedadeId;
+  final String municipio;
   final DateTime data;
-  final double volume; // em milímetros
-  final String municipio; // município de SP
+  final int mes; // 1-12
+  final int ano;
+  final double milimetros; // ✅ MUDADO DE 'volume' para 'milimetros'
   final String? observacoes;
   final DateTime criadoEm;
   final DateTime atualizadoEm;
@@ -13,24 +15,34 @@ class Precipitacao {
   Precipitacao({
     required this.id,
     required this.propriedadeId,
-    required this.data,
-    required this.volume,
     required this.municipio,
+    required this.data,
+    required this.mes,
+    required this.ano,
+    required this.milimetros,
     this.observacoes,
     required this.criadoEm,
     required this.atualizadoEm,
   });
 
   factory Precipitacao.fromJson(Map<String, dynamic> json) {
+    final dataObj = json['data'] != null ? DateTime.parse(json['data']) : DateTime.now();
+    
     return Precipitacao(
       id: json['id'] ?? '',
       propriedadeId: json['propriedade_id'] ?? '',
-      data: json['data'] != null ? DateTime.parse(json['data']) : DateTime.now(),
-      volume: (json['volume'] ?? 0).toDouble(),
       municipio: json['municipio'] ?? 'São Paulo',
+      data: dataObj,
+      mes: json['mes'] ?? dataObj.month,
+      ano: json['ano'] ?? dataObj.year,
+      milimetros: (json['milimetros'] ?? 0).toDouble(), // ✅ CORRIGIDO
       observacoes: json['observacoes'],
-      criadoEm: json['criado_em'] != null ? DateTime.parse(json['criado_em']) : DateTime.now(),
-      atualizadoEm: json['atualizado_em'] != null ? DateTime.parse(json['atualizado_em']) : DateTime.now(),
+      criadoEm: json['criado_em'] != null 
+          ? DateTime.parse(json['criado_em']) 
+          : DateTime.now(),
+      atualizadoEm: json['atualizado_em'] != null 
+          ? DateTime.parse(json['atualizado_em']) 
+          : DateTime.now(),
     );
   }
 
@@ -38,9 +50,11 @@ class Precipitacao {
     return {
       'id': id,
       'propriedade_id': propriedadeId,
-      'data': data.toIso8601String(),
-      'volume': volume,
       'municipio': municipio,
+      'data': data.toIso8601String().split('T')[0], // Enviar apenas a data (YYYY-MM-DD)
+      'mes': mes,
+      'ano': ano,
+      'milimetros': milimetros, // ✅ CORRIGIDO
       'observacoes': observacoes,
       'criado_em': criadoEm.toIso8601String(),
       'atualizado_em': atualizadoEm.toIso8601String(),
@@ -50,9 +64,11 @@ class Precipitacao {
   Precipitacao copyWith({
     String? id,
     String? propriedadeId,
-    DateTime? data,
-    double? volume,
     String? municipio,
+    DateTime? data,
+    int? mes,
+    int? ano,
+    double? milimetros,
     String? observacoes,
     DateTime? criadoEm,
     DateTime? atualizadoEm,
@@ -60,9 +76,11 @@ class Precipitacao {
     return Precipitacao(
       id: id ?? this.id,
       propriedadeId: propriedadeId ?? this.propriedadeId,
-      data: data ?? this.data,
-      volume: volume ?? this.volume,
       municipio: municipio ?? this.municipio,
+      data: data ?? this.data,
+      mes: mes ?? this.mes,
+      ano: ano ?? this.ano,
+      milimetros: milimetros ?? this.milimetros,
       observacoes: observacoes ?? this.observacoes,
       criadoEm: criadoEm ?? this.criadoEm,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,

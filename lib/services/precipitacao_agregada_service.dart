@@ -67,7 +67,8 @@ class PrecipitacaoAgregadaService {
           resumo[p.municipio]![mesAno] = 0.0;
         }
 
-        resumo[p.municipio]![mesAno] = resumo[p.municipio]![mesAno]! + p.volume;
+        // ✅ CORRIGIDO: usar 'milimetros' ao invés de 'volume'
+        resumo[p.municipio]![mesAno] = resumo[p.municipio]![mesAno]! + p.milimetros;
       }
 
       return resumo;
@@ -105,9 +106,10 @@ class PrecipitacaoAgregadaService {
       double menorVolume = double.infinity;
 
       for (var p in precipitacoes) {
-        totalVolume += p.volume;
-        if (p.volume > maiorVolume) maiorVolume = p.volume;
-        if (p.volume < menorVolume) menorVolume = p.volume;
+        // ✅ CORRIGIDO: usar 'milimetros'
+        totalVolume += p.milimetros;
+        if (p.milimetros > maiorVolume) maiorVolume = p.milimetros;
+        if (p.milimetros < menorVolume) menorVolume = p.milimetros;
       }
 
       return {
@@ -115,7 +117,7 @@ class PrecipitacaoAgregadaService {
         'totalVolume': totalVolume,
         'mediaVolume': totalVolume / precipitacoes.length,
         'maiorVolume': maiorVolume,
-        'menorVolume': menorVolume,
+        'menorVolume': menorVolume == double.infinity ? 0 : menorVolume,
         'ultimaAtualizacao': precipitacoes.isNotEmpty ? precipitacoes.first.data : null,
       };
     } catch (e) {
@@ -171,12 +173,44 @@ class PrecipitacaoAgregadaService {
       for (var p in precipitacoes) {
         final mesAno = '${p.data.year}-${p.data.month.toString().padLeft(2, '0')}';
         totaisPorMes.putIfAbsent(mesAno, () => 0.0);
-        totaisPorMes[mesAno] = totaisPorMes[mesAno]! + p.volume;
+        // ✅ CORRIGIDO: usar 'milimetros'
+        totaisPorMes[mesAno] = totaisPorMes[mesAno]! + p.milimetros;
       }
 
       return totaisPorMes;
     } catch (e) {
       throw Exception('Erro ao calcular totais por mês: $e');
+    }
+  }
+
+  /// Obtém precipitações agrupadas por ano
+  Future<Map<int, double>> totalPorAno({String? municipio}) async {
+    try {
+      List<dynamic> data;
+
+      if (municipio != null) {
+        data = await _supabase
+            .from(_table)
+            .select()
+            .eq('municipio', municipio);
+      } else {
+        data = await _supabase.from(_table).select();
+      }
+
+      final precipitacoes = (data)
+          .map((p) => Precipitacao.fromJson(p as Map<String, dynamic>))
+          .toList();
+
+      final totaisPorAno = <int, double>{};
+
+      for (var p in precipitacoes) {
+        totaisPorAno.putIfAbsent(p.ano, () => 0.0);
+        totaisPorAno[p.ano] = totaisPorAno[p.ano]! + p.milimetros;
+      }
+
+      return totaisPorAno;
+    } catch (e) {
+      throw Exception('Erro ao calcular totais por ano: $e');
     }
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../constants/app_colors.dart';
-import '../utils/formatters.dart';
 
 class PropriedadeCard extends StatelessWidget {
   final Propriedade propriedade;
@@ -14,6 +13,7 @@ class PropriedadeCard extends StatelessWidget {
   final VoidCallback? onManageAnexos;
   final VoidCallback? onManageTratos;
   final VoidCallback? onManageOperacoes;
+  final VoidCallback? onManageProdutividade;
 
   const PropriedadeCard({
     super.key,
@@ -27,6 +27,7 @@ class PropriedadeCard extends StatelessWidget {
     this.onManageAnexos,
     this.onManageTratos,
     this.onManageOperacoes,
+    this.onManageProdutividade,
   });
 
   @override
@@ -37,9 +38,9 @@ class PropriedadeCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: (propriedade.ativa ?? true)
+          color: propriedade.ativa
               ? AppColors.success.withOpacity(0.3)
-              : AppColors.error.withOpacity(0.3),
+              : Colors.grey.withOpacity(0.3),
         ),
       ),
       child: InkWell(
@@ -50,110 +51,183 @@ class PropriedadeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cabeçalho com informações principais
+              // Cabeçalho
               Row(
                 children: [
                   // Ícone de status
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: (propriedade.ativa ?? true)
+                      color: propriedade.ativa
                           ? AppColors.success.withOpacity(0.1)
-                          : AppColors.error.withOpacity(0.1),
+                          : Colors.grey.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      (propriedade.ativa ?? true) ? Icons.check_circle : Icons.cancel,
-                      color: (propriedade.ativa ?? true) ? AppColors.success : AppColors.error,
+                      Icons.home_work,
+                      color: propriedade.ativa ? AppColors.success : Colors.grey,
                       size: 24,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Informações da propriedade
+                  
+                  // Nome da propriedade
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          propriedade.nomePropriedade,
+                          propriedade.nome,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'F.A: ${propriedade.numeroFA}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
                         if (nomeProprietario != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'Proprietário: $nomeProprietario',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person,
+                                size: 14,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  nomeProprietario!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ],
                     ),
                   ),
-                  // Chip de status
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (propriedade.ativa ?? true)
-                          ? AppColors.success.withOpacity(0.2)
-                          : AppColors.error.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(4),
+                  
+                  // Menu de ações
+                  if (onEdit != null || 
+                      onDelete != null || 
+                      onToggleStatus != null ||
+                      onManageTalhoes != null ||
+                      onManageAnexos != null ||
+                      onManageTratos != null ||
+                      onManageOperacoes != null ||
+                      onManageProdutividade != null)
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'edit':
+                            onEdit?.call();
+                            break;
+                          case 'delete':
+                            onDelete?.call();
+                            break;
+                          case 'toggle':
+                            onToggleStatus?.call();
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        if (onEdit != null)
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 20),
+                                SizedBox(width: 8),
+                                Text('Editar'),
+                              ],
+                            ),
+                          ),
+                        if (onToggleStatus != null)
+                          PopupMenuItem(
+                            value: 'toggle',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  propriedade.ativa ? Icons.cancel : Icons.check_circle,
+                                  size: 20,
+                                  color: propriedade.ativa ? Colors.orange : Colors.green,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  propriedade.ativa ? 'Inativar' : 'Ativar',
+                                  style: TextStyle(
+                                    color: propriedade.ativa ? Colors.orange : Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (onDelete != null)
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, size: 20, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Excluir', style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
-                    child: Text(
-                      (propriedade.ativa ?? true) ? 'Ativa' : 'Inativa',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: (propriedade.ativa ?? true) ? AppColors.success : AppColors.error,
-                      ),
-                    ),
-                  ),
                 ],
               ),
+              
               const SizedBox(height: 12),
-              // Detalhes da propriedade
-              if (propriedade.areaHa != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.square_foot,
-                        size: 16,
-                        color: Colors.grey[600],
+              
+              // Informações
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    if (propriedade.numeroFA.isNotEmpty)
+                      _buildInfoRow(
+                        icon: Icons.tag,
+                        label: 'F.A.',
+                        value: propriedade.numeroFA,
+                        color: AppColors.primary,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Área: ${Formatters.formatHectares(propriedade.areaHa!)}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[700],
-                        ),
+                    if (propriedade.areaTotalHectares != null) ...[
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        icon: Icons.terrain,
+                        label: 'Área Total',
+                        value: '${propriedade.areaTotalHectares!.toStringAsFixed(2)} ha',
+                        color: AppColors.secondary,
                       ),
                     ],
-                  ),
+                    if (propriedade.localizacao?.isNotEmpty ?? false) ...[
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        icon: Icons.location_on,
+                        label: 'Localização',
+                        value: propriedade.localizacao!,
+                        color: Colors.red,
+                      ),
+                    ],
+                  ],
                 ),
+              ),
+              
               // Botões de ação
-              if (onEdit != null ||
-                  onDelete != null ||
-                  onToggleStatus != null ||
-                  onManageTalhoes != null ||
+              if (onManageTalhoes != null ||
                   onManageAnexos != null ||
                   onManageTratos != null ||
-                  onManageOperacoes != null) ...[
-                const Divider(height: 16),
+                  onManageOperacoes != null ||
+                  onManageProdutividade != null) ...[
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -162,14 +236,14 @@ class PropriedadeCard extends StatelessWidget {
                       _buildActionButton(
                         icon: Icons.landscape,
                         label: 'Talhões',
-                        color: AppColors.primary,
+                        color: Colors.brown,
                         onPressed: onManageTalhoes!,
                       ),
                     if (onManageAnexos != null)
                       _buildActionButton(
                         icon: Icons.attach_file,
                         label: 'Anexos',
-                        color: AppColors.secondary,
+                        color: Colors.orange,
                         onPressed: onManageAnexos!,
                       ),
                     if (onManageTratos != null)
@@ -183,29 +257,15 @@ class PropriedadeCard extends StatelessWidget {
                       _buildActionButton(
                         icon: Icons.agriculture,
                         label: 'Operações',
-                        color: Colors.brown,
+                        color: Colors.teal,
                         onPressed: onManageOperacoes!,
                       ),
-                    if (onEdit != null)
+                    if (onManageProdutividade != null)
                       _buildActionButton(
-                        icon: Icons.edit,
-                        label: 'Editar',
-                        color: AppColors.info,
-                        onPressed: onEdit!,
-                      ),
-                    if (onToggleStatus != null)
-                      _buildActionButton(
-                        icon: (propriedade.ativa ?? true) ? Icons.block : Icons.check_circle,
-                        label: (propriedade.ativa ?? true) ? 'Desativar' : 'Ativar',
-                        color: (propriedade.ativa ?? true) ? AppColors.warning : AppColors.success,
-                        onPressed: onToggleStatus!,
-                      ),
-                    if (onDelete != null)
-                      _buildActionButton(
-                        icon: Icons.delete,
-                        label: 'Deletar',
-                        color: AppColors.error,
-                        onPressed: onDelete!,
+                        icon: Icons.show_chart,
+                        label: 'Produtividade',
+                        color: Colors.purple,
+                        onPressed: onManageProdutividade!,
                       ),
                   ],
                 ),
@@ -217,35 +277,55 @@ class PropriedadeCard extends StatelessWidget {
     );
   }
 
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionButton({
     required IconData icon,
     required String label,
     required Color color,
     required VoidCallback onPressed,
   }) {
-    return Material(
-      color: color.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(6),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color.withOpacity(0.1),
+        foregroundColor: color,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: color.withOpacity(0.3)),
         ),
       ),
     );

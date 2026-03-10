@@ -20,6 +20,7 @@ class AppColors {
   
   // Cores de Fundo
   static const Color background = Color(0xFFF5F5F5);
+  static const Color lightBackground = Color(0xFFFAFAFA);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color divider = Color(0xFFE0E0E0);
   

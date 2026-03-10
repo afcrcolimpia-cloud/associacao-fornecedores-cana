@@ -1,6 +1,7 @@
 // lib/screens/precipitacao_screen.dart
 
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import 'package:flutter/services.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../constants/app_colors.dart';
@@ -84,37 +85,37 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
       context: context,
       builder: (dialogContext) => _DialogAdicionarPrecipitacao(
         data: _selectedDay!,
-        onSalvar: (volume, observacoes) async {
+        onSalvar: (milimetros, observacoes) async {
           try {
+            final now = DateTime.now();
+            // ✅ CORRIGIDO: usar 'milimetros' e incluir 'mes' e 'ano'
             final precipitacao = Precipitacao(
               id: '',
               propriedadeId: widget.propriedade.id,
-              data: _selectedDay!,
-              volume: volume,
               municipio: _municipioSelecionado,
+              data: _selectedDay!,
+              mes: _selectedDay!.month,
+              ano: _selectedDay!.year,
+              milimetros: milimetros,
               observacoes: observacoes.isEmpty ? null : observacoes,
-              criadoEm: DateTime.now(),
-              atualizadoEm: DateTime.now(),
+              criadoEm: now,
+              atualizadoEm: now,
             );
 
             await _service.addPrecipitacao(precipitacao);
             if (!mounted) return;
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Precipitação registrada!'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            }
-            _carregarDados();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Precipitação registrada!'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+            await _carregarDados();
           } catch (e) {
             if (!mounted) return;
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erro: $e')),
-              );
-            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Erro: $e')),
+            );
           }
         },
       ),
@@ -126,7 +127,8 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Excluir Precipitação?'),
-        content: Text('${p.volume}mm em ${Formatters.formatDate(p.data)}'),
+        // ✅ CORRIGIDO: usar 'milimetros'
+        content: Text('${p.milimetros}mm em ${Formatters.formatDate(p.data)}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -147,7 +149,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Excluído com sucesso!')),
           );
-          _carregarDados();
+          await _carregarDados();
         }
       } catch (e) {
         if (mounted) {
@@ -165,7 +167,8 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
       for (var p in eventos) {
         if (p.data.month == _focusedDay.month &&
             p.data.year == _focusedDay.year) {
-          soma += p.volume;
+          // ✅ CORRIGIDO: usar 'milimetros'
+          soma += p.milimetros;
         }
       }
     }
@@ -177,7 +180,8 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
     for (var eventos in _eventosMap.values) {
       for (var p in eventos) {
         if (p.data.year == _anoSelecionado) {
-          soma += p.volume;
+          // ✅ CORRIGIDO: usar 'milimetros'
+          soma += p.milimetros;
         }
       }
     }
@@ -207,11 +211,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Precipitação'),
-        centerTitle: true,
-        elevation: 0,
-      ),
+      appBar: const AppBarAfcrc(title: 'Precipitação'),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -424,7 +424,8 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                                   Icons.water_drop,
                                   color: AppColors.primary,
                                 ),
-                                title: Text('${p.volume}mm'),
+                                // ✅ CORRIGIDO: usar 'milimetros'
+                                title: Text('${p.milimetros}mm'),
                                 subtitle: Text(
                                   p.municipio,
                                   style: TextStyle(color: Colors.grey[600]),

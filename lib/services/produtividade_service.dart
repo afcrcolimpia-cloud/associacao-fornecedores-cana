@@ -11,36 +11,37 @@ class ProdutividadeService {
     return _supabase
         .from(_tableName)
         .stream(primaryKey: ['id'])
-        .eq('propriedade_id', propriedadeId)
-        .order('ano_safra', ascending: false)
-        .order('mes_colheita', ascending: false)
-        .map((data) => data.map((json) => Produtividade.fromJson(json)).toList());
+        .map((data) => data
+            .where((json) => json['propriedade_id'] == propriedadeId)
+            .map((json) => Produtividade.fromJson(json))
+            .toList());
   }
 
   // Stream de produtividade por propriedade e ano safra
   Stream<List<Produtividade>> getProdutividadePorPropriedadeEAno(
-      String propriedadeId,
-  String anoSafra,
-) {
-  return _supabase
-      .from(_tableName)
-      .stream(primaryKey: ['id'])
-      .map((data) => data
-          .where((json) =>
-              json['propriedade_id'] == propriedadeId &&
-              json['ano_safra'] == anoSafra)
-          .map((json) => Produtividade.fromJson(json))
-          .toList());
-}
+    String propriedadeId,
+    String anoSafra,
+  ) {
+    return _supabase
+        .from(_tableName)
+        .stream(primaryKey: ['id'])
+        .map((data) => data
+            .where((json) =>
+                json['propriedade_id'] == propriedadeId &&
+                json['ano_safra'] == anoSafra)
+            .map((json) => Produtividade.fromJson(json))
+            .toList());
+  }
 
   // Stream de produtividade por talhão
   Stream<List<Produtividade>> getProdutividadePorTalhao(String talhaoId) {
     return _supabase
         .from(_tableName)
         .stream(primaryKey: ['id'])
-        .eq('talhao_id', talhaoId)
-        .order('ano_safra', ascending: false)
-        .map((data) => data.map((json) => Produtividade.fromJson(json)).toList());
+        .map((data) => data
+            .where((json) => json['talhao_id'] == talhaoId)
+            .map((json) => Produtividade.fromJson(json))
+            .toList());
   }
 
   // Buscar produtividade por ID
@@ -72,11 +73,6 @@ class ProdutividadeService {
       debugPrint('Erro ao criar produtividade: $e');
       rethrow;
     }
-  }
-
-  // Alias para criar nova produtividade
-  Future<void> addProdutividade(Produtividade produtividade) async {
-    return createProdutividade(produtividade);
   }
 
   // Atualizar produtividade
@@ -139,14 +135,12 @@ class ProdutividadeService {
     String anoAnterior,
   ) async {
     try {
-      // Buscar dados do ano atual
       final dadosAtual = await _supabase
           .from(_tableName)
           .select()
           .eq('propriedade_id', propriedadeId)
           .eq('ano_safra', anoAtual);
 
-      // Buscar dados do ano anterior
       final dadosAnterior = await _supabase
           .from(_tableName)
           .select()
@@ -156,7 +150,6 @@ class ProdutividadeService {
       final prodAtual = dadosAtual.map((json) => Produtividade.fromJson(json)).toList();
       final prodAnterior = dadosAnterior.map((json) => Produtividade.fromJson(json)).toList();
 
-      // Calcular totais do ano atual
       double totalPesoAtual = prodAtual.fold(
         0.0,
         (sum, p) => sum + (p.pesoLiquidoToneladas ?? 0),
@@ -166,7 +159,6 @@ class ProdutividadeService {
           ? 0.0
           : prodAtual.fold(0.0, (sum, p) => sum + (p.mediaATR ?? 0)) / prodAtual.length;
 
-      // Calcular totais do ano anterior
       double totalPesoAnterior = prodAnterior.fold(
         0.0,
         (sum, p) => sum + (p.pesoLiquidoToneladas ?? 0),
@@ -176,7 +168,6 @@ class ProdutividadeService {
           ? 0.0
           : prodAnterior.fold(0.0, (sum, p) => sum + (p.mediaATR ?? 0)) / prodAnterior.length;
 
-      // Calcular variações
       double variacaoPeso = totalPesoAnterior > 0
           ? ((totalPesoAtual - totalPesoAnterior) / totalPesoAnterior) * 100
           : 0.0;
@@ -278,25 +269,6 @@ class ProdutividadeService {
     }
   }
 
-  // Obter todos os anos safra disponíveis
-  Future<List<String>> getAnosSafra() async {
-    try {
-      final data = await _supabase
-          .from(_tableName)
-          .select('ano_safra')
-          .order('ano_safra', ascending: false);
-
-      final anos = data
-          .map((item) => item['ano_safra'] as String)
-          .toSet()
-          .toList();
-      return anos;
-    } catch (e) {
-      debugPrint('Erro ao buscar anos safra: $e');
-      return [];
-    }
-  }
-
   // Dados para gráfico por mês
   Future<List<Map<String, dynamic>>> getDadosGraficoPorMes(
     String propriedadeId,
@@ -312,7 +284,6 @@ class ProdutividadeService {
 
       final produtividades = data.map((json) => Produtividade.fromJson(json)).toList();
 
-      // Agrupar por mês
       Map<int, double> pesosPorMes = {};
       for (var prod in produtividades) {
         if (prod.mesColheita != null && prod.pesoLiquidoToneladas != null) {
@@ -321,7 +292,6 @@ class ProdutividadeService {
         }
       }
 
-      // Converter para lista
       return pesosPorMes.entries.map((entry) {
         const meses = [
           'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',

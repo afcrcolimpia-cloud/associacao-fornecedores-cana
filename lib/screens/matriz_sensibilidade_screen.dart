@@ -1,0 +1,352 @@
+import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
+import '../services/custo_operacional_analise.dart';
+import '../services/custo_operacional_service.dart';
+import '../constants/app_colors.dart';
+
+class MatrizSensibilidadeScreen extends StatelessWidget {
+  final CustoOperacionalCenario cenario;
+
+  const MatrizSensibilidadeScreen({
+    required this.cenario,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final matrizSensibilidade =
+        CustoOperacionalAnalise.gerarMatrizSensibilidade(cenario);
+
+    return Scaffold(
+      appBar: const AppBarAfcrc(title: 'Matriz de Sensibilidade'),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Card com informações do cenário
+              Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cenario.nomeCenario,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Produtividade Base',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                '${matrizSensibilidade.produtividadeBase.toStringAsFixed(2)} t/ha',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Preço ATR Base',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                'R\$ ${matrizSensibilidade.precoBase.toStringAsFixed(2)}/kg',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Legenda
+              Card(
+                color: AppColors.lightBackground,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Margem por Tonelada (R\$/t)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            color: AppColors.success,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Positiva (Viável)',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Negativa (Inviável)',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Matriz de Sensibilidade
+              _buildMatrizTable(matrizSensibilidade),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMatrizTable(MatrizSensibilidade matriz) {
+    final variacoes = [-20, -15, -10, -5, 0, 5, 10, 15, 20];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Preço ATR →  |  Produtividade ↓',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey, width: 1),
+            ),
+            child: Table(
+              border: TableBorder.all(
+                color: Colors.grey,
+                width: 0.5,
+              ),
+              columnWidths: {
+                0: const FixedColumnWidth(50),
+                for (int i = 1; i < variacoes.length + 1; i++)
+                  i: const FixedColumnWidth(45),
+              },
+              children: [
+                // Cabeçalho com variações de preço
+                TableRow(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Text(
+                        'Prod %',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    ...variacoes.map((v) => Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Text(
+                        '$v%',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9,
+                        ),
+                      ),
+                    )),
+                  ],
+                ),
+                // Linhas da matriz
+                for (int i = 0; i < matriz.produtividadesVariadas.length; i++)
+                  TableRow(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Text(
+                          '${variacoes[i]}%',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 9,
+                          ),
+                        ),
+                      ),
+                      ...matriz.matriz[i].map((margem) {
+                        final ehPositiva = margem >= 0;
+                        final cor = ehPositiva
+                            ? AppColors.success.withOpacity(0.2)
+                            : AppColors.error.withOpacity(0.2);
+                        final textColor = ehPositiva
+                            ? AppColors.success
+                            : AppColors.error;
+
+                        return Container(
+                          color: cor,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Text(
+                              margem.toStringAsFixed(0),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildInterpretacao(matriz),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInterpretacao(MatrizSensibilidade matriz) {
+    // Encontrar valor mínimo e máximo
+    double minValue = double.infinity;
+    double maxValue = double.negativeInfinity;
+
+    for (var linha in matriz.matriz) {
+      for (var valor in linha) {
+        if (valor < minValue) minValue = valor;
+        if (valor > maxValue) maxValue = valor;
+      }
+    }
+
+    // Contar viáveis e inviáveis
+    int viavel = 0;
+    int inviavel = 0;
+
+    for (var linha in matriz.matriz) {
+      for (var valor in linha) {
+        if (valor >= 0) {
+          viavel++;
+        } else {
+          inviavel++;
+        }
+      }
+    }
+
+    return Card(
+      color: AppColors.lightBackground,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Análise da Matriz',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              'Cenários Viáveis',
+              '$viavel de 81',
+              viavel > 40 ? AppColors.success : AppColors.warning,
+            ),
+            const SizedBox(height: 6),
+            _buildInfoRow(
+              'Cenários Inviáveis',
+              '$inviavel de 81',
+              inviavel < 40 ? AppColors.success : AppColors.error,
+            ),
+            const SizedBox(height: 6),
+            _buildInfoRow(
+              'Margem Máxima',
+              'R\$ ${maxValue.toStringAsFixed(2)}/t',
+              AppColors.success,
+            ),
+            const SizedBox(height: 6),
+            _buildInfoRow(
+              'Margem Mínima',
+              'R\$ ${minValue.toStringAsFixed(2)}/t',
+              AppColors.error,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+}

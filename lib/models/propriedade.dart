@@ -3,20 +3,23 @@ class Propriedade {
   final String proprietarioId;
   final String nomePropriedade;
   final String numeroFA;
-
-  // Aliases (uso em UI / compatibilidade)
-  final String? nome; // Alias para nomePropriedade
-  final String? fa;   // Alias para numeroFA
-
   final String? endereco;
   final String? cidade;
   final String? estado;
   final String? cep;
   final double? areaHa;
   final double? areaAlqueires;
-  final bool? ativa;
+  final bool ativa;
   final DateTime criadoEm;
   final DateTime atualizadoEm;
+
+  // Getters auxiliares
+  String get nome => nomePropriedade;
+  String get fa => numeroFA;
+  double? get areaTotalHectares => areaHa;
+  String? get localizacao => cidade != null && estado != null 
+      ? '$cidade - $estado' 
+      : null;
 
   Propriedade({
     required this.id,
@@ -29,13 +32,11 @@ class Propriedade {
     this.cep,
     this.areaHa,
     this.areaAlqueires,
-    this.ativa,
+    this.ativa = true,
     required this.criadoEm,
     required this.atualizadoEm,
-  })  : nome = nomePropriedade,
-        fa = numeroFA;
+  });
 
-  // Converter para JSON (ENVIAR PARA O SUPABASE)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -48,13 +49,12 @@ class Propriedade {
       'cep': cep,
       'area_ha': areaHa,
       'area_alqueires': areaAlqueires,
-      'ativa': ativa ?? true,
+      'ativa': ativa,
       'criado_em': criadoEm.toIso8601String(),
       'atualizado_em': atualizadoEm.toIso8601String(),
     };
   }
 
-  // Criar objeto A PARTIR DO SUPABASE
   factory Propriedade.fromJson(Map<String, dynamic> json) {
     return Propriedade(
       id: json['id']?.toString() ?? '',
@@ -81,7 +81,6 @@ class Propriedade {
     );
   }
 
-  // Cópia com alterações
   Propriedade copyWith({
     String? id,
     String? proprietarioId,

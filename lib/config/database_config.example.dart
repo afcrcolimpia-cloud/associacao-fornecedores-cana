@@ -12,9 +12,9 @@
 // 4. Copie "Project URL" e "anon public key"
 
 class DatabaseConfig {
-  // 🔑 CREDENCIAIS REAIS DO SEU SUPABASE
-  static const String supabaseUrl = 'https://ffiqzxvglfgcczrwohja.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXF6eHZnbGZnY2N6cndvaGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMDkxNjcsImV4cCI6MjA3ODU4NTE2N30.W_fez15AEensrdOxflmVuDtspNU9ImIuW2IdnEOUbOE';
+  // 🔑 SUBSTITUA COM SUAS CREDENCIAIS DO SUPABASE
+  static const String supabaseUrl = 'https://SEU_PROJECT_ID.supabase.co';
+  static const String supabaseAnonKey = 'SUA_ANON_KEY_AQUI';
   
   // 📋 Nomes das tabelas (não precisa alterar)
   static const String tabelaProprietarios = 'proprietarios';

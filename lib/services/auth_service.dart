@@ -1,4 +1,5 @@
-// lib/services/auth_service.dart
+﻿// lib/services/auth_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -16,28 +17,36 @@ class AuthService {
 
   Future<User?> signInWithEmail(String email, String password) async {
     try {
+      debugPrint('?? [Auth] Iniciando login com email: $email');
       final AuthResponse response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
+      debugPrint('? [Auth] Login bem-sucedido! Usuario: ${response.user?.email}');
       return response.user;
     } on AuthException catch (e) {
+      debugPrint('? [Auth] AuthException: ${e.message} (Code: ${e.statusCode})');
       throw _handleAuthError(e);
     } catch (e) {
+      debugPrint('? [Auth] Erro desconhecido: $e');
       throw 'Erro desconhecido: $e';
     }
   }
 
   Future<User?> registerWithEmail(String email, String password) async {
     try {
+      debugPrint('?? [Auth] Iniciando registro com email: $email');
       final AuthResponse response = await _supabase.auth.signUp(
         email: email,
         password: password,
       );
+      debugPrint('? [Auth] Registro bem-sucedido! Usuario: ${response.user?.email}');
       return response.user;
     } on AuthException catch (e) {
+      debugPrint('? [Auth] AuthException no registro: ${e.message} (Code: ${e.statusCode})');
       throw _handleAuthError(e);
     } catch (e) {
+      debugPrint('? [Auth] Erro desconhecido no registro: $e');
       throw 'Erro desconhecido: $e';
     }
   }
@@ -45,6 +54,7 @@ class AuthService {
   // --- GOOGLE SIGN-IN ---
   Future<User?> signInWithGoogle() async {
     try {
+      debugPrint('?? [Auth] Iniciando login com Google...');
       // IMPORTANTE: Configure no Supabase Dashboard:
       // 1. Authentication > Providers > Google
       // 2. Adicione suas credenciais OAuth
@@ -53,10 +63,14 @@ class AuthService {
         OAuthProvider.google,
         redirectTo: 'io.supabase.flutterquickstart://login-callback',
       );
-      return _supabase.auth.currentUser;
+      final user = _supabase.auth.currentUser;
+      debugPrint('? [Auth] Login com Google bem-sucedido! Usuario: ${user?.email}');
+      return user;
     } on AuthException catch (e) {
+      debugPrint('? [Auth] AuthException no Google login: ${e.message} (Code: ${e.statusCode})');
       throw _handleAuthError(e);
     } catch (e) {
+      debugPrint('? [Auth] Erro ao autenticar com Google: $e');
       throw 'Erro ao autenticar com Google: $e';
     }
   }
@@ -64,15 +78,21 @@ class AuthService {
   // --- OUTROS MÉTODOS ---
 
   Future<void> signOut() async {
+    debugPrint('?? [Auth] Fazendo logout...');
     await _supabase.auth.signOut();
+    debugPrint('? [Auth] Logout bem-sucedido!');
   }
 
   Future<void> resetPassword(String email) async {
     try {
+      debugPrint('?? [Auth] Enviando link de recuperação para: $email');
       await _supabase.auth.resetPasswordForEmail(email);
+      debugPrint('? [Auth] Link de recuperação enviado!');
     } on AuthException catch (e) {
+      debugPrint('? [Auth] AuthException na recuperação: ${e.message}');
       throw _handleAuthError(e);
     } catch (e) {
+      debugPrint('? [Auth] Erro ao redefinir senha: $e');
       throw 'Erro ao redefinir senha: $e';
     }
   }
@@ -82,6 +102,8 @@ class AuthService {
   String _handleAuthError(AuthException e) {
     // Mensagens de erro em português
     final message = e.message.toLowerCase();
+    
+    debugPrint('?? [Auth] Processando erro: $message (Code: ${e.statusCode})');
     
     if (message.contains('invalid login credentials') || 
         message.contains('invalid email or password')) {
@@ -107,6 +129,10 @@ class AuthService {
     
     if (e.statusCode == '429') {
       return 'Muitas tentativas. Aguarde alguns minutos';
+    }
+    
+    if (message.contains('network') || message.contains('connection')) {
+      return 'Erro de conexão. Verifique sua internet';
     }
     
     // Mensagem genérica se não identificar o erro

@@ -1,10 +1,8 @@
-// lib/screens/talhao_form_screen.dart
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import 'package:flutter/services.dart';
-import '../constants/app_colors.dart';
 import '../models/models.dart';
-import '../services/propriedade_service.dart';
-import '../utils/formatters.dart';
+import '../services/talhao_service.dart';
 
 class TalhaoFormScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -22,82 +20,274 @@ class TalhaoFormScreen extends StatefulWidget {
 
 class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _service = PropriedadeService();
+  final _talhaoService = TalhaoService();
 
-  late TextEditingController _numeroTalhaoController;
-  late TextEditingController _areaHectaresController;
-  late TextEditingController _areaAlqueiresController;
-  late TextEditingController _variedadeController;
-  late TextEditingController _anoPlantioController;
-  late TextEditingController _corteController;
-  late TextEditingController _observacoesController;
+  final _numeroController = TextEditingController();
+  final _areaHaController = TextEditingController();
+  final _areaAlqueiresController = TextEditingController();
+  final _variedadeController = TextEditingController();
+  final _observacoesController = TextEditingController();
 
+  String? _culturaSelecionada;
+  bool _ativo = true;
   bool _isLoading = false;
-  bool _calculandoArea = false;
-  String _tipoTalhao = 'producao'; // 'producao' ou 'reforma'
+
+  final List<String> _culturas = [
+    'Cana-de-açúcar',
+    'Milho',
+    'Soja',
+    'Sorgo',
+    'Outra',
+  ];
+
+  // Normalizar cultura para compatibilidade
+  String _normalizarCultura(String cultura) {
+    return cultura.toLowerCase().trim();
+  }
+
+  // Encontrar a cultura correta na lista ou retornar a original
+  String? _encontrarCultura(String? culturaBuscada) {
+    if (culturaBuscada == null) return null;
+    
+    final normalizada = _normalizarCultura(culturaBuscada);
+    
+    // Procurar na lista normalizada
+    for (var cultura in _culturas) {
+      if (_normalizarCultura(cultura) == normalizada) {
+        return cultura;
+      }
+    }
+    
+    // Se não encontrou, retornar a original
+    return culturaBuscada;
+  }
 
   @override
   void initState() {
     super.initState();
-    final t = widget.talhao;
-
-    _numeroTalhaoController = TextEditingController(text: t?.numeroTalhao);
-    _areaHectaresController = TextEditingController(
-      text: t?.areaHa?.toString(),
-    );
-    _areaAlqueiresController = TextEditingController(
-      text: t?.areaAlqueires?.toString(),
-    );
-    _variedadeController = TextEditingController(text: t?.variedade);
-    _anoPlantioController = TextEditingController(
-      text: t?.anoPlantio?.toString() ?? DateTime.now().year.toString(),
-    );
-    _corteController = TextEditingController(
-      text: t?.corte?.toString() ?? '1',
-    );
-    _observacoesController = TextEditingController(text: t?.observacoes);
-    _tipoTalhao = t?.tipoTalhao ?? 'producao';
-
-    _areaHectaresController.addListener(_onHectaresChanged);
-    _areaAlqueiresController.addListener(_onAlqueiresChanged);
-  }
-
-  void _onHectaresChanged() {
-    if (_calculandoArea) return;
-    if (_areaHectaresController.text.isEmpty) return;
-
-    final hectares = double.tryParse(_areaHectaresController.text);
-    if (hectares != null) {
-      _calculandoArea = true;
-      final alqueires = Formatters.hectaresToAlqueires(hectares);
-      _areaAlqueiresController.text = alqueires.toStringAsFixed(2);
-      _calculandoArea = false;
+    if (widget.talhao != null) {
+      _carregarDados();
     }
   }
 
-  void _onAlqueiresChanged() {
-    if (_calculandoArea) return;
-    if (_areaAlqueiresController.text.isEmpty) return;
-
-    final alqueires = double.tryParse(_areaAlqueiresController.text);
-    if (alqueires != null) {
-      _calculandoArea = true;
-      final hectares = Formatters.alqueiresToHectares(alqueires);
-      _areaHectaresController.text = hectares.toStringAsFixed(2);
-      _calculandoArea = false;
+  void _carregarDados() {
+    final talhao = widget.talhao!;
+    _numeroController.text = talhao.numeroTalhao;
+    _areaHaController.text = talhao.areaHa?.toString() ?? '';
+    _areaAlqueiresController.text = talhao.areaAlqueires?.toString() ?? '';
+    
+    // Procurar a cultura correta na lista
+    if (talhao.cultura != null) {
+      final culturaNormalizada = _encontrarCultura(talhao.cultura);
+      _culturaSelecionada = culturaNormalizada;
+    } else {
+      _culturaSelecionada = null;
     }
+    
+    _variedadeController.text = talhao.variedade ?? '';
+    _ativo = talhao.ativo;
   }
 
   @override
   void dispose() {
-    _numeroTalhaoController.dispose();
-    _areaHectaresController.dispose();
+    _numeroController.dispose();
+    _areaHaController.dispose();
     _areaAlqueiresController.dispose();
     _variedadeController.dispose();
-    _anoPlantioController.dispose();
-    _corteController.dispose();
     _observacoesController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBarAfcrc(
+        title: widget.talhao == null ? 'Novo Talhão' : 'Editar Talhão',
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  const Text(
+                    'Informações Básicas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  _buildNumeroField(),
+                  const SizedBox(height: 16),
+                  _buildCulturaField(),
+                  const SizedBox(height: 16),
+                  _buildVariedadeField(),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Área',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildAreaHaField(),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildAreaAlqueiresField(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  SwitchListTile(
+                    title: const Text('Talhão Ativo'),
+                    subtitle: const Text('O talhão está em operação?'),
+                    value: _ativo,
+                    onChanged: (value) {
+                      setState(() => _ativo = value);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  _buildBotoes(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildNumeroField() {
+    return TextFormField(
+      controller: _numeroController,
+      decoration: const InputDecoration(
+        labelText: 'Número do Talhão',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.tag),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Número do talhão é obrigatório';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildCulturaField() {
+    // Criar uma lista de culturas que inclui o valor atualmente selecionado se não estiver na lista
+    final culturasList = List<String>.from(_culturas);
+    
+    if (_culturaSelecionada != null) {
+      // Se o valor selecionado não está na lista, adicionar
+      if (!culturasList.any((c) => _normalizarCultura(c) == _normalizarCultura(_culturaSelecionada!))) {
+        culturasList.add(_culturaSelecionada!);
+      }
+    }
+
+    return DropdownButtonFormField<String>(
+      value: _culturaSelecionada,
+      decoration: const InputDecoration(
+        labelText: 'Cultura',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.eco),
+      ),
+      items: culturasList.map((cultura) {
+        return DropdownMenuItem(
+          value: cultura,
+          child: Text(cultura),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() => _culturaSelecionada = value);
+      },
+    );
+  }
+
+  Widget _buildVariedadeField() {
+    return TextFormField(
+      controller: _variedadeController,
+      decoration: const InputDecoration(
+        labelText: 'Variedade Principal',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.nature),
+      ),
+    );
+  }
+
+  Widget _buildAreaHaField() {
+    return TextFormField(
+      controller: _areaHaController,
+      decoration: const InputDecoration(
+        labelText: 'Área (Hectares)',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.agriculture),
+        suffixText: 'ha',
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+      ],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Área em hectares é obrigatória';
+        }
+        if (double.tryParse(value) == null) {
+          return 'Digite um número válido';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildAreaAlqueiresField() {
+    return TextFormField(
+      controller: _areaAlqueiresController,
+      decoration: const InputDecoration(
+        labelText: 'Área (Alqueires)',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.agriculture),
+        suffixText: 'alq',
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+      ],
+      validator: (value) {
+        if (value != null && value.isNotEmpty) {
+          if (double.tryParse(value) == null) {
+            return 'Digite um número válido';
+          }
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildBotoes() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _salvar,
+            child: const Text('Salvar'),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _salvar() async {
@@ -106,54 +296,56 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final anoPlantio = int.parse(_anoPlantioController.text);
-      final dataPlantio = DateTime(anoPlantio, 1, 1);
+      // Normalizar a cultura para a versão padrão na lista
+      String? culturaNormalizada;
+      if (_culturaSelecionada != null) {
+        culturaNormalizada = _encontrarCultura(_culturaSelecionada);
+      }
 
       final talhao = Talhao(
         id: widget.talhao?.id ?? '',
         propriedadeId: widget.propriedade.id,
-        numeroTalhao: _numeroTalhaoController.text.trim(),
-        cultura: 'Cana-de-açúcar',
-        areaHa: double.parse(_areaHectaresController.text),
-        areaAlqueires: double.parse(_areaAlqueiresController.text),
-        variedade: _variedadeController.text.trim(),
-        anoPlantio: anoPlantio,
-        corte: int.parse(_corteController.text),
-        tipoTalhao: _tipoTalhao,
-        observacoes: _observacoesController.text.trim().isNotEmpty 
-            ? _observacoesController.text.trim() 
-            : null,
-        dataPlantio: dataPlantio,
+        numeroTalhao: _numeroController.text,
+        areaHa: _areaHaController.text.isEmpty
+            ? null
+            : double.parse(_areaHaController.text),
+        areaAlqueires: _areaAlqueiresController.text.isEmpty
+            ? null
+            : double.parse(_areaAlqueiresController.text),
+        cultura: culturaNormalizada,
+        variedade: _variedadeController.text.isEmpty
+            ? null
+            : _variedadeController.text,
+        anoPlantio: widget.talhao?.anoPlantio,
+        corte: widget.talhao?.corte,
+        dataPlantio: widget.talhao?.dataPlantio,
+        tipoTalhao: widget.talhao?.tipoTalhao ?? 'producao',
+        ativo: _ativo,
+        observacoes: widget.talhao?.observacoes,
         criadoEm: widget.talhao?.criadoEm ?? DateTime.now(),
         atualizadoEm: DateTime.now(),
       );
 
       if (widget.talhao == null) {
-        await _service.addTalhao(talhao);
+        await _talhaoService.createTalhao(talhao);
       } else {
-        await _service.updateTalhao(talhao);
+        await _talhaoService.updateTalhao(talhao);
       }
 
       if (mounted) {
-        Navigator.of(context).pop(true);
+        Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              widget.talhao == null
-                  ? 'Talhão cadastrado com sucesso!'
-                  : 'Talhão atualizado com sucesso!',
-            ),
-            backgroundColor: AppColors.success,
+            content: Text(widget.talhao == null
+                ? 'Talhão criado com sucesso'
+                : 'Talhão atualizado com sucesso'),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text('Erro ao salvar: $e')),
         );
       }
     } finally {
@@ -161,344 +353,5 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isEdicao = widget.talhao != null;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdicao ? 'Editar Talhão' : 'Novo Talhão'),
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Card(
-              color: AppColors.primary.withOpacity(0.1),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.home_work, color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            widget.propriedade.nomePropriedade,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'FA: ${widget.propriedade.numeroFA}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Identificação',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _numeroTalhaoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Número do Talhão *',
-                        hintText: 'Ex: 1, 2, A, B',
-                        prefixIcon: Icon(Icons.tag),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Campo obrigatório';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _variedadeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Variedade *',
-                        hintText: 'Ex: RB867515',
-                        prefixIcon: Icon(Icons.grass),
-                      ),
-                      textCapitalization: TextCapitalization.characters,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Campo obrigatório';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tipo de Talhão',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SegmentedButton<String>(
-                            segments: const <ButtonSegment<String>>[
-                              ButtonSegment<String>(
-                                value: 'producao',
-                                label: Text('Produção'),
-                                icon: Icon(Icons.grain),
-                              ),
-                              ButtonSegment<String>(
-                                value: 'reforma',
-                                label: Text('Reforma'),
-                                icon: Icon(Icons.agriculture),
-                              ),
-                            ],
-                            selected: <String>{_tipoTalhao},
-                            onSelectionChanged: (Set<String> newSelection) {
-                              setState(() {
-                                _tipoTalhao = newSelection.first;
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Área',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Digite a área em hectares ou alqueires. O cálculo será automático.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _areaHectaresController,
-                            decoration: const InputDecoration(
-                              labelText: 'Hectares *',
-                              suffixText: 'ha',
-                              prefixIcon: Icon(Icons.square_foot),
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Obrigatório';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'Número inválido';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _areaAlqueiresController,
-                            decoration: const InputDecoration(
-                              labelText: 'Alqueires *',
-                              suffixText: 'alq',
-                              prefixIcon: Icon(Icons.square_foot),
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Obrigatório';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'Inválido';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Informações de Cultivo',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _anoPlantioController,
-                            decoration: const InputDecoration(
-                              labelText: 'Ano Plantio *',
-                              prefixIcon: Icon(Icons.calendar_today),
-                            ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(4),
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Obrigatório';
-                              }
-                              final ano = int.tryParse(value);
-                              if (ano == null || ano < 1900 || ano > DateTime.now().year + 1) {
-                                return 'Ano inválido';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _corteController,
-                            decoration: const InputDecoration(
-                              labelText: 'Corte *',
-                              suffixText: 'º',
-                              prefixIcon: Icon(Icons.agriculture),
-                            ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(2),
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Obrigatório';
-                              }
-                              final corte = int.tryParse(value);
-                              if (corte == null || corte < 1) {
-                                return 'Inválido';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _observacoesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Observações',
-                        prefixIcon: Icon(Icons.notes),
-                      ),
-                      maxLines: 3,
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                    child: const Text('CANCELAR'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _salvar,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(isEdicao ? 'ATUALIZAR' : 'SALVAR'),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
   }
 }

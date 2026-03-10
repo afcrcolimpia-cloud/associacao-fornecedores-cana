@@ -1,6 +1,6 @@
 // lib/services/anexo_service.dart
 
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
@@ -55,6 +55,49 @@ class AnexoService {
     }
   }
 
+  // Função auxiliar para detectar tipo MIME pela extensão
+  String _detectarTipoMime(String nomeArquivo) {
+    final extensao = nomeArquivo.split('.').last.toLowerCase();
+    const mimeTypes = {
+      'pdf': 'application/pdf',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'xls': 'application/vnd.ms-excel',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'ppt': 'application/vnd.ms-powerpoint',
+      'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'bmp': 'image/bmp',
+      'mp4': 'video/mp4',
+      'avi': 'video/x-msvideo',
+      'mov': 'video/quicktime',
+      'txt': 'text/plain',
+      'csv': 'text/csv',
+      'zip': 'application/zip',
+    };
+    return mimeTypes[extensao] ?? 'application/octet-stream';
+  }
+
+  // Função auxiliar para determinar tipo de anexo pela extensão
+  String _determinarTipoAnexo(String nomeArquivo) {
+    final extensao = nomeArquivo.split('.').last.toLowerCase();
+    const tiposImagem = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+    const tiposVideo = ['mp4', 'avi', 'mov', 'mkv'];
+    const tiposPlanilha = ['xls', 'xlsx', 'csv'];
+    const tiposApresentacao = ['ppt', 'pptx'];
+
+    if (tiposImagem.contains(extensao)) return 'Imagem';
+    if (tiposVideo.contains(extensao)) return 'Vídeo';
+    if (tiposPlanilha.contains(extensao)) return 'Planilha';
+    if (tiposApresentacao.contains(extensao)) return 'Apresentação';
+    if (extensao == 'pdf') return 'PDF';
+    
+    return 'Documento';
+  }
+
   // ------------------------------
   // UPLOAD COMPLETO E CORRIGIDO
   // ------------------------------
@@ -62,8 +105,6 @@ class AnexoService {
     required String propriedadeId,
     required String nomeArquivo,
     required List<int> bytes,
-    String? tipoDocumento,
-    String? descricao,
   }) async {
     try {
       // 1. Pegar usuário autenticado
@@ -80,56 +121,14 @@ class AnexoService {
       final extensao = nomeArquivo.split('.').last.toLowerCase();
       final nomeUnico = '$propriedadeId/$timestamp.$extensao';
 
-      // 4. Detectar MIME
-      String mimeType;
-      switch (extensao) {
-        case 'pdf':
-          mimeType = 'application/pdf';
-          break;
-        case 'kml':
-          mimeType = 'application/vnd.google-earth.kml+xml';
-          break;
-        case 'kmz':
-          mimeType = 'application/vnd.google-earth.kmz';
-          break;
-        case 'jpg':
-        case 'jpeg':
-          mimeType = 'image/jpeg';
-          break;
-        case 'png':
-          mimeType = 'image/png';
-          break;
-        case 'doc':
-          mimeType = 'application/msword';
-          break;
-        case 'docx':
-          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-          break;
-        case 'xls':
-          mimeType = 'application/vnd.ms-excel';
-          break;
-        case 'xlsx':
-          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-          break;
-        case 'csv':
-          mimeType = 'text/csv';
-          break;
-        case 'txt':
-          mimeType = 'text/plain';
-          break;
-        default:
-          mimeType = 'application/octet-stream';
-      }
-
-      // 5. Upload com metadata OBRIGATÓRIA
+      // 4. Upload com metadata
       final uploadResponse = await _supabase.storage.from(bucketName).uploadBinary(
             nomeUnico,
             uint8bytes,
             fileOptions: FileOptions(
-              contentType: mimeType,
               upsert: false,
               metadata: {
-                'owner': user.id,            // 🔥 OBRIGATÓRIO PARA RLS
+                'owner': user.id,
                 'propriedade_id': propriedadeId,
               },
             ),
@@ -139,35 +138,40 @@ class AnexoService {
         throw 'Falha no upload do arquivo';
       }
 
-      // 6. URL pública
-      final urlPublica = _supabase.storage.from(bucketName).getPublicUrl(nomeUnico);
+      // 5. Determinar tipo MIME e tipo de anexo
+      final tipoMime = _detectarTipoMime(nomeArquivo);
+      final tipoAnexo = _determinarTipoAnexo(nomeArquivo);
 
-      // 7. Registrar no banco
-      final anexo = Anexo(
-        id: '',
-        propriedadeId: propriedadeId,
-        nomeArquivo: nomeArquivo,
-        tipoArquivo: mimeType,
-        tamanhoBytes: bytes.length,
-        caminhoStorage: nomeUnico,
-        urlPublica: urlPublica,
-        descricao: descricao,
-        tipoDocumento: tipoDocumento,
-        criadoEm: DateTime.now(),
-        atualizadoEm: DateTime.now(),
-      );
+      // 6. Inserir com todos os campos obrigatórios
+      try {
+        final data = await _supabase
+            .from(tableName)
+            .insert({
+              'propriedade_id': propriedadeId,
+              'tipo_anexo': tipoAnexo,
+              'nome_arquivo': nomeArquivo,
+              'url_arquivo': '$propriedadeId/$timestamp.$extensao',
+              'caminho_storage': nomeUnico,
+              'tamanho_bytes': bytes.length,
+              'tipo_mime': tipoMime,
+            })
+            .select('id')
+            .single();
 
-      final json = anexo.toJson();
-      json.remove('id');
-
-      final data = await _supabase
-          .from(tableName)
-          .insert(json)
-          .select('id')
-          .single();
-
-      return data['id'];
+        debugPrint('✅ Upload bem-sucedido: ${data['id']}');
+        return (data['id'] as String?) ?? '';
+      } catch (dbError) {
+        debugPrint('❌ Erro ao inserir no banco: $dbError');
+        // Se falhar no banco, tenta remover o arquivo do storage
+        try {
+          await _supabase.storage.from(bucketName).remove([nomeUnico]);
+        } catch (e) {
+          debugPrint('❌ Erro ao limpar storage: $e');
+        }
+        rethrow;
+      }
     } catch (e) {
+      debugPrint('❌ Erro ao fazer upload: $e');
       throw 'Erro ao fazer upload: $e';
     }
   }
@@ -228,21 +232,6 @@ class AnexoService {
       return '${(bytes / 1024).toStringAsFixed(2)} KB';
     } else {
       return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
-    }
-  }
-
-  String getNomeTipoDocumento(String? tipo) {
-    switch (tipo) {
-      case 'mapa_pdf':
-        return 'Mapa PDF';
-      case 'arquivo_kml':
-        return 'Arquivo KML';
-      case 'relatorio_word':
-        return 'Relatório Word';
-      case 'relatorio_excel':
-        return 'Relatório Excel';
-      default:
-        return 'Outro';
     }
   }
 }

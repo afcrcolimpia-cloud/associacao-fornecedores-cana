@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
@@ -22,10 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        centerTitle: true,
-      ),
+      appBar: const AppBarAfcrc(title: 'Dashboard'),
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {});
@@ -101,7 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: '',
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Selecione uma propriedade primeiro')),
+                          const SnackBar(content: Text('Acesse a GESTÃO para gerenciar talhões')),
                         );
                       },
                     ),
@@ -116,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: '',
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Selecione uma propriedade primeiro')),
+                          const SnackBar(content: Text('Acesse a GESTÃO para gerenciar anexos')),
                         );
                       },
                     ),
@@ -131,7 +129,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: '',
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Selecione uma propriedade primeiro')),
+                          const SnackBar(content: Text('Acesse a GESTÃO para gerenciar operações')),
+                        );
+                      },
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    _buildMenuItem(
+                      icon: Icons.attach_money,
+                      title: 'Custo Operacional',
+                      subtitle: 'Análise de custos',
+                      color: Colors.indigo,
+                      count: '',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Acesse a GESTÃO para analisar custos operacionais')),
                         );
                       },
                     ),
@@ -146,7 +159,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: '',
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Em desenvolvimento')),
+                          const SnackBar(content: Text('Acesse a GESTÃO para análise de produtividade')),
                         );
                       },
                     ),
@@ -161,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       count: '',
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Em desenvolvimento')),
+                          const SnackBar(content: Text('Acesse a GESTÃO para visualizar precipitação')),
                         );
                       },
                     ),
@@ -179,10 +192,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final proprietariosAtivos = proprietarios.where((p) => p.ativo).length;
 
     return StreamBuilder<List<Propriedade>>(
-      stream: _propriedadeService.getAllPropriedadesStream(),
+      stream: _propriedadeService.getPropriedadesStream(),
       builder: (context, snapshotPropriedades) {
         final propriedades = snapshotPropriedades.data ?? [];
-        final propriedadesAtivas = propriedades.where((p) => p.ativa ?? true).length;
+        final propriedadesAtivas = propriedades.where((p) => p.ativa).length;
 
         return FutureBuilder<double>(
           future: _computeTotalAreaFromPropriedades(propriedades),
@@ -444,7 +457,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required VoidCallback onTap,
   }) {
     return StreamBuilder<List<Propriedade>>(
-      stream: _propriedadeService.getAllPropriedadesStream(),
+      stream: _propriedadeService.getPropriedadesStream(),
       builder: (context, snapshot) {
         final count = (snapshot.data ?? []).length.toString();
         

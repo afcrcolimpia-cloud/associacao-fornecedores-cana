@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
@@ -59,6 +60,7 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
       _inseticidas = List.from(widget.tratos!.inseticidas ?? []);
       _maturadores = List.from(widget.tratos!.maturadores ?? []);
     } else {
+      // Se houver talhões disponíveis, seleciona o primeiro; caso contrário, deixa vazio
       _talhaoSelecionado = widget.talhoes.isNotEmpty ? widget.talhoes.first.id : '';
       _anoSafra = DateTime.now().year;
       _adubos = [];
@@ -118,6 +120,17 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Valida\u00e7\u00e3o adicional para talhaoId
+    if (_talhaoSelecionado.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('\u26a0\ufe0f Selecione um talh\u00e3o antes de salvar.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -134,7 +147,7 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
 
       final tratos = TratosCulturais(
         id: widget.tratos?.id ?? '',
-        talhaoId: _talhaoSelecionado,
+        talhaoId: _talhaoSelecionado.isEmpty ? null : _talhaoSelecionado,
         propriedadeId: widget.propriedade.id,
         anoSafra: _anoSafra.toString(),
         adubos: _adubos,
@@ -220,11 +233,29 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     });
   }
 
+  void _carregarDadosTalhao(String talhaoId) {
+    try {
+      final talhao = widget.talhoes.firstWhere((t) => t.id == talhaoId);
+      // Mostra um toast com as informa\u00e7\u00f5es do talh\u00e3o
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Talh\u00e3o: ${talhao.nome} | Variedade: ${talhao.variedade ?? "N/A"} | \u00c1rea: ${talhao.areaHa?.toStringAsFixed(2) ?? "N/A"} ha',
+          ),
+          duration: const Duration(seconds: 3),
+          backgroundColor: AppColors.success.withOpacity(0.8),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Talh\u00e3o n\u00e3o encontrado: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.tratos == null ? 'Novo Trato Cultural' : 'Editar Trato'),
+      appBar: AppBarAfcrc(
+        title: widget.tratos == null ? 'Novo Trato Cultural' : 'Editar Trato',
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -258,13 +289,16 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
                         items: widget.talhoes.map((t) {
                           return DropdownMenuItem(
                             value: t.id,
-                            child: Text('Talhão ${t.numeroTalhao}'),
+                            child: Text(
+                              'Talh\u00e3o ${t.numeroTalhao}${t.variedade != null ? ' - ${t.variedade}' : ''}',
+                            ),
                           );
                         }).toList(),
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               _talhaoSelecionado = value;
+                              _carregarDadosTalhao(value);
                             });
                           }
                         },

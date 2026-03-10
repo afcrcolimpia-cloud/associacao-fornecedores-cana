@@ -1,188 +1,182 @@
-// lib/services/propriedade_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
 class PropriedadeService {
   final SupabaseClient _supabase = Supabase.instance.client;
-  final String collectionPropriedades = 'propriedades';
-  final String collectionTalhoes = 'talhoes';
+  final String _tableName = 'propriedades';
 
-  // --- PROPRIEDADES ---
-
-  Stream<List<Propriedade>> getAllPropriedadesStream() {
-    return _supabase
-        .from(collectionPropriedades)
-        .stream(primaryKey: ['id'])
-        .order('nome_propriedade', ascending: true)
-        .map((data) => data.map((map) => Propriedade.fromJson(map)).toList());
-  }
-
-  Stream<List<Propriedade>> getPropriedadesByProprietarioStream(String proprietarioId) {
-    return _supabase
-        .from(collectionPropriedades)
-        .stream(primaryKey: ['id'])
-        .eq('proprietario_id', proprietarioId)
-        .order('nome_propriedade', ascending: true)
-        .map((data) => data.map((map) => Propriedade.fromJson(map)).toList());
-  }
-
-  Future<Propriedade?> getPropriedade(String id) async {
+  // Buscar todas as propriedades
+  Future<List<Propriedade>> getPropriedades() async {
     try {
       final data = await _supabase
-          .from(collectionPropriedades)
+          .from(_tableName)
+          .select()
+          .order('nome_propriedade', ascending: true);
+      
+      return data.map((json) => Propriedade.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('Erro ao buscar propriedades: $e');
+      return [];
+    }
+  }
+
+  // Buscar propriedades por proprietário
+  Future<List<Propriedade>> getPropriedadesPorProprietario(String proprietarioId) async {
+    try {
+      final data = await _supabase
+          .from(_tableName)
+          .select()
+          .eq('proprietario_id', proprietarioId)
+          .order('nome_propriedade', ascending: true);
+      
+      return data.map((json) => Propriedade.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('Erro ao buscar propriedades: $e');
+      return [];
+    }
+  }
+
+  // Buscar propriedade por ID
+  Future<Propriedade?> getPropriedadeById(String id) async {
+    try {
+      final data = await _supabase
+          .from(_tableName)
           .select()
           .eq('id', id)
-          .single();
-
-      return Propriedade.fromJson(data);
-    } on PostgrestException catch (e) {
-      if (e.code == 'PGRST116') {
-        return null;
+          .maybeSingle();
+      
+      if (data != null) {
+        return Propriedade.fromJson(data);
       }
-      throw 'Erro ao buscar propriedade: ${e.message}';
+      return null;
     } catch (e) {
-      throw 'Erro ao buscar propriedade: $e';
+      debugPrint('Erro ao buscar propriedade: $e');
+      return null;
     }
   }
 
-  Future<String> addPropriedade(Propriedade propriedade) async {
+  // Criar nova propriedade
+  Future<void> createPropriedade(Propriedade propriedade) async {
     try {
-      final json = propriedade.toJson();
-      json.remove('id');
-
-      final data = await _supabase
-          .from(collectionPropriedades)
-          .insert(json)
-          .select('id')
-          .single();
-
-      return data['id'] as String;
+      await _supabase.from(_tableName).insert({
+        'proprietario_id': propriedade.proprietarioId,
+        'nome_propriedade': propriedade.nomePropriedade,
+        'numero_fa': propriedade.numeroFA,
+        'endereco': propriedade.endereco,
+        'cidade': propriedade.cidade,
+        'estado': propriedade.estado,
+        'cep': propriedade.cep,
+        'area_ha': propriedade.areaHa,
+        'area_alqueires': propriedade.areaAlqueires,
+        'ativa': propriedade.ativa,
+      });
     } catch (e) {
-      throw 'Erro ao adicionar propriedade: $e';
+      debugPrint('Erro ao criar propriedade: $e');
+      rethrow;
     }
   }
 
+  // Atualizar propriedade
   Future<void> updatePropriedade(Propriedade propriedade) async {
     try {
-      final json = propriedade.toJson();
-      json.remove('criado_em');
-      
       await _supabase
-          .from(collectionPropriedades)
-          .update(json)
+          .from(_tableName)
+          .update({
+            'proprietario_id': propriedade.proprietarioId,
+            'nome_propriedade': propriedade.nomePropriedade,
+            'numero_fa': propriedade.numeroFA,
+            'endereco': propriedade.endereco,
+            'cidade': propriedade.cidade,
+            'estado': propriedade.estado,
+            'cep': propriedade.cep,
+            'area_ha': propriedade.areaHa,
+            'area_alqueires': propriedade.areaAlqueires,
+            'ativa': propriedade.ativa,
+          })
           .eq('id', propriedade.id);
     } catch (e) {
-      throw 'Erro ao atualizar propriedade: $e';
+      debugPrint('Erro ao atualizar propriedade: $e');
+      rethrow;
     }
   }
 
+  // Deletar propriedade
   Future<void> deletePropriedade(String id) async {
     try {
       await _supabase
-          .from(collectionPropriedades)
+          .from(_tableName)
           .delete()
           .eq('id', id);
     } catch (e) {
-      throw 'Erro ao deletar propriedade: $e';
+      debugPrint('Erro ao deletar propriedade: $e');
+      rethrow;
     }
   }
 
-  // Atualiza apenas o campo de área total (hectares) da propriedade
-  Future<void> setAreaTotalHectares(String propriedadeId, double area) async {
+  // Toggle ativo/inativo
+  Future<void> toggleAtivo(String id) async {
     try {
-      await _supabase
-          .from(collectionPropriedades)
-          .update({'area_total_hectares': area})
-          .eq('id', propriedadeId);
-    } catch (e) {
-      throw 'Erro ao atualizar área total da propriedade: $e';
-    }
-  }
-
-  // --- TALHÕES ---
-
-  Stream<List<Talhao>> getTalhoesByPropriedadeStream(String propriedadeId) {
-    return _supabase
-        .from(collectionTalhoes)
-        .stream(primaryKey: ['id'])
-        .eq('propriedade_id', propriedadeId)
-        .order('numero_talhao', ascending: true)
-        .map((data) => data.map((map) => Talhao.fromJson(map)).toList());
-  }
-
-  Future<Talhao?> getTalhao(String id) async {
-    try {
-      final data = await _supabase
-          .from(collectionTalhoes)
-          .select()
-          .eq('id', id)
-          .single();
-
-      return Talhao.fromJson(data);
-    } on PostgrestException catch (e) {
-      if (e.code == 'PGRST116') {
-        return null;
+      final propriedade = await getPropriedadeById(id);
+      if (propriedade != null) {
+        await _supabase
+            .from(_tableName)
+            .update({'ativa': !propriedade.ativa})
+            .eq('id', id);
       }
-      throw 'Erro ao buscar talhão: ${e.message}';
     } catch (e) {
-      throw 'Erro ao buscar talhão: $e';
+      debugPrint('Erro ao alternar status: $e');
+      rethrow;
     }
   }
 
-  Future<String> addTalhao(Talhao talhao) async {
-    try {
-      final json = talhao.toJson();
-      json.remove('id');
+  // Stream de todas as propriedades
+  Stream<List<Propriedade>> getPropriedadesStream() {
+    return _supabase
+        .from(_tableName)
+        .stream(primaryKey: ['id'])
+        .order('nome_propriedade', ascending: true)
+        .map((data) => data.map((json) => Propriedade.fromJson(json)).toList());
+  }
 
+  // Stream de propriedades ativas
+  Stream<List<Propriedade>> getPropriedadesAtivasStream() {
+    return _supabase
+        .from(_tableName)
+        .stream(primaryKey: ['id'])
+        .map((data) => data
+            .where((json) => json['ativa'] == true)
+            .map((json) => Propriedade.fromJson(json))
+            .toList());
+  }
+
+  // Stream de propriedades inativas
+  Stream<List<Propriedade>> getPropriedadesInativasStream() {
+    return _supabase
+        .from(_tableName)
+        .stream(primaryKey: ['id'])
+        .map((data) => data
+            .where((json) => json['ativa'] == false)
+            .map((json) => Propriedade.fromJson(json))
+            .toList());
+  }
+
+  // Buscar por número FA
+  Future<Propriedade?> getPropriedadePorFA(String numeroFA) async {
+    try {
       final data = await _supabase
-          .from(collectionTalhoes)
-          .insert(json)
-          .select('id')
-          .single();
-
-      return data['id'] as String;
-    } catch (e) {
-      throw 'Erro ao adicionar talhão: $e';
-    }
-  }
-
-  Future<void> updateTalhao(Talhao talhao) async {
-    try {
-      final json = talhao.toJson();
-      json.remove('criado_em');
+          .from(_tableName)
+          .select()
+          .eq('numero_fa', numeroFA)
+          .maybeSingle();
       
-      await _supabase
-          .from(collectionTalhoes)
-          .update(json)
-          .eq('id', talhao.id);
+      if (data != null) {
+        return Propriedade.fromJson(data);
+      }
+      return null;
     } catch (e) {
-      throw 'Erro ao atualizar talhão: $e';
-    }
-  }
-
-  Future<void> deleteTalhao(String id) async {
-    try {
-      await _supabase
-          .from(collectionTalhoes)
-          .delete()
-          .eq('id', id);
-    } catch (e) {
-      throw 'Erro ao deletar talhão: $e';
-    }
-  }
-
-  // --- MÉTODO AUXILIAR PARA CONTAGEM ---
-  
-  Future<int> getTalhoesCount(String propriedadeId) async {
-    try {
-      final response = await _supabase
-          .from(collectionTalhoes)
-          .select('id')
-          .eq('propriedade_id', propriedadeId);
-
-      return response.length;
-    } catch (e) {
-      return 0;
+      debugPrint('Erro ao buscar propriedade por FA: $e');
+      return null;
     }
   }
 }

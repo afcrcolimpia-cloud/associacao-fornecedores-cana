@@ -1,4 +1,15 @@
 lib/config/database_config.dart
+
+# Credenciais e arquivos sensíveis
+client_secret_*.json
+google-services.json
+firebase.json
+*.bak
+
+# Arquivos temporários de debug
+errors.txt
+errors_gestao.txt
+errors_utf8.txt
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies

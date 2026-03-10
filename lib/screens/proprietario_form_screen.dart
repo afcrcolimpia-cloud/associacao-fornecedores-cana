@@ -1,5 +1,6 @@
 // lib/screens/proprietario_form_screen.dart
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
@@ -139,9 +140,7 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
     final isEdicao = widget.proprietario != null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdicao ? 'Editar Proprietário' : 'Novo Proprietário'),
-      ),
+      appBar: AppBarAfcrc(title: isEdicao ? 'Editar Proprietário' : 'Novo Proprietário'),
       body: Form(
         key: _formKey,
         child: ListView(

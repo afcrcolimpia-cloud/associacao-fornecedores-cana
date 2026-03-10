@@ -1,6 +1,7 @@
-// lib/screens/precipitacao_por_municipios_screen.dart
+﻿// lib/screens/precipitacao_por_municipios_screen.dart
 
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../constants/app_colors.dart';
 import '../models/precipitacao.dart';
 import '../services/precipitacao_agregada_service.dart';
@@ -68,10 +69,7 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('PRECIPITAÇÃO POR MUNICÍPIOS'),
-        elevation: 0,
-      ),
+      appBar: const AppBarAfcrc(title: 'Precipitação por Municípios'),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -253,6 +251,7 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
         }
 
         final totalPorMes = snapshot.data ?? {};
+        // ? CORRIGIDO: usar 'milimetros' ao invés de 'volume'
         final totalVolume = totalPorMes.values.fold(0.0, (a, b) => a + b);
 
         return GestureDetector(
@@ -479,7 +478,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                 children: porMes.entries.toList().reversed.map((entry) {
                   final mes = entry.key;
                   final dados = entry.value;
-                  final total = dados.fold(0.0, (sum, p) => sum + p.volume);
+                  // ? CORRIGIDO: usar 'milimetros'
+                  final total = dados.fold(0.0, (sum, p) => sum + p.milimetros);
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -549,8 +549,9 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                                           ),
                                       ],
                                     ),
+                                    // ? CORRIGIDO: usar 'milimetros'
                                     Text(
-                                      '${p.volume.toStringAsFixed(1)} mm',
+                                      '${p.milimetros.toStringAsFixed(1)} mm',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: AppColors.primary,

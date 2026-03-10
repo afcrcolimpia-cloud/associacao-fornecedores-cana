@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
@@ -27,36 +28,30 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🔵 TratosCulturaisScreen - Propriedade ID: ${widget.propriedade.id}');
+    debugPrint('🔵 TratosCulturaisScreen - Propriedade Nome: ${widget.propriedade.nomePropriedade}');
     _carregarTalhoes();
   }
 
   Future<void> _carregarTalhoes() async {
     try {
       final talhoes = await _talhaoService.getTalhoesPorPropriedade(widget.propriedade.id);
+      debugPrint('🟢 Talhões carregados: ${talhoes.length}');
       if (mounted) {
         setState(() {
           _talhoes = talhoes;
         });
       }
     } catch (e) {
-      debugPrint('Erro ao carregar talhões: $e');
+      debugPrint('🔴 Erro ao carregar talhões: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Tratos Culturais'),
-            Text(
-              widget.propriedade.nomePropriedade,
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
+      appBar: AppBarAfcrc(
+        title: 'Tratos Culturais — ${widget.propriedade.nomePropriedade}',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -119,18 +114,38 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
     return StreamBuilder<List<TratosCulturais>>(
       stream: _service.getTratosByPropriedadeStream(widget.propriedade.id),
       builder: (context, snapshot) {
+        debugPrint('🟡 Stream State: ${snapshot.connectionState}');
+        debugPrint('🟡 Has Data: ${snapshot.hasData}');
+        debugPrint('🟡 Has Error: ${snapshot.hasError}');
+        if (snapshot.hasError) {
+          debugPrint('🔴 Stream Error: ${snapshot.error}');
+        }
+        if (snapshot.hasData) {
+          debugPrint('🟢 Data recebida: ${snapshot.data?.length ?? 0} registros');
+        }
+
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Erro: ${snapshot.error}'));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error, size: 64, color: Colors.red[400]),
+                const SizedBox(height: 16),
+                Text('Erro: ${snapshot.error}'),
+              ],
+            ),
+          );
         }
 
         var tratos = snapshot.data ?? [];
+        debugPrint('🟢 Total de tratos antes do filtro: ${tratos.length}');
 
-        // Aplicar filtros
         tratos = tratos.where((t) => t.anoSafra == _filtroAnoSafra.toString()).toList();
+        debugPrint('🟢 Total de tratos depois do filtro: ${tratos.length}');
 
         if (tratos.isEmpty) {
           return Center(
@@ -140,6 +155,12 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
                 Icon(Icons.agriculture, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 const Text('Nenhum trato cadastrado para este período'),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Adicionar Trato'),
+                  onPressed: () => _abrirFormulario(),
+                ),
               ],
             ),
           );

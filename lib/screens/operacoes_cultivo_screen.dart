@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/operacao_cultivo_service.dart';
 import '../services/talhao_service.dart';
@@ -127,17 +128,8 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Operações de Cultivo'),
-            Text(
-              widget.propriedade.nomePropriedade,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
-            ),
-          ],
-        ),
+      appBar: AppBarAfcrc(
+        title: 'Operações de Cultivo — ${widget.propriedade.nomePropriedade}',
         actions: [
           // Filtro por talhão
           PopupMenuButton<String?>(

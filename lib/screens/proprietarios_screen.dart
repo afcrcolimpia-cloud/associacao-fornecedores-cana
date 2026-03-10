@@ -1,5 +1,6 @@
 // lib/screens/proprietarios_screen.dart
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
@@ -28,8 +29,8 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Proprietários'),
+      appBar: AppBarAfcrc(
+        title: 'Proprietários',
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(

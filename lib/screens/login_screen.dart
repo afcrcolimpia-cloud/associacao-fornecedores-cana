@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
 // A navegação é delegada ao AuthGate que observa o stream de autenticação.
@@ -48,18 +48,19 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      debugPrint('Tentando login com: ${_emailController.text.trim()}');
       await _authService.signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text,
       );
       
+      debugPrint('Login bem-sucedido!');
       // Sucesso: O AuthGate fará o redirecionamento.
       
     } catch (e) {
+      debugPrint('Erro ao fazer login: $e');
       // Tratamento de erro refinado para feedback mais claro
-      final errorMessage = e.toString().contains('user-not-found')
-          ? 'E-mail ou senha inválidos.'
-          : 'Ocorreu um erro no login. Verifique sua conexão ou tente novamente.';
+      final errorMessage = e.toString();
       _showSnackbar(errorMessage, color: AppColors.error);
 
     } finally {
@@ -72,10 +73,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      debugPrint('Tentando login com Google...');
       await _authService.signInWithGoogle();
+      debugPrint('Login com Google bem-sucedido!');
 
     } catch (e) {
-      _showSnackbar('Erro ao fazer login com Google: Por favor, tente novamente.', color: AppColors.error);
+      debugPrint('Erro ao fazer login com Google: $e');
+      _showSnackbar('Erro ao fazer login com Google: $e', color: AppColors.error);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -191,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           enabled: !isAnyLoading, // Desabilita durante o loading
                           decoration: InputDecoration(
                             labelText: 'Senha',
-                            hintText: '••••••••',
+                            hintText: '******',
                             prefixIcon: const Icon(Icons.lock_outlined),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -327,3 +331,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

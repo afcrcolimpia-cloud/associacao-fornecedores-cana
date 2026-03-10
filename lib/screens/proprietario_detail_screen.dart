@@ -1,5 +1,6 @@
 // lib/screens/proprietario_detail_screen.dart
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
@@ -102,8 +103,8 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes do Proprietário'),
+      appBar: AppBarAfcrc(
+        title: 'Detalhes do Proprietário',
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),

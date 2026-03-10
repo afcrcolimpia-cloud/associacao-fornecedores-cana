@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
-import '../services/proprietario_service.dart';
-import '../services/propriedade_service.dart';
+import 'produtividade_form_screen.dart';
 
 class ProdutividadeScreen extends StatefulWidget {
-  const ProdutividadeScreen({super.key});
+  final Propriedade? propriedade;
+
+  const ProdutividadeScreen({
+    super.key,
+    this.propriedade,
+  });
 
   @override
   State<ProdutividadeScreen> createState() => _ProdutividadeScreenState();
@@ -14,89 +19,46 @@ class ProdutividadeScreen extends StatefulWidget {
 
 class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   final ProdutividadeService _service = ProdutividadeService();
-  final ProprietarioService _proprietarioService = ProprietarioService();
-  final PropriedadeService _propriedadeService = PropriedadeService();
   
-  String? _proprietarioSelecionado;
   String? _propriedadeSelecionada;
   String? _anoSafraSelecionado;
   String? _anoComparacao;
   
-  List<Proprietario> _proprietarios = [];
-  List<Propriedade> _propriedades = [];
-  List<String> _anosSafra = [];
-  
   bool _modoComparacao = false;
-  
+
   @override
   void initState() {
     super.initState();
-    _carregarProprietarios();
-    _carregarAnosSafra();
-  }
-  
-  Future<void> _carregarProprietarios() async {
-    try {
-      final proprietarios = await _proprietarioService.getProprietarios();
-      setState(() => _proprietarios = proprietarios);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar proprietários: $e')),
-        );
-      }
-    }
-  }
-  
-  Future<void> _carregarPropriedades(String proprietarioId) async {
-    try {
-      _propriedadeService
-          .getPropriedadesByProprietarioStream(proprietarioId)
-          .listen((propriedades) {
-        setState(() => _propriedades = propriedades);
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar propriedades: $e')),
-        );
-      }
-    }
-  }
-  
-  Future<void> _carregarAnosSafra() async {
-    try {
-      final anos = await _service.getAnosSafra();
-      setState(() => _anosSafra = anos);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar anos: $e')),
-        );
-      }
+    if (widget.propriedade != null) {
+      _propriedadeSelecionada = widget.propriedade!.id;
+      _anoSafraSelecionado = DateTime.now().year.toString();
     }
   }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Produtividade'),
+      appBar: AppBarAfcrc(
+        title: 'Produtividade',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => _mostrarFormulario(),
+            onPressed: widget.propriedade != null ? _mostrarFormulario : null,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildFiltros(),
-          Expanded(
-            child: _buildConteudo(),
-          ),
-        ],
-      ),
+      body: widget.propriedade == null
+          ? const Center(
+              child: Text('Selecione uma propriedade para visualizar produtividade'),
+            )
+          : Column(
+              children: [
+                _buildFiltros(),
+                Expanded(
+                  child: _buildConteudo(),
+                ),
+              ],
+            ),
     );
   }
 
@@ -107,74 +69,21 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Dropdown de Proprietário
-            DropdownButtonFormField<String>(
-              value: _proprietarioSelecionado,
-              decoration: const InputDecoration(
-                labelText: 'Proprietário',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-              items: _proprietarios.map((prop) {
-                return DropdownMenuItem(
-                  value: prop.id,
-                  child: Text(prop.nome),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _proprietarioSelecionado = value;
-                  _propriedadeSelecionada = null;
-                  _propriedades.clear();
-                });
-                if (value != null) {
-                  _carregarPropriedades(value);
-                }
-              },
-            ),
-            const SizedBox(height: 12),
-            
-            // Dropdown de Propriedade (F.A)
-            DropdownButtonFormField<String>(
-              value: _propriedadeSelecionada,
-              decoration: const InputDecoration(
-                labelText: 'Propriedade (F.A)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.home_work),
-              ),
-              items: _propriedades.map((prop) {
-                return DropdownMenuItem(
-                  value: prop.id,
-                  child: Text('${prop.numeroFA} - ${prop.nomePropriedade}'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() => _propriedadeSelecionada = value);
-              },
-            ),
-            const SizedBox(height: 12),
-            
-            // Dropdown de Ano Safra
             DropdownButtonFormField<String>(
               value: _anoSafraSelecionado,
               decoration: const InputDecoration(
                 labelText: 'Ano Safra',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.calendar_today),
               ),
-              items: _anosSafra.map((ano) {
-                return DropdownMenuItem(
-                  value: ano,
-                  child: Text(ano),
-                );
-              }).toList(),
+              items: List.generate(5, (index) {
+                final ano = (DateTime.now().year - index).toString();
+                return DropdownMenuItem(value: ano, child: Text(ano));
+              }),
               onChanged: (value) {
                 setState(() => _anoSafraSelecionado = value);
               },
             ),
-            
             const SizedBox(height: 16),
-            
             SwitchListTile(
               title: const Text('Modo Comparação'),
               subtitle: const Text('Compare com ano anterior'),
@@ -183,25 +92,18 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
                 setState(() => _modoComparacao = value);
               },
             ),
-            
             if (_modoComparacao) ...[
               const SizedBox(height: 8),
-              // Dropdown de Ano Comparação
               DropdownButtonFormField<String>(
                 value: _anoComparacao,
                 decoration: const InputDecoration(
-                  labelText: 'Ano para Comparação',
+                  labelText: 'Comparar com',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.compare),
                 ),
-                items: _anosSafra
-                    .where((ano) => ano != _anoSafraSelecionado)
-                    .map((ano) {
-                  return DropdownMenuItem(
-                    value: ano,
-                    child: Text(ano),
-                  );
-                }).toList(),
+                items: List.generate(5, (index) {
+                  final ano = (DateTime.now().year - index - 1).toString();
+                  return DropdownMenuItem(value: ano, child: Text(ano));
+                }),
                 onChanged: (value) {
                   setState(() => _anoComparacao = value);
                 },
@@ -576,18 +478,21 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   }
 
   Future<void> _mostrarFormulario({Produtividade? produtividade}) async {
-    await showDialog(
-      context: context,
-      builder: (context) => ProdutividadeFormDialog(
-        produtividade: produtividade,
-        propriedadeId: _propriedadeSelecionada,
-        anoSafra: _anoSafraSelecionado,
-        onSalvo: () {
-          Navigator.pop(context);
-          setState(() {});
-        },
+    if (widget.propriedade == null) return;
+
+    final resultado = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProdutividadeFormScreen(
+          propriedade: widget.propriedade!,
+          produtividade: produtividade,
+        ),
       ),
     );
+
+    if (resultado == true && mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _confirmarExclusao(String id) async {
@@ -614,8 +519,6 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
       try {
         await _service.deleteProdutividade(id);
         if (mounted) {
-          // Forçar rebuild do StreamBuilder
-          setState(() {});
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Registro excluído com sucesso')),
           );
@@ -626,213 +529,6 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
             SnackBar(content: Text('Erro ao excluir: $e')),
           );
         }
-      }
-    }
-  }
-}
-
-class ProdutividadeFormDialog extends StatefulWidget {
-  final Produtividade? produtividade;
-  final String? propriedadeId;
-  final String? anoSafra;
-  final VoidCallback onSalvo;
-
-  const ProdutividadeFormDialog({
-    super.key,
-    this.produtividade,
-    this.propriedadeId,
-    this.anoSafra,
-    required this.onSalvo,
-  });
-
-  @override
-  State<ProdutividadeFormDialog> createState() =>
-      _ProdutividadeFormDialogState();
-}
-
-class _ProdutividadeFormDialogState extends State<ProdutividadeFormDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final ProdutividadeService _service = ProdutividadeService();
-  
-  late TextEditingController _talhaoController;
-  late TextEditingController _variedadeController;
-  late TextEditingController _pesoController;
-  late TextEditingController _atrController;
-  
-  int? _mesSelecionado;
-  String? _estagio;
-
-  @override
-  void initState() {
-    super.initState();
-    _talhaoController = TextEditingController(
-      text: widget.produtividade?.talhaoId ?? '',
-    );
-    _variedadeController = TextEditingController(
-      text: widget.produtividade?.variedade ?? '',
-    );
-    _pesoController = TextEditingController(
-      text: widget.produtividade?.pesoLiquidoToneladas?.toString() ?? '',
-    );
-    _atrController = TextEditingController(
-      text: widget.produtividade?.mediaATR?.toString() ?? '',
-    );
-    _mesSelecionado = widget.produtividade?.mesColheita;
-    _estagio = widget.produtividade?.estagio;
-  }
-
-  @override
-  void dispose() {
-    _talhaoController.dispose();
-    _variedadeController.dispose();
-    _pesoController.dispose();
-    _atrController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.produtividade == null
-          ? 'Adicionar Produtividade'
-          : 'Editar Produtividade'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _talhaoController,
-                decoration: const InputDecoration(
-                  labelText: 'Talhão',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Campo obrigatório';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _variedadeController,
-                decoration: const InputDecoration(
-                  labelText: 'Variedade',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                value: _mesSelecionado,
-                decoration: const InputDecoration(
-                  labelText: 'Mês de Colheita',
-                  border: OutlineInputBorder(),
-                ),
-                items: List.generate(12, (i) {
-                  final meses = [
-                    'Janeiro', 'Fevereiro', 'Março', 'Abril',
-                    'Maio', 'Junho', 'Julho', 'Agosto',
-                    'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-                  ];
-                  return DropdownMenuItem(
-                    value: i + 1,
-                    child: Text(meses[i]),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _mesSelecionado = value);
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _pesoController,
-                decoration: const InputDecoration(
-                  labelText: 'Peso (Toneladas)',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _atrController,
-                decoration: const InputDecoration(
-                  labelText: 'Média ATR',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: _estagio,
-                decoration: const InputDecoration(
-                  labelText: 'Estágio',
-                  border: OutlineInputBorder(),
-                ),
-                items: ['Colheita', 'Processamento', 'Armazenamento']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() => _estagio = value);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: _salvar,
-          child: const Text('Salvar'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _salvar() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    try {
-      final produtividade = Produtividade(
-        id: widget.produtividade?.id ?? '',
-        propriedadeId: widget.propriedadeId ?? '',
-        talhaoId: _talhaoController.text,
-        variedade: _variedadeController.text.isNotEmpty
-            ? _variedadeController.text
-            : null,
-        mesColheita: _mesSelecionado,
-        pesoLiquidoToneladas: _pesoController.text.isNotEmpty
-            ? double.parse(_pesoController.text)
-            : null,
-        mediaATR: _atrController.text.isNotEmpty
-            ? double.parse(_atrController.text)
-            : null,
-        estagio: _estagio,
-        anoSafra: widget.anoSafra ?? '',
-      );
-
-      if (widget.produtividade == null) {
-        await _service.addProdutividade(produtividade);
-      } else {
-        await _service.updateProdutividade(produtividade);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Produtividade salva com sucesso!')),
-        );
-        widget.onSalvo();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar: $e')),
-        );
       }
     }
   }

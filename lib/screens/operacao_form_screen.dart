@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/operacao_cultivo_service.dart';
 import '../services/talhao_service.dart';
@@ -168,14 +169,30 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
     return fim.difference(inicio).inDays;
   }
 
+  void _mostrarDadosTalhao(String talhaoId) {
+    try {
+      final talhao = _talhoes.firstWhere((t) => t.id == talhaoId);
+      // Mostra um toast com as informa\u00e7\u00f5es do talh\u00e3o
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '\u2705 Talh\u00e3o: ${talhao.nome} | Variedade: ${talhao.variedade ?? "N/A"} | \u00c1rea: ${talhao.areaHa?.toStringAsFixed(2) ?? "N/A"} ha',
+          ),
+          duration: const Duration(seconds: 3),
+          backgroundColor: AppColors.success.withOpacity(0.8),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Talh\u00e3o n\u00e3o encontrado: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isEdicao = widget.operacao != null;
     
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdicao ? 'Editar Operação' : 'Nova Operação'),
-      ),
+      appBar: AppBarAfcrc(title: isEdicao ? 'Editar Operação' : 'Nova Operação'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
@@ -224,11 +241,18 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
               items: _talhoes.map((talhao) {
                 return DropdownMenuItem(
                   value: talhao.id,
-                  child: Text('${talhao.numeroTalhao} - ${talhao.cultura}'),
+                  child: Text(
+                    '${talhao.numeroTalhao}${talhao.variedade != null ? ' - ${talhao.variedade}' : ''}${talhao.cultura != null ? ' (${talhao.cultura})' : ''}',
+                  ),
                 );
               }).toList(),
               onChanged: isEdicao ? null : (value) {
-                setState(() => _talhaoSelecionado = value);
+                setState(() {
+                  _talhaoSelecionado = value;
+                  if (value != null) {
+                    _mostrarDadosTalhao(value);
+                  }
+                });
               },
               validator: (value) => value == null ? 'Selecione um talhão' : null,
             ),
@@ -262,7 +286,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
           ),
             const SizedBox(height: 12),
             _buildDateField(
-            label: '1ª Aplicação Herbicida',
+            label: '1º Aplicação Herbicida',
             icon: Icons.science,
             data: _data1aHerbicida,
             onTap: () => _selecionarData(context, '1aHerbicida'),
@@ -271,7 +295,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
           ),
           const SizedBox(height: 12),
           
-          // 3️⃣ Data Quebra-lombo
+          // 3?? Data Quebra-lombo
           _buildDateField(
             label: 'Data Quebra-lombo',
             icon: Icons.construction,
@@ -282,9 +306,9 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
           ),
           const SizedBox(height: 12),
           
-          // 4️⃣ 2ª Aplicação Herbicida
+          // 4?? 2º Aplicação Herbicida
           _buildDateField(
-            label: '2ª Aplicação Herbicida',
+            label: '2º Aplicação Herbicida',
             icon: Icons.science,
             data: _data2aHerbicida,
             onTap: () => _selecionarData(context, '2aHerbicida'),
@@ -293,7 +317,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
           ),
           const SizedBox(height: 12),
           
-          // 5️⃣ Data de Colheita
+          // 5?? Data de Colheita
           _buildDateField(
             label: 'Data de Colheita',
             icon: Icons.agriculture,
@@ -425,7 +449,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
                   Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                   const SizedBox(height: 2),
                   Text(
-                    data != null ? Formatters.formatDate(data) : 'Não informada',
+                    data != null ? Formatters.formatDate(data) : 'Nºo informada',
                     style: TextStyle(
                       fontSize: destaque ? 15 : 14,
                       fontWeight: destaque ? FontWeight.bold : FontWeight.w500,

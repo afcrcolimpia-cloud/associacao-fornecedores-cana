@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/anexo_service.dart';
 import '../constants/app_colors.dart';
+import '../config/database_config.dart';
 import '../utils/file_utils.dart';
 import 'anexo_upload_screen.dart';
+import 'formularios_pdf_screen.dart';
 
 class AnexosScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -18,7 +21,8 @@ class _AnexosScreenState extends State<AnexosScreen> {
   final AnexoService _anexoService = AnexoService();
 
   Future<void> _abrirArquivo(Anexo anexo) async {
-    final sucesso = await FileUtils.openFile(anexo.urlPublica);
+    final urlPublica = anexo.getUrlPublica('anexos-propriedades', DatabaseConfig.supabaseUrl);
+    final sucesso = await FileUtils.openFile(urlPublica);
     if (!mounted) return;
     if (!sucesso) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,7 +72,29 @@ class _AnexosScreenState extends State<AnexosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Anexos da Propriedade')),
+      appBar: AppBarAfcrc(
+        title: 'Anexos da Propriedade',
+        actions: [
+          // Botão para relatórios de pragas
+          Tooltip(
+            message: 'Gerar Relatórios de Pragas',
+            child: IconButton(
+              icon: const Icon(Icons.note_add),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FormulariosPdfScreen(
+                      propriedadeId: widget.propriedade.id,
+                      propriedade: widget.propriedade,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
       body: StreamBuilder<List<Anexo>>(
         stream: _anexoService.getAnexosByPropriedadeStream(widget.propriedade.id),
         builder: (context, snapshot) {
@@ -95,26 +121,101 @@ class _AnexosScreenState extends State<AnexosScreen> {
             itemCount: anexos.length,
             itemBuilder: (context, index) {
               final anexo = anexos[index];
+              final iconeData = _obterIconeECorPorExtensao(anexo.nomeArquivo);
+              
               return Card(
-                child: ListTile(
-                  leading: Text(_anexoService.getIconePorExtensao(anexo.nomeArquivo), style: const TextStyle(fontSize: 24)),
-                  title: Text(anexo.nomeArquivo),
-                  subtitle: Text('${_anexoService.getNomeTipoDocumento(anexo.tipoDocumento)} • ${_anexoService.formatarTamanho(anexo.tamanhoBytes)}'),
-                  trailing: PopupMenuButton<int>(
-                    onSelected: (v) async {
-                      if (v == 1) {
-                        if (!context.mounted) return;
-                        _abrirArquivo(anexo);
-                      }
-                      if (v == 2) {
-                        if (!context.mounted) return;
-                        _excluirAnexo(anexo);
-                      }
-                    },
-                    itemBuilder: (_) => [
-                      const PopupMenuItem(value: 1, child: Text('Abrir')),
-                      const PopupMenuItem(value: 2, child: Text('Excluir')),
-                    ],
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: InkWell(
+                  onTap: () => _abrirArquivo(anexo),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        // Ícone com fundo colorido
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: iconeData['cor'].withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            iconeData['icone'] as IconData,
+                            color: iconeData['cor'] as Color,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        
+                        // Informações do arquivo
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                anexo.nomeArquivo,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _anexoService.formatarTamanho(anexo.tamanhoBytes),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Menu de ações
+                        PopupMenuButton<int>(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          onSelected: (v) async {
+                            if (v == 1) {
+                              if (!context.mounted) return;
+                              _abrirArquivo(anexo);
+                            }
+                            if (v == 2) {
+                              if (!context.mounted) return;
+                              _excluirAnexo(anexo);
+                            }
+                          },
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(
+                              value: 1,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.open_in_new, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Abrir'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 2,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, size: 18, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Excluir', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -140,5 +241,82 @@ class _AnexosScreenState extends State<AnexosScreen> {
         label: const Text('Novo Anexo'),
       ),
     );
+  }
+
+  /// Retorna ícone e cor baseado na extensão do arquivo
+  Map<String, dynamic> _obterIconeECorPorExtensao(String nomeArquivo) {
+    final extensao = nomeArquivo.split('.').last.toLowerCase();
+    
+    switch (extensao) {
+      case 'pdf':
+        return {
+          'icone': Icons.picture_as_pdf,
+          'cor': Colors.red[600] ?? Colors.red,
+        };
+      case 'kml':
+      case 'kmz':
+        return {
+          'icone': Icons.location_on,
+          'cor': Colors.green[600] ?? Colors.green,
+        };
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return {
+          'icone': Icons.image,
+          'cor': Colors.purple[600] ?? Colors.purple,
+        };
+      case 'doc':
+      case 'docx':
+        return {
+          'icone': Icons.description,
+          'cor': Colors.blue[600] ?? Colors.blue,
+        };
+      case 'xls':
+      case 'xlsx':
+        return {
+          'icone': Icons.table_chart,
+          'cor': Colors.green[700] ?? Colors.green,
+        };
+      case 'csv':
+        return {
+          'icone': Icons.data_usage,
+          'cor': Colors.orange[600] ?? Colors.orange,
+        };
+      case 'txt':
+        return {
+          'icone': Icons.text_fields,
+          'cor': Colors.grey[600] ?? Colors.grey,
+        };
+      case 'zip':
+      case 'rar':
+      case '7z':
+        return {
+          'icone': Icons.folder_zip,
+          'cor': Colors.amber[700] ?? Colors.amber,
+        };
+      case 'mp4':
+      case 'mov':
+      case 'avi':
+      case 'mkv':
+        return {
+          'icone': Icons.videocam,
+          'cor': Colors.red[700] ?? Colors.red,
+        };
+      case 'mp3':
+      case 'wav':
+      case 'm4a':
+        return {
+          'icone': Icons.audio_file,
+          'cor': Colors.indigo[600] ?? Colors.indigo,
+        };
+      default:
+        return {
+          'icone': Icons.attach_file,
+          'cor': Colors.grey[500] ?? Colors.grey,
+        };
+    }
   }
 }

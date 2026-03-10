@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../constants/app_colors.dart';
 import '../utils/formatters.dart';
@@ -186,12 +186,12 @@ class OperacaoCard extends StatelessWidget {
                       ),
                     ],
 
-                    // 1ª Aplicação Herbicida
+                    // 1º Aplicação Herbicida
                     if (operacao.data1aAplicHerbicida != null) ...[
                       const SizedBox(height: 8),
                       _buildDateRow(
                         icon: Icons.science,
-                        label: '1ª Herbicida',
+                        label: '1º Herbicida',
                         date: operacao.data1aAplicHerbicida,
                         color: Colors.orange,
                         dias: _calcularDias(
@@ -201,12 +201,12 @@ class OperacaoCard extends StatelessWidget {
                       ),
                     ],
 
-                    // 2ª Aplicação Herbicida
+                    // 2º Aplicação Herbicida
                     if (operacao.data2aAplicHerbicida != null) ...[
                       const SizedBox(height: 8),
                       _buildDateRow(
                         icon: Icons.science,
-                        label: '2ª Herbicida',
+                        label: '2º Herbicida',
                         date: operacao.data2aAplicHerbicida,
                         color: Colors.deepOrange,
                         dias: _calcularDias(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_bar_afcrc.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/models.dart';
 import '../services/anexo_service.dart';
@@ -16,8 +17,6 @@ class AnexoUploadScreen extends StatefulWidget {
 class _AnexoUploadScreenState extends State<AnexoUploadScreen> {
   final AnexoService _anexoService = AnexoService();
   PlatformFile? _file;
-  String? _tipoDocumento;
-  final TextEditingController _descricaoController = TextEditingController();
   bool _isUploading = false;
 
   Future<void> _pickFile() async {
@@ -60,8 +59,6 @@ class _AnexoUploadScreenState extends State<AnexoUploadScreen> {
         propriedadeId: widget.propriedade.id,
         nomeArquivo: _file!.name,
         bytes: _file!.bytes!,
-        tipoDocumento: _tipoDocumento,
-        descricao: _descricaoController.text.isEmpty ? null : _descricaoController.text,
       );
 
       if (mounted) {
@@ -87,14 +84,13 @@ class _AnexoUploadScreenState extends State<AnexoUploadScreen> {
 
   @override
   void dispose() {
-    _descricaoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Enviar Anexo')),
+      appBar: const AppBarAfcrc(title: 'Enviar Anexo'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -108,32 +104,6 @@ class _AnexoUploadScreenState extends State<AnexoUploadScreen> {
             const SizedBox(height: 12),
             _buildPreview(),
             const SizedBox(height: 12),
-
-            // Tipo Documento
-            DropdownButtonFormField<String>(
-              value: _tipoDocumento,
-              decoration: const InputDecoration(labelText: 'Tipo de Documento'),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('Outro')),
-                DropdownMenuItem(value: 'mapa_pdf', child: Text('Mapa PDF')),
-                DropdownMenuItem(value: 'arquivo_kml', child: Text('Arquivo KML')),
-                DropdownMenuItem(value: 'relatorio_word', child: Text('Relatório Word')),
-                DropdownMenuItem(value: 'relatorio_excel', child: Text('Relatório Excel')),
-              ],
-              onChanged: (v) => setState(() => _tipoDocumento = v),
-            ),
-            const SizedBox(height: 12),
-
-            TextField(
-              controller: _descricaoController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Descrição (opcional)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 16),
 
             ElevatedButton(
               onPressed: _isUploading ? null : _upload,
