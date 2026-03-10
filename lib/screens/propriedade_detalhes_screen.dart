@@ -6,7 +6,6 @@ import 'talhoes_screen.dart';
 import 'anexos_screen.dart';
 import 'operacoes_cultivo_screen.dart';
 import 'produtividade_screen.dart';
-import 'precipitacao_screen.dart';
 import 'custo_operacional_screen.dart';
 
 class PropriedadeDetalhesScreen extends StatelessWidget {
@@ -132,14 +131,6 @@ class PropriedadeDetalhesScreen extends StatelessWidget {
         'descricao': 'Análise de produção',
         'onTap': () => _navegarPara(context,
           ProdutividadeScreen(propriedade: propriedade)),
-      },
-      {
-        'titulo': 'Precipitação',
-        'icone': Icons.water_drop,
-        'cor': Colors.cyan,
-        'descricao': 'Dados de chuva',
-        'onTap': () => _navegarPara(context,
-          const PrecipitacaoScreen()),
       },
       {
         'titulo': 'Custo Operacional',
