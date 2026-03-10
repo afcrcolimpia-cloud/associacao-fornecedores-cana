@@ -123,7 +123,7 @@ class PropriedadeDetalhesScreen extends StatelessWidget {
         'cor': Colors.purple,
         'descricao': 'Tratos e operações',
         'onTap': () => _navegarPara(context,
-          OperacoesCultivoScreen(propriedade: propriedade)),
+          const OperacoesCultivoScreen()),
       },
       {
         'titulo': 'Produtividade',

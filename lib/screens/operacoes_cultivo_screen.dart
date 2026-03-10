@@ -1,366 +1,997 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
-import '../models/models.dart';
-import '../services/operacao_cultivo_service.dart';
-import '../services/talhao_service.dart';
-import '../services/pdf_generators/pdf_operacoes.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../widgets/app_shell.dart';
+import '../widgets/kpi_card.dart';
 import '../constants/app_colors.dart';
-import '../widgets/operacao_card.dart';
-import 'operacao_form_screen.dart';
-import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
+import '../services/operacao_cultivo_service.dart';
+import '../services/propriedade_service.dart';
+import '../services/talhao_service.dart';
+import '../models/models.dart';
 
 class OperacoesCultivoScreen extends StatefulWidget {
-  final Propriedade propriedade;
-
-  const OperacoesCultivoScreen({
-    super.key,
-    required this.propriedade,
-  });
+  const OperacoesCultivoScreen({super.key});
 
   @override
   State<OperacoesCultivoScreen> createState() => _OperacoesCultivoScreenState();
 }
 
 class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
-  final OperacaoCultivoService _service = OperacaoCultivoService();
-  final TalhaoService _talhaoService = TalhaoService();
-  
-  Map<String, String> _talhoesNomes = {};
-  bool _isLoading = true;
-  String? _talhaoFiltro;
+  List<OperacaoCultivo> _operacoes = [];
+  List<Propriedade> _propriedades = [];
+  List<Talhao> _talhoes = [];
+
+  bool _loadingOperacoes = true;
+  bool _loadingPropriedades = true;
+  bool _loadingTalhoes = true;
+
+  String? _propriedadeSelecionada;
+  String? _talhaoSelecionado;
+
+  DateTime? _dataPlantio;
+  DateTime? _dataQuebraLombo;
+  DateTime? _dataColheita;
+  DateTime? _data1aAplic;
+  DateTime? _data2aAplic;
+
+  final TextEditingController _observacoesController = TextEditingController();
+
+  final OperacaoCultivoService _serviceOperacoes = OperacaoCultivoService();
+  final PropriedadeService _servicePropriedades = PropriedadeService();
+  final TalhaoService _serviceTalhoes = TalhaoService();
 
   @override
   void initState() {
     super.initState();
-    _carregarTalhoes();
+    _loadData();
   }
 
-  Future<void> _carregarTalhoes() async {
+  Future<void> _loadData() async {
+    await Future.wait([
+      _loadPropriedades(),
+      _loadOperacoes(),
+    ]);
+  }
+
+  Future<void> _loadPropriedades() async {
     try {
-      final talhoes = await _talhaoService
-          .getTalhoesByPropriedadeStream(widget.propriedade.id)
-          .first;
-      
-      setState(() {
-        _talhoesNomes = {
-          for (var t in talhoes) t.id: t.numeroTalhao,
-        };
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar talhões: $e')),
-        );
-      }
-    }
-  }
-
-  void _navegarParaFormulario([OperacaoCultivo? operacao]) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => OperacaoFormScreen(
-          propriedade: widget.propriedade,
-          operacao: operacao,
-        ),
-      ),
-    );
-
-    if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            operacao == null
-                ? 'Operação cadastrada com sucesso!'
-                : 'Operação atualizada com sucesso!',
-          ),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    }
-  }
-
-  Future<void> _confirmarExclusao(OperacaoCultivo operacao) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text(
-          'Deseja realmente excluir esta operação de ${_talhoesNomes[operacao.talhaoId] ?? "talhão"}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await _service.deleteOperacao(operacao.id!);
-        if (mounted) {
-          // Forçar rebuild do StreamBuilder
-          setState(() {});
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Operação excluída com sucesso!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro ao excluir: $e')),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _gerarPdf() async {
-    try {
-      final operacoes = await _service.getOperacoesPorPropriedade(
-        widget.propriedade.id,
-      ).first;
-
       if (!mounted) return;
+      setState(() => _loadingPropriedades = true);
 
-      final pdf = await PdfOperacoesCultivo.gerar(
-        propriedade: widget.propriedade,
-        operacoes: operacoes,
+      final propriedades = await _servicePropriedades.getPropriedades();
+
+      if (mounted) {
+        setState(() {
+          _propriedades = propriedades;
+          _loadingPropriedades = false;
+          if (propriedades.isNotEmpty && _propriedadeSelecionada == null) {
+            _propriedadeSelecionada = propriedades.first.id;
+            _loadTalhoes(propriedades.first.id);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingPropriedades = false);
+      }
+    }
+  }
+
+  Future<void> _loadTalhoes(String propriedadeId) async {
+    try {
+      if (!mounted) return;
+      setState(() => _loadingTalhoes = true);
+
+      final talhoes = await _serviceTalhoes.getTalhoesPorPropriedade(propriedadeId);
+
+      if (mounted) {
+        setState(() {
+          _talhoes = talhoes;
+          _talhaoSelecionado = null;
+          _loadingTalhoes = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingTalhoes = false);
+      }
+    }
+  }
+
+  Future<void> _loadOperacoes() async {
+    try {
+      if (!mounted || _propriedadeSelecionada == null) return;
+      setState(() => _loadingOperacoes = true);
+
+      final operacoes = await _serviceOperacoes.getOperacoesPorPropriedade(_propriedadeSelecionada!).first;
+
+      if (mounted) {
+        setState(() {
+          _operacoes = operacoes;
+          _loadingOperacoes = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingOperacoes = false);
+      }
+    }
+  }
+
+  Future<void> _salvarOperacao() async {
+    if (_propriedadeSelecionada == null || _talhaoSelecionado == null || _dataPlantio == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha os campos obrigatórios')),
+      );
+      return;
+    }
+
+    try {
+      final operacao = OperacaoCultivo(
+        propriedadeId: _propriedadeSelecionada!,
+        talhaoId: _talhaoSelecionado!,
+        dataPlantio: _dataPlantio!,
+        dataQuebraLombo: _dataQuebraLombo,
+        dataColheita: _dataColheita,
+        data1aAplicHerbicida: _data1aAplic,
+        data2aAplicHerbicida: _data2aAplic,
+        observacoes: _observacoesController.text.isNotEmpty ? _observacoesController.text : null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
 
-      await Printing.layoutPdf(
-        name: 'Relatorio_Operacoes_${widget.propriedade.nomePropriedade}.pdf',
-        format: PdfPageFormat.a4,
-        onLayout: (_) async => pdf,
-      );
+      await _serviceOperacoes.createOperacao(operacao);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Operação salva com sucesso')),
+        );
+        _limparFormulario();
+        _loadOperacoes();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+          SnackBar(content: Text('Erro ao salvar operação: $e')),
         );
       }
     }
+  }
+
+  void _limparFormulario() {
+    setState(() {
+      _dataPlantio = null;
+      _dataQuebraLombo = null;
+      _dataColheita = null;
+      _data1aAplic = null;
+      _data2aAplic = null;
+      _observacoesController.clear();
+      _talhaoSelecionado = null;
+    });
+  }
+
+  Future<void> _selecionarData(BuildContext context, Function(DateTime) onDateSelected) async {
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.newPrimary,
+              onPrimary: AppColors.bgDark,
+              surface: AppColors.surfaceDark,
+              onSurface: AppColors.newTextPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (selected != null) {
+      onDateSelected(selected);
+    }
+  }
+
+  int _getTotalOperacoes() => _operacoes.length;
+
+  int _getOperacoesAtuais() => _operacoes.where((op) => op.dataColheita == null).length;
+
+  String _getUltimaOperacao() {
+    if (_operacoes.isEmpty) return 'N/A';
+    return '${_operacoes.first.dataPlantio.day}/${_operacoes.first.dataPlantio.month}/${_operacoes.first.dataPlantio.year}';
+  }
+
+  @override
+  void dispose() {
+    _observacoesController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Operações de Cultivo — ${widget.propriedade.nomePropriedade}',
-        actions: [
-          // Filtro por talhão
-          PopupMenuButton<String?>(
-            icon: Icon(
-              _talhaoFiltro != null ? Icons.filter_alt : Icons.filter_alt_outlined,
-              color: _talhaoFiltro != null ? AppColors.primary : null,
+    return AppShell(
+      selectedIndex: 0,
+      title: 'Operações de Cultivo',
+      onNavigationSelect: (_) {},
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Títulos
+            Text(
+              'Operações de Cultivo',
+              style: GoogleFonts.inter(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: AppColors.newTextPrimary,
+              ),
             ),
-            tooltip: 'Filtrar por talhão',
-            onSelected: (value) {
-              setState(() => _talhaoFiltro = value);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: null,
-                child: Text('Todos os talhões'),
+            const SizedBox(height: 8),
+            Text(
+              'Registre e acompanhe todas as operações realizar nos talhões',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.newTextSecondary,
+                fontWeight: FontWeight.w400,
               ),
-              const PopupMenuDivider(),
-              ..._talhoesNomes.entries.map(
-                (entry) => PopupMenuItem(
-                  value: entry.key,
-                  child: Text(entry.value),
+            ),
+            const SizedBox(height: 32),
+
+            // KPI Cards Grid
+            GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.3,
+              children: [
+                KpiCard(
+                  label: 'Total de Operações',
+                  value: '${_getTotalOperacoes()}',
+                  icon: Icons.agriculture_outlined,
+                  iconColor: AppColors.newSuccess,
                 ),
+                KpiCard(
+                  label: 'Em Progresso',
+                  value: '${_getOperacoesAtuais()}',
+                  icon: Icons.hourglass_bottom_outlined,
+                  iconColor: AppColors.newWarning,
+                ),
+                KpiCard(
+                  label: 'Última Plantio',
+                  value: _getUltimaOperacao(),
+                  icon: Icons.calendar_today_outlined,
+                  iconColor: AppColors.newInfo,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 32),
+
+            // Formulário de Nova Operação
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDark,
+                border: Border.all(
+                  color: AppColors.borderDark,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
               ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: _gerarPdf,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : StreamBuilder<List<OperacaoCultivo>>(
-              stream: _service.getOperacoesPorPropriedade(widget.propriedade.id),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Erro: ${snapshot.error}'),
-                  );
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                var operacoes = snapshot.data ?? [];
-
-                // Aplicar filtro de talhão
-                if (_talhaoFiltro != null) {
-                  operacoes = operacoes
-                      .where((o) => o.talhaoId == _talhaoFiltro)
-                      .toList();
-                }
-
-                if (operacoes.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.agriculture_outlined,
-                          size: 80,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _talhaoFiltro != null
-                              ? 'Nenhuma operação neste talhão'
-                              : 'Nenhuma operação cadastrada',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Clique no + para adicionar',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Nova Operação',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.newTextPrimary,
                     ),
-                  );
-                }
+                  ),
+                  const SizedBox(height: 20),
 
-                return Column(
-                  children: [
-                    // Card de estatísticas
-                    _buildEstatisticasCard(operacoes),
-                    
-                    // Lista de operações
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 80),
-                        itemCount: operacoes.length,
-                        itemBuilder: (context, index) {
-                          final operacao = operacoes[index];
-                          return OperacaoCard(
-                            operacao: operacao,
-                            nomeTalhao: _talhoesNomes[operacao.talhaoId],
-                            onTap: () => _navegarParaFormulario(operacao),
-                            onEdit: () => _navegarParaFormulario(operacao),
-                            onDelete: () => _confirmarExclusao(operacao),
-                          );
-                        },
+                  // Seção: Identificação
+                  Text(
+                    'Identificação',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.newTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      // Propriedade
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Propriedade',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.newTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _loadingPropriedades
+                                ? const SizedBox(
+                                    height: 40,
+                                    child: Center(child: CircularProgressIndicator()),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.bgDark,
+                                      border: Border.all(
+                                        color: AppColors.borderDark,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: _propriedadeSelecionada,
+                                      isExpanded: true,
+                                      underline: const SizedBox(),
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          setState(() => _propriedadeSelecionada = value);
+                                          _loadTalhoes(value);
+                                          _loadOperacoes();
+                                        }
+                                      },
+                                      dropdownColor: AppColors.surfaceDark,
+                                      style: GoogleFonts.inter(
+                                        color: AppColors.newTextPrimary,
+                                        fontSize: 14,
+                                      ),
+                                      items: _propriedades
+                                          .map((prop) => DropdownMenuItem(
+                                                value: prop.id,
+                                                child: Text(prop.nomePropriedade),
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+
+                      // Talhão
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Talhão',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.newTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _loadingTalhoes
+                                ? const SizedBox(
+                                    height: 40,
+                                    child: Center(child: CircularProgressIndicator()),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.bgDark,
+                                      border: Border.all(
+                                        color: AppColors.borderDark,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: _talhaoSelecionado,
+                                      isExpanded: true,
+                                      underline: const SizedBox(),
+                                      onChanged: (value) {
+                                        setState(() => _talhaoSelecionado = value);
+                                      },
+                                      dropdownColor: AppColors.surfaceDark,
+                                      style: GoogleFonts.inter(
+                                        color: AppColors.newTextPrimary,
+                                        fontSize: 14,
+                                      ),
+                                      hint: Text(
+                                        'Selecione um talhão',
+                                        style: GoogleFonts.inter(
+                                          color: AppColors.newTextSecondary,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      items: _talhoes
+                                          .map((talhao) => DropdownMenuItem(
+                                                value: talhao.id,
+                                                child: Text(talhao.nome),
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+
+                      // Data de Plantio
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Data de Plantio',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.newTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _selecionarData(context, (date) {
+                                  setState(() => _dataPlantio = date);
+                                }),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.bgDark,
+                                    border: Border.all(
+                                      color: AppColors.borderDark,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_outlined,
+                                          color: AppColors.newTextSecondary, size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _dataPlantio != null
+                                              ? '${_dataPlantio!.day}/${_dataPlantio!.month}/${_dataPlantio!.year}'
+                                              : 'Selecione',
+                                          style: GoogleFonts.inter(
+                                            color: _dataPlantio != null
+                                                ? AppColors.newTextPrimary
+                                                : AppColors.newTextSecondary,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Seção: Operação
+                  Text(
+                    'Operação',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.newTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Quebra de Lombo',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.newTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _selecionarData(context, (date) {
+                                  setState(() => _dataQuebraLombo = date);
+                                }),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.bgDark,
+                                    border: Border.all(
+                                      color: AppColors.borderDark,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_outlined,
+                                          color: AppColors.newTextSecondary, size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _dataQuebraLombo != null
+                                              ? '${_dataQuebraLombo!.day}/${_dataQuebraLombo!.month}/${_dataQuebraLombo!.year}'
+                                              : 'Opcional',
+                                          style: GoogleFonts.inter(
+                                            color: _dataQuebraLombo != null
+                                                ? AppColors.newTextPrimary
+                                                : AppColors.newTextSecondary,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Data de Colheita',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.newTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _selecionarData(context, (date) {
+                                  setState(() => _dataColheita = date);
+                                }),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.bgDark,
+                                    border: Border.all(
+                                      color: AppColors.borderDark,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_outlined,
+                                          color: AppColors.newTextSecondary, size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _dataColheita != null
+                                              ? '${_dataColheita!.day}/${_dataColheita!.month}/${_dataColheita!.year}'
+                                              : 'Opcional',
+                                          style: GoogleFonts.inter(
+                                            color: _dataColheita != null
+                                                ? AppColors.newTextPrimary
+                                                : AppColors.newTextSecondary,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Seção: Herbicidas
+                  Text(
+                    'Aplicações de Herbicida',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.newTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '1ª Aplicação',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.newTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _selecionarData(context, (date) {
+                                  setState(() => _data1aAplic = date);
+                                }),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.bgDark,
+                                    border: Border.all(
+                                      color: AppColors.borderDark,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_outlined,
+                                          color: AppColors.newTextSecondary, size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _data1aAplic != null
+                                              ? '${_data1aAplic!.day}/${_data1aAplic!.month}/${_data1aAplic!.year}'
+                                              : 'Opcional',
+                                          style: GoogleFonts.inter(
+                                            color: _data1aAplic != null
+                                                ? AppColors.newTextPrimary
+                                                : AppColors.newTextSecondary,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '2ª Aplicação',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.newTextSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _selecionarData(context, (date) {
+                                  setState(() => _data2aAplic = date);
+                                }),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.bgDark,
+                                    border: Border.all(
+                                      color: AppColors.borderDark,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_outlined,
+                                          color: AppColors.newTextSecondary, size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _data2aAplic != null
+                                              ? '${_data2aAplic!.day}/${_data2aAplic!.month}/${_data2aAplic!.year}'
+                                              : 'Opcional',
+                                          style: GoogleFonts.inter(
+                                            color: _data2aAplic != null
+                                                ? AppColors.newTextPrimary
+                                                : AppColors.newTextSecondary,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Observações
+                  Text(
+                    'Observações',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.newTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.bgDark,
+                      border: Border.all(
+                        color: AppColors.borderDark,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TextField(
+                      controller: _observacoesController,
+                      maxLines: 4,
+                      style: GoogleFonts.inter(
+                        color: AppColors.newTextPrimary,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Adicione observações sobre esta operação...',
+                        hintStyle: GoogleFonts.inter(
+                          color: AppColors.newTextSecondary,
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(12),
                       ),
                     ),
-                  ],
-                );
-              },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Botões de Ação
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('Salvar'),
+                        onPressed: _salvarOperacao,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.newPrimary,
+                          foregroundColor: AppColors.bgDark,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.file_download_outlined),
+                        label: const Text('Gerar PDF'),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('PDF gerado com sucesso')),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.newWarning,
+                          foregroundColor: AppColors.bgDark,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navegarParaFormulario(),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
-        label: const Text('Nova Operação'),
-      ),
-    );
-  }
 
-  Widget _buildEstatisticasCard(List<OperacaoCultivo> operacoes) {
-    final total = operacoes.length;
-    final colhidas = operacoes.where((o) => o.dataColheita != null).length;
-    final emCultivo = operacoes.where((o) => 
-      o.dataQuebraLombo != null && o.dataColheita == null
-    ).length;
-    final plantadas = total - colhidas - emCultivo;
+            const SizedBox(height: 32),
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem(
-            icon: Icons.eco,
-            label: 'Plantadas',
-            value: plantadas.toString(),
-            color: Colors.white,
-          ),
-          Container(width: 1, height: 40, color: Colors.white30),
-          _buildStatItem(
-            icon: Icons.grass,
-            label: 'Em Cultivo',
-            value: emCultivo.toString(),
-            color: Colors.white,
-          ),
-          Container(width: 1, height: 40, color: Colors.white30),
-          _buildStatItem(
-            icon: Icons.agriculture,
-            label: 'Colhidas',
-            value: colhidas.toString(),
-            color: Colors.white,
-          ),
-        ],
-      ),
-    );
-  }
+            // Histórico de Operações
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDark,
+                border: Border.all(
+                  color: AppColors.borderDark,
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: _loadingOperacoes
+                  ? const Center(child: CircularProgressIndicator())
+                  : _operacoes.isEmpty
+                      ? Center(
+                          child: Text(
+                            'Nenhuma operação registrada',
+                            style: GoogleFonts.inter(
+                              color: AppColors.newTextMuted,
+                              fontSize: 14,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Histórico de Operações',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.newTextPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DataTable(
+                                columnSpacing: 20,
+                                dataRowColor: MaterialStateProperty.all(
+                                  AppColors.bgDark,
+                                ),
+                                headingRowColor: MaterialStateProperty.all(
+                                  AppColors.borderDark,
+                                ),
+                                columns: [
+                                  DataColumn(
+                                    label: Text(
+                                      'Talhão',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.newTextPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Data Plantio',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.newTextPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Quebra Lombo',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.newTextPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Colheita',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.newTextPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      'Status',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.newTextPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                rows: _operacoes
+                                    .map((op) => DataRow(
+                                          cells: [
+                                            DataCell(
+                                              Text(
+                                                op.talhaoId,
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  color: AppColors.newTextPrimary,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                '${op.dataPlantio.day}/${op.dataPlantio.month}/${op.dataPlantio.year}',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  color: AppColors.newTextPrimary,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                op.dataQuebraLombo != null
+                                                    ? '${op.dataQuebraLombo!.day}/${op.dataQuebraLombo!.month}/${op.dataQuebraLombo!.year}'
+                                                    : '—',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  color: AppColors.newTextSecondary,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                op.dataColheita != null
+                                                    ? '${op.dataColheita!.day}/${op.dataColheita!.month}/${op.dataColheita!.year}'
+                                                    : '—',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  color: AppColors.newTextSecondary,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                    horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: op.dataColheita != null
+                                                      ? AppColors.newSuccess.withOpacity(0.2)
+                                                      : AppColors.newWarning.withOpacity(0.2),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  op.dataColheita != null ? 'Colhido' : 'Em Progresso',
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: op.dataColheita != null
+                                                        ? AppColors.newSuccess
+                                                        : AppColors.newWarning,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+            ),
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 28),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+            const SizedBox(height: 24),
+          ],
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: color.withOpacity(0.9),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
