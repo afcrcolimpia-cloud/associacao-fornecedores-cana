@@ -94,9 +94,6 @@ class _DataTableWidgetState extends State<DataTableWidget> {
 
   List<DataColumn> _buildDataColumns() {
     return widget.columns.map((column) {
-      final isCurrentSortColumn =
-          widget.columns.indexOf(column) == _sortColumnIndex;
-
       return DataColumn(
         label: Expanded(
           child: Text(column),
