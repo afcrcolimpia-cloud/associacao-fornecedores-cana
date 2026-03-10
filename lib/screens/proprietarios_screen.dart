@@ -1,6 +1,7 @@
 // lib/screens/proprietarios_screen.dart
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../widgets/app_shell.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
@@ -19,6 +20,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
   final _service = ProprietarioService();
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  int _selectedNavigationIndex = 0;
 
   @override
   void dispose() {
@@ -28,21 +30,42 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Proprietários',
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: 'Proprietários',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: Column(
+        children: [
+          // SEARCH BAR
+          Container(
+            padding: const EdgeInsets.all(24),
+            color: AppColors.bgDark,
             child: TextField(
               controller: _searchController,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.newTextPrimary,
+              ),
               decoration: InputDecoration(
-                hintText: 'Buscar proprietário...',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Buscar por nome ou CPF/CNPJ...',
+                hintStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: AppColors.newTextMuted,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: AppColors.newTextSecondary,
+                  size: 20,
+                ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(
+                          Icons.clear,
+                          color: AppColors.newTextSecondary,
+                          size: 20,
+                        ),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -52,11 +75,20 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surfaceDark,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: AppColors.borderDark),
                 ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.borderDark),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
               ),
               onChanged: (value) {
                 setState(() {
@@ -65,195 +97,332 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
               },
             ),
           ),
-        ),
-      ),
-      body: StreamBuilder<List<Proprietario>>(
-        stream: _service.getProprietariosStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+          
+          // CONTENT
+          Expanded(
+            child: StreamBuilder<List<Proprietario>>(
+              stream: _service.getProprietariosStream(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Erro ao carregar dados',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    snapshot.error.toString(),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          var proprietarios = snapshot.data ?? [];
-
-          // Filtrar por busca
-          if (_searchQuery.isNotEmpty) {
-            proprietarios = proprietarios.where((p) {
-              return p.nome.toLowerCase().contains(_searchQuery) ||
-                  p.cpfCnpj.contains(_searchQuery);
-            }).toList();
-          }
-
-          if (proprietarios.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _searchQuery.isEmpty
-                        ? Icons.person_add_outlined
-                        : Icons.search_off,
-                    size: 64,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _searchQuery.isEmpty
-                        ? 'Nenhum proprietário cadastrado'
-                        : 'Nenhum resultado encontrado',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _searchQuery.isEmpty
-                        ? 'Clique no botão + para adicionar'
-                        : 'Tente buscar por outro termo',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Column(
-            children: [
-              // Contador
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: AppColors.background,
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.people,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${proprietarios.length} ${proprietarios.length == 1 ? "proprietário" : "proprietários"}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Lista
-              Expanded(
-                child: ListView.builder(
-                  itemCount: proprietarios.length,
-                  itemBuilder: (context, index) {
-                    final proprietario = proprietarios[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.primary,
-                          child: Text(
-                            proprietario.nome.substring(0, 1).toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: AppColors.newDanger,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Erro ao carregar dados',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.newTextPrimary,
                           ),
                         ),
-                        title: Text(
-                          proprietario.nome,
-                          style: Theme.of(context).textTheme.titleMedium,
+                        const SizedBox(height: 8),
+                        Text(
+                          snapshot.error.toString(),
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AppColors.newTextSecondary,
+                          ),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Text(
-                              proprietario.cpfCnpj.length == 11
-                                  ? 'CPF: ${Formatters.formatCPF(proprietario.cpfCnpj)}'
-                                  : 'CNPJ: ${Formatters.formatCNPJ(proprietario.cpfCnpj)}',
-                            ),
-                            if (proprietario.cidade != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                '${proprietario.cidade}, ${proprietario.estado ?? ""}',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ProprietarioDetailScreen(
-                                proprietario: proprietario,
-                              ),
-                            ),
-                          );
+                      ],
+                    ),
+                  );
+                }
 
-                          if (result == true && mounted) {
-                            setState(() {});
-                          }
-                        },
+                var proprietarios = snapshot.data ?? [];
+
+                // Filtrar por busca
+                if (_searchQuery.isNotEmpty) {
+                  proprietarios = proprietarios.where((p) {
+                    return p.nome.toLowerCase().contains(_searchQuery) ||
+                        p.cpfCnpj.contains(_searchQuery);
+                  }).toList();
+                }
+
+                if (proprietarios.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _searchQuery.isEmpty
+                              ? Icons.person_add_outlined
+                              : Icons.search_off,
+                          size: 64,
+                          color: AppColors.newTextMuted,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Nenhum proprietário cadastrado'
+                              : 'Nenhum resultado encontrado',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.newTextPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Clique no botão + para adicionar'
+                              : 'Tente buscar por outro termo',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AppColors.newTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // COUNTER
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.people,
+                            color: AppColors.newPrimary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${proprietarios.length} ${proprietarios.length == 1 ? "proprietário" : "proprietários"}',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.newTextPrimary,
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const ProprietarioFormScreen(),
+                      const SizedBox(height: 16),
+                      
+                      // TABLE
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: proprietarios.isNotEmpty ? 200 : 100,
+                          maxHeight: double.infinity,
+                        ),
+                        child: _buildProprietariosTable(proprietarios),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-          );
-
-          if (result == true && mounted) {
-            setState(() {});
-          }
-        },
-        child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildProprietariosTable(List<Proprietario> proprietarios) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceDark,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.borderDark),
+        ),
+        child: DataTable(
+          headingRowColor: MaterialStateProperty.all(
+            AppColors.borderDark.withOpacity(0.5),
+          ),
+          headingRowHeight: 48,
+          dataRowHeight: 56,
+          columns: [
+            DataColumn(
+              label: Text(
+                'Nome',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.newTextPrimary,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'CPF/CNPJ',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.newTextPrimary,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Cidade',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.newTextPrimary,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Status',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.newTextPrimary,
+                ),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Ações',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.newTextPrimary,
+                ),
+              ),
+            ),
+          ],
+          rows: proprietarios.map((p) {
+            final cpfCnpj = p.cpfCnpj.length == 11
+                ? Formatters.formatCPF(p.cpfCnpj)
+                : Formatters.formatCNPJ(p.cpfCnpj);
+            final cidade = p.cidade != null && p.estado != null
+                ? '${p.cidade}, ${p.estado}'
+                : p.cidade ?? 'N/A';
+            
+            return DataRow(
+              onSelectChanged: (_) => _navigateToDetail(p),
+              cells: [
+                DataCell(
+                  Text(
+                    p.nome,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.newTextPrimary,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    cpfCnpj,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.newTextSecondary,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  Text(
+                    cidade,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.newTextSecondary,
+                    ),
+                  ),
+                ),
+                DataCell(
+                  _buildStatusBadge(p.ativo),
+                ),
+                DataCell(
+                  _buildActionButtons(p),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(bool ativo) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: ativo ? AppColors.newSuccess.withOpacity(0.15) : AppColors.newDanger.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        ativo ? 'Ativo' : 'Inativo',
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: ativo ? AppColors.newSuccess : AppColors.newDanger,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(Proprietario p) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Icon(
+            Icons.visibility_outlined,
+            size: 18,
+            color: AppColors.newTextSecondary,
+          ),
+          onPressed: () => _navigateToDetail(p),
+          tooltip: 'Visualizar',
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.edit_outlined,
+            size: 18,
+            color: AppColors.newPrimary,
+          ),
+          onPressed: () => _navigateToEdit(p),
+          tooltip: 'Editar',
+        ),
+      ],
+    );
+  }
+
+  Future<void> _navigateToDetail(Proprietario proprietario) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProprietarioDetailScreen(
+          proprietario: proprietario,
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _navigateToEdit(Proprietario proprietario) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProprietarioFormScreen(proprietario: proprietario),
+      ),
+    );
+
+    if (result == true && mounted) {
+      setState(() {});
+    }
   }
 }
