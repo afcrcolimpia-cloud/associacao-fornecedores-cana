@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../services/proprietario_service.dart';
@@ -28,20 +28,17 @@ class _PropriedadesPorProprietarioScreenState
   final PropriedadeService _service = PropriedadeService();
   String _filtro = 'todas';
   String _busca = '';
+  int _selectedNavigationIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Propriedades de ${widget.proprietarioNome}',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _mostrarFormulario,
-          ),
-        ],
-      ),
-      body: Column(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Propriedades de ${widget.proprietarioNome}',
+      child: Column(
         children: [
           _buildFiltros(),
           Expanded(
@@ -255,6 +252,7 @@ class _PropriedadesScreenState extends State<PropriedadesScreen> {
   final ProprietarioService _proprietarioService = ProprietarioService();
   final TextEditingController _buscaController = TextEditingController();
   String _busca = '';
+  int _selectedNavigationIndex = 0;
 
   @override
   void dispose() {
@@ -264,17 +262,13 @@ class _PropriedadesScreenState extends State<PropriedadesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Propriedades por Proprietário',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _mostrarFormulario,
-          ),
-        ],
-      ),
-      body: Column(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Propriedades por Proprietário',
+      child: Column(
         children: [
           _buildBuscaProprietario(),
           Expanded(

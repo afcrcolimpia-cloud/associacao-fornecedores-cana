@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
@@ -19,22 +19,19 @@ class TalhoesScreen extends StatefulWidget {
 
 class _TalhoesScreenState extends State<TalhoesScreen> {
   final TalhaoService _service = TalhaoService();
+  int _selectedNavigationIndex = 0;
   String _filtro = 'todos';
   String _busca = '';
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Talhões',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _mostrarFormulario,
-          ),
-        ],
-      ),
-      body: Column(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Talhões',
+      child: Column(
         children: [
           HeaderPropriedade(contexto: widget.contexto),
           _buildFiltros(),

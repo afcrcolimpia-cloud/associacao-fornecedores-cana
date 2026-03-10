@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
@@ -24,6 +24,7 @@ class TratosCulturaisScreen extends StatefulWidget {
 
 class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
   final TratosCulturaisService _service = TratosCulturaisService();
+  int _selectedNavigationIndex = 0;
   final TalhaoService _talhaoService = TalhaoService();
 
   int _filtroAnoSafra = DateTime.now().year;
@@ -53,21 +54,13 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Tratos Culturais',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: () => _gerarPdf(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _abrirFormulario(),
-          ),
-        ],
-      ),
-      body: Column(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Tratos Culturais',
+      child: Column(
         children: [
           HeaderPropriedade(contexto: widget.contexto),
           _buildFiltros(),

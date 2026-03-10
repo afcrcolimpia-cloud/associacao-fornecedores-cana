@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../models/models.dart';
 import '../services/custo_operacional_service.dart';
@@ -30,26 +30,17 @@ class CustoOperacionalScreen extends StatefulWidget {
 class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
   final _service = CustoOperacionalService();
   String? _cenarioSelecionadoId;
+  int _selectedNavigationIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Custo Operacional',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: _cenarioSelecionadoId != null
-                ? () => _gerarPdf(_cenarioSelecionadoId!)
-                : null,
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _criarNovoCenario,
-          ),
-        ],
-      ),
-      body: StreamBuilder<List<CustoOperacionalCenario>>(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Custo Operacional',
+      child: StreamBuilder<List<CustoOperacionalCenario>>(
         stream: _service.getCenariosByPropriedadeStream(widget.contexto.propriedade.id),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

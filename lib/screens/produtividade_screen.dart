@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/models.dart';
@@ -23,6 +23,7 @@ class ProdutividadeScreen extends StatefulWidget {
 
 class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   final ProdutividadeService _service = ProdutividadeService();
+  int _selectedNavigationIndex = 0;
   
   String? _anoSafraSelecionado;
   String? _anoComparacao;
@@ -37,23 +38,13 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Produtividade',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: _anoSafraSelecionado != null
-                ? _gerarPdf
-                : null,
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _mostrarFormulario,
-          ),
-        ],
-      ),
-      body: Column(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Produtividade',
+      child: Column(
         children: [
           HeaderPropriedade(contexto: widget.contexto),
           _buildFiltros(),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../widgets/kpi_card.dart';
 import '../constants/app_colors.dart';
@@ -28,6 +28,7 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
   List<Talhao> _talhoes = [];
 
   bool _loadingOperacoes = true;
+  int _selectedNavigationIndex = 0;
   bool _loadingTalhoes = true;
 
   String? _talhaoSelecionado;
@@ -191,11 +192,13 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(
-        title: 'Operações de Cultivo',
-      ),
-      body: SingleChildScrollView(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Operações de Cultivo',
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

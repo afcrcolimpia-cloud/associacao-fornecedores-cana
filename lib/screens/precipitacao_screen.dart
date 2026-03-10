@@ -3,7 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:gestao_cana_app/constants/app_colors.dart';
-import 'package:gestao_cana_app/widgets/app_bar_afcrc.dart';
+import 'package:gestao_cana_app/widgets/app_shell.dart';
 import 'package:gestao_cana_app/widgets/header_propriedade.dart';
 import 'package:gestao_cana_app/models/models.dart';
 import 'package:gestao_cana_app/services/precipitacao_service.dart';
@@ -29,6 +29,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
   String? _selectedSafra;
   String? _selectedMunicipio;
   bool _isLoading = true;
+  int _selectedNavigationIndex = 0;
 
   List<double> _monthlyData = List.filled(12, 0.0);
   final List<String> _months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -114,11 +115,13 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(
-        title: 'Monitoramento Pluviométrico',
-      ),
-      body: _isLoading
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Monitoramento Pluviométrico',
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
         child: Column(
