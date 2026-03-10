@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../widgets/app_shell.dart';
+import '../widgets/kpi_card.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
@@ -20,224 +22,134 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _propriedadeService = PropriedadeService();
   final _talhaoService = TalhaoService();
 
+  int _selectedNavigationIndex = 0;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Dashboard'),
-      body: RefreshIndicator(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: 'Dashboard Principal',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: RefreshIndicator(
         onRefresh: () async {
           setState(() {});
         },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Estatísticas resumidas no topo
-            StreamBuilder<List<Proprietario>>(
-              stream: _proprietarioService.getProprietariosStream(),
-              builder: (context, proprietariosSnapshot) {
-                if (proprietariosSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // KPI CARDS — 4 COLUNAS
+              StreamBuilder<List<Proprietario>>(
+                stream: _proprietarioService.getProprietariosStream(),
+                builder: (context, proprietariosSnapshot) {
+                  if (proprietariosSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: SizedBox(
+                      height: 200,
+                      child: CircularProgressIndicator(),
+                    ));
+                  }
 
-                final proprietarios = proprietariosSnapshot.data ?? [];
+                  final proprietarios = proprietariosSnapshot.data ?? [];
 
-                return Column(
-                  children: [
-                    _buildResumoCards(proprietarios),
-                    const SizedBox(height: 24),
-                    
-                    // Título
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
+                  return Column(
+                    children: [
+                      _buildKPIGrid(proprietarios),
+                      const SizedBox(height: 32),
+                      
+                      // TITLE "MENU PRINCIPAL"
+                      Text(
                         'Menu Principal',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.newTextPrimary,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // MENU EM LISTA HORIZONTAL
-                    _buildMenuItem(
-                      icon: Icons.person,
-                      title: 'Proprietários',
-                      subtitle: 'Gerenciar proprietários',
-                      color: Colors.blue,
-                      count: proprietarios.length.toString(),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ProprietariosScreen()),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuItemWithStream(
-                      icon: Icons.location_city,
-                      title: 'Propriedades',
-                      subtitle: 'Visualizar propriedades',
-                      color: Colors.green,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PropriedadesScreen()),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuItem(
-                      icon: Icons.landscape,
-                      title: 'Talhões',
-                      subtitle: 'Gerenciar talhões',
-                      color: Colors.brown,
-                      count: '',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Acesse a GESTÃO para gerenciar talhões')),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuItem(
-                      icon: Icons.attach_file,
-                      title: 'Anexos',
-                      subtitle: 'Documentos e arquivos',
-                      color: Colors.orange,
-                      count: '',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Acesse a GESTÃO para gerenciar anexos')),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuItem(
-                      icon: Icons.agriculture,
-                      title: 'Operações',
-                      subtitle: 'Operações de cultivo',
-                      color: Colors.teal,
-                      count: '',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Acesse a GESTÃO para gerenciar operações')),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuItem(
-                      icon: Icons.attach_money,
-                      title: 'Custo Operacional',
-                      subtitle: 'Análise de custos',
-                      color: Colors.indigo,
-                      count: '',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Acesse a GESTÃO para analisar custos operacionais')),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuItem(
-                      icon: Icons.trending_up,
-                      title: 'Produtividade',
-                      subtitle: 'Análise de produção',
-                      color: Colors.purple,
-                      count: '',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Acesse a GESTÃO para análise de produtividade')),
-                        );
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    _buildMenuItem(
-                      icon: Icons.water_drop,
-                      title: 'Precipitação',
-                      subtitle: 'Dados de chuvas',
-                      color: Colors.lightBlue,
-                      count: '',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Acesse a GESTÃO para visualizar precipitação')),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
+                      const SizedBox(height: 16),
+                      
+                      // MENU GRID (2 colunas)
+                      _buildMenuGrid(proprietarios),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildResumoCards(List<Proprietario> proprietarios) {
-    final proprietariosAtivos = proprietarios.where((p) => p.ativo).length;
-
+  Widget _buildKPIGrid(List<Proprietario> proprietarios) {
     return StreamBuilder<List<Propriedade>>(
       stream: _propriedadeService.getPropriedadesStream(),
       builder: (context, snapshotPropriedades) {
         final propriedades = snapshotPropriedades.data ?? [];
-        final propriedadesAtivas = propriedades.where((p) => p.ativa).length;
 
         return FutureBuilder<double>(
-          future: _computeTotalAreaFromPropriedades(propriedades),
+          future: _computeTotalArea(propriedades),
           builder: (context, snapshotAreaTotal) {
-            final areaTotalGeral = snapshotAreaTotal.data ?? 0.0;
+            final areaTotal = snapshotAreaTotal.data ?? 0.0;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 88,
-                  child: _buildStatCard(
-                    title: 'Proprietários',
-                    value: proprietarios.length.toString(),
-                    icon: Icons.people,
-                    color: AppColors.primary,
-                    subtitle: '$proprietariosAtivos ativos',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 88,
-                  child: _buildStatCard(
-                    title: 'Propriedades',
-                    value: propriedades.length.toString(),
-                    icon: Icons.home_work,
-                    color: AppColors.secondary,
-                    subtitle: '$propriedadesAtivas ativas',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 88,
-                  child: _buildStatCard(
-                    title: 'Área total (ha)',
-                    value: areaTotalGeral.toStringAsFixed(2),
-                    icon: Icons.terrain,
-                    color: AppColors.primary,
-                    subtitle: null,
-                  ),
-                ),
-              ],
+            return FutureBuilder<int>(
+              future: _computeTotalTalhoes(propriedades),
+              builder: (context, snapshotTalhoes) {
+                final totalTalhoes = snapshotTalhoes.data ?? 0;
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 1200;
+                    final crossAxisCount = isWide ? 4 : 2;
+                    final childAspectRatio = isWide ? 1.5 : 1.3;
+
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: childAspectRatio,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        KpiCard(
+                          label: 'Total de Proprietários',
+                          value: proprietarios.length.toString(),
+                          icon: Icons.people,
+                          iconColor: AppColors.newPrimary,
+                          variation: 0,
+                          isPositive: true,
+                        ),
+                        KpiCard(
+                          label: 'Total de Propriedades',
+                          value: propriedades.length.toString(),
+                          icon: Icons.home_work,
+                          iconColor: AppColors.newSuccess,
+                          variation: 0,
+                          isPositive: true,
+                        ),
+                        KpiCard(
+                          label: 'Total de Talhões',
+                          value: totalTalhoes.toString(),
+                          icon: Icons.landscape,
+                          iconColor: AppColors.newWarning,
+                          variation: 0,
+                          isPositive: true,
+                        ),
+                        KpiCard(
+                          label: 'Área Total (ha)',
+                          value: areaTotal.toStringAsFixed(1),
+                          icon: Icons.terrain,
+                          iconColor: AppColors.newInfo,
+                          variation: 0,
+                          isPositive: true,
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
             );
           },
         );
@@ -245,7 +157,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Future<double> _computeTotalAreaFromPropriedades(List<Propriedade> propriedades) async {
+  Future<double> _computeTotalArea(List<Propriedade> propriedades) async {
     double total = 0.0;
     for (var p in propriedades) {
       if (p.areaHa != null && p.areaHa! > 0) {
@@ -260,90 +172,142 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return total;
   }
 
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    String? subtitle,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 6,
-            height: 76,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
+  Future<int> _computeTotalTalhoes(List<Propriedade> propriedades) async {
+    int total = 0;
+    for (var p in propriedades) {
+      try {
+        final talhoes = await _talhaoService.getTalhoesPorPropriedade(p.id);
+        total += talhoes.length;
+      } catch (_) {}
+    }
+    return total;
+  }
+
+  Widget _buildMenuGrid(List<Proprietario> proprietarios) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 1000;
+        final crossAxisCount = isWide ? 2 : 1;
+
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: isWide ? 2 : 3,
+          children: [
+            _buildMenuCard(
+              icon: Icons.person,
+              title: 'Proprietários',
+              subtitle: 'Gerenciar proprietários',
+              count: proprietarios.length.toString(),
+              color: AppColors.newPrimary,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProprietariosScreen()),
+                );
+              },
             ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: color.withOpacity(0.12),
-                    child: Icon(icon, color: color, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(title, style: Theme.of(context).textTheme.bodyMedium),
-                        if (subtitle != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: Text(
-                              subtitle,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                ],
-              ),
+            
+            _buildMenuCardWithStream(
+              icon: Icons.location_city,
+              title: 'Propriedades',
+              subtitle: 'Visualizar propriedades',
+              color: AppColors.newSuccess,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PropriedadesScreen()),
+                );
+              },
             ),
-          ),
-        ],
-      ),
+            
+            _buildMenuCard(
+              icon: Icons.landscape,
+              title: 'Talhões',
+              subtitle: 'Gerenciar talhões',
+              count: '',
+              color: AppColors.newWarning,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Acesse a GESTÃO para gerenciar talhões')),
+                );
+              },
+            ),
+            
+            _buildMenuCard(
+              icon: Icons.attach_file,
+              title: 'Anexos',
+              subtitle: 'Documentos e arquivos',
+              count: '',
+              color: AppColors.newInfo,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Acesse a GESTÃO para gerenciar anexos')),
+                );
+              },
+            ),
+            
+            _buildMenuCard(
+              icon: Icons.agriculture,
+              title: 'Operações',
+              subtitle: 'Operações de cultivo',
+              count: '',
+              color: AppColors.newPrimary,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Acesse a GESTÃO para gerenciar operações')),
+                );
+              },
+            ),
+            
+            _buildMenuCard(
+              icon: Icons.attach_money,
+              title: 'Custo Operacional',
+              subtitle: 'Análise de custos',
+              count: '',
+              color: AppColors.newSuccess,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Acesse a GESTÃO para analisar custos operacionais')),
+                );
+              },
+            ),
+            
+            _buildMenuCard(
+              icon: Icons.trending_up,
+              title: 'Produtividade',
+              subtitle: 'Análise de produção',
+              count: '',
+              color: AppColors.newWarning,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Acesse a GESTÃO para análise de produtividade')),
+                );
+              },
+            ),
+            
+            _buildMenuCard(
+              icon: Icons.water_drop,
+              title: 'Precipitação',
+              subtitle: 'Dados de chuvas',
+              count: '',
+              color: AppColors.newInfo,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Acesse a GESTÃO para visualizar precipitação')),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
-  // MENU ITEM EM LISTA HORIZONTAL
-  Widget _buildMenuItem({
+  Widget _buildMenuCard({
     required IconData icon,
     required String title,
     required String subtitle,
@@ -351,105 +315,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String count,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderDark),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: [
-                color.withOpacity(0.1),
-                color.withOpacity(0.05),
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-          ),
-          child: Row(
-            children: [
-              // Ícone
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-              
-              const SizedBox(width: 16),
-              
-              // Textos
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          hoverColor: AppColors.borderDark.withOpacity(0.5),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                      child: Icon(icon, color: color, size: 24),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
+                    const Spacer(),
+                    if (count.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          count,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: color,
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
-              ),
-              
-              // Contador (se tiver)
-              if (count.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    count,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.newTextPrimary,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.newTextSecondary,
+                  ),
+                ),
               ],
-              
-              // Seta
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.grey[400],
-                size: 18,
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Menu com contador dinâmico
-  Widget _buildMenuItemWithStream({
+  Widget _buildMenuCardWithStream({
     required IconData icon,
     required String title,
     required String subtitle,
@@ -461,7 +400,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, snapshot) {
         final count = (snapshot.data ?? []).length.toString();
         
-        return _buildMenuItem(
+        return _buildMenuCard(
           icon: icon,
           title: title,
           subtitle: subtitle,
