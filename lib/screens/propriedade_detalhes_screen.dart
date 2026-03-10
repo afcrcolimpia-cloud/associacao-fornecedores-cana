@@ -52,6 +52,7 @@ class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
         onNavigationSelect: (index) {
           setState(() => _selectedNavigationIndex = index);
         },
+        showBackButton: true,
         title: widget.propriedade.nome,
         child: const Center(child: CircularProgressIndicator()),
       );
@@ -73,6 +74,7 @@ class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: widget.propriedade.nome,
       child: const Center(
         child: Text('Não foi possível carregar os dados do proprietário.'),

@@ -29,6 +29,7 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Detalhes da Propriedade',
       child: FutureBuilder<Propriedade?>(
         future: _service.getPropriedadeById(widget.propriedadeId),

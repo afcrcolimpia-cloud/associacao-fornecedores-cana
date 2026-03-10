@@ -36,6 +36,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Custo Operacional',
       child: StreamBuilder<List<CustoOperacionalCenario>>(
         stream: _service.getCenariosByPropriedadeStream(widget.contexto.propriedade.id),

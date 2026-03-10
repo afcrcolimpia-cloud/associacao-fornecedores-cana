@@ -30,6 +30,7 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Talhões',
       child: Column(
         children: [

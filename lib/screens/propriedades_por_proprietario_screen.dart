@@ -32,6 +32,7 @@ class _PropriedadesPorProprietarioScreenState extends State<PropriedadesPorPropr
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      showBackButton: true,
       child: Column(
         children: [
           // Header com título e ação

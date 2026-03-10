@@ -452,6 +452,7 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
       return AppShell(
         selectedIndex: _selectedNavigationIndex,
         title: isEditando ? 'Editar Cenário' : 'Novo Cenário',
+        showBackButton: true,
         onNavigationSelect: (index) {
           setState(() => _selectedNavigationIndex = index);
         },
@@ -466,6 +467,7 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
       return AppShell(
         selectedIndex: _selectedNavigationIndex,
         title: isEditando ? 'Editar Cenário' : 'Novo Cenário',
+        showBackButton: true,
         onNavigationSelect: (index) {
           setState(() => _selectedNavigationIndex = index);
         },
@@ -478,6 +480,7 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       title: isEditando ? 'Editar Cenário' : 'Novo Cenário',
+      showBackButton: true,
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },

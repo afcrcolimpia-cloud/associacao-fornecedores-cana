@@ -35,6 +35,7 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      showBackButton: true,
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),

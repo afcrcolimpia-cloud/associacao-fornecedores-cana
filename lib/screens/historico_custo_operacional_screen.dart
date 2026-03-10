@@ -149,6 +149,7 @@ class _HistoricoCustoOperacionalScreenState
     return AppShell(
       selectedIndex: 0,
       title: 'Relatório de Custos',
+      showBackButton: true,
       onNavigationSelect: (_) {},
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

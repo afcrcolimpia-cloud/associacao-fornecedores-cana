@@ -160,6 +160,7 @@ class _CustoOperacionalLancamentosScreenState
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Custo Operacional Dinâmico',
       child: Column(
         children: [

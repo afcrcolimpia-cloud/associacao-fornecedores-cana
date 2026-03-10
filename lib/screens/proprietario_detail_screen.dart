@@ -35,6 +35,7 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Detalhes do Proprietário',
       child: ListView(
         padding: const EdgeInsets.all(16),

@@ -77,6 +77,7 @@ class _AnexosScreenState extends State<AnexosScreen> {
     return AppShell(
       onNavigationSelect: (index) {},
       selectedIndex: 6,
+      showBackButton: true,
       child: SingleChildScrollView(
         child: Column(
           children: [

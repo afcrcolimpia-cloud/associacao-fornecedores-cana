@@ -27,6 +27,7 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      showBackButton: true,
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),

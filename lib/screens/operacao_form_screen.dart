@@ -195,6 +195,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       title: isEdicao ? 'Editar Operação' : 'Nova Operação',
+      showBackButton: true,
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },

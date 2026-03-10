@@ -124,6 +124,7 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Detalhes de Operações',
       child: Column(
         children: [

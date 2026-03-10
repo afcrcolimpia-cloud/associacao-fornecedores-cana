@@ -40,6 +40,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Produtividade',
       child: Column(
         children: [

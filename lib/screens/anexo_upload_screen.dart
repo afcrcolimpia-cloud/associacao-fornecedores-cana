@@ -95,6 +95,7 @@ class _AnexoUploadScreenState extends State<AnexoUploadScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Enviar Anexo',
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -147,6 +147,7 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       title: widget.tratos == null ? 'Novo Trato Cultural' : 'Editar Trato',
+      showBackButton: true,
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },

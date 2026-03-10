@@ -56,6 +56,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Tratos Culturais',
       child: Column(
         children: [

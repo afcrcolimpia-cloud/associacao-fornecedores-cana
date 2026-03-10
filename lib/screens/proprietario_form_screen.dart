@@ -143,6 +143,7 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       title: isEdicao ? 'Editar Proprietário' : 'Novo Proprietário',
+      showBackButton: true,
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },

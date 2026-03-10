@@ -120,6 +120,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Monitoramento Pluviométrico',
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())

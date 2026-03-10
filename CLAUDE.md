@@ -372,7 +372,7 @@ PAINEL HUB DA PROPRIEDADE  (PropriedadeHubScreen)
 |---|---|---|
 | `lib/models/contexto_propriedade.dart` | Model | Agrupa Proprietario + Propriedade com atalhos |
 | `lib/widgets/header_propriedade.dart` | Widget | Cabeçalho verde fixo no topo de cada tela operacional |
-| `lib/screens/propriedade_hub_screen.dart` | Screen | Grid com todos os módulos da propriedade |
+| `lib/screens/propriedade_hub_screen.dart` | Screen | Lista vertical com todos os módulos da propriedade (layout tipo lista, NÃO grid/quadrado) |
 | `lib/services/pdf_generators/pdf_cabecalho.dart` | Service | Cabeçalho AFCRC compartilhado por todos os PDFs |
 
 ### ContextoPropriedade — estrutura obrigatória
@@ -516,10 +516,7 @@ pw.Widget cabecalhoPDF(ContextoPropriedade ctx, String titulo) {
 - PDFs novos SEMPRE importam `cabecalhoPDF()` — nunca recriar o cabeçalho
 - `ContextoPropriedade` deve ser exportado em `models/models.dart`
 - NUNCA inventar dados — usar apenas dados reais dos services existentes
-
----
-
-### /implementar-fluxo
+- `PropriedadeHubScreen` DEVE usar layout de LISTA vertical (ListTile com ícone, título, subtítulo e seta) — NUNCA usar grid/quadrado
 
 Implementar a arquitetura de contexto de propriedade conforme os padrões definidos neste CLAUDE.md (seção "Arquitetura de Contexto de Propriedade").
 

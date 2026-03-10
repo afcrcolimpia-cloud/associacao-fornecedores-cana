@@ -161,13 +161,7 @@ class _GestaoAgricolaDashboardScreenState
   }
 
   Widget _buildKPIGrid() {
-    return GridView.count(
-      crossAxisCount: 4,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.2,
+    return Column(
       children: [
         KpiCard(
           label: 'Talhões Ativos',
@@ -175,18 +169,21 @@ class _GestaoAgricolaDashboardScreenState
           icon: Icons.grid_view_outlined,
           iconColor: AppColors.newPrimary,
         ),
+        const SizedBox(height: 8),
         KpiCard(
           label: 'Área Total',
           value: '${_getTotalArea().toStringAsFixed(1)} ha',
           icon: Icons.agriculture_outlined,
           iconColor: AppColors.newSuccess,
         ),
+        const SizedBox(height: 8),
         const KpiCard(
           label: 'Produtividade',
           value: 'N/A',
           icon: Icons.trending_up_outlined,
           iconColor: AppColors.newInfo,
         ),
+        const SizedBox(height: 8),
         KpiCard(
           label: 'Variedade',
           value: _getVariedadeMaisCultivada(),

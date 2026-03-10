@@ -324,6 +324,7 @@ class _CustoOperacionalLancamentoScreenState
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: widget.edicao == null ? 'Novo Lançamento' : 'Editar Lançamento',
       child: Form(
         key: _formKey,

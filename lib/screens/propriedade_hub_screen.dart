@@ -36,6 +36,7 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedIndex = index);
       },
+      showBackButton: true,
       child: Scaffold(
         appBar: AppBar(
           title: Text('${widget.contexto.nomePropriedade} - Hub'),
@@ -59,54 +60,53 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      children: [
-                        _buildModuleCard(
-                          icon: Icons.agriculture,
-                          title: 'Talhões',
-                          onTap: () => _navegarParaTalhoes(),
-                        ),
-                        _buildModuleCard(
-                          icon: Icons.spa,
-                          title: 'Tratos Culturais',
-                          onTap: () => _navegarParaTratos(),
-                        ),
-                        _buildModuleCard(
-                          icon: Icons.build,
-                          title: 'Operações de Cultivo',
-                          onTap: () => _navegarParaOperacoes(),
-                        ),
-                        _buildModuleCard(
-                          icon: Icons.trending_up,
-                          title: 'Produtividade',
-                          onTap: () => _navegarParaProdutividade(),
-                        ),
-                        _buildModuleCard(
-                          icon: Icons.cloud,
-                          title: 'Precipitação',
-                          onTap: () => _navegarParaPrecipitacao(),
-                        ),
-                        _buildModuleCard(
-                          icon: Icons.money,
-                          title: 'Custo Operacional',
-                          onTap: () => _navegarParaCusto(),
-                        ),
-                        _buildModuleCard(
-                          icon: Icons.attach_file,
-                          title: 'Anexos',
-                          onTap: () => _navegarParaAnexos(),
-                        ),
-                        _buildModuleCard(
-                          icon: Icons.bug_report,
-                          title: 'Relatórios de Pragas',
-                          onTap: () => _navegarParaPragas(),
-                        ),
-                      ],
+                    _buildModuleItem(
+                      icon: Icons.agriculture,
+                      title: 'Talhões',
+                      subtitle: 'Gerenciar talhões da propriedade',
+                      onTap: () => _navegarParaTalhoes(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.spa,
+                      title: 'Tratos Culturais',
+                      subtitle: 'Registros de tratos culturais',
+                      onTap: () => _navegarParaTratos(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.build,
+                      title: 'Operações de Cultivo',
+                      subtitle: 'Operações realizadas nos talhões',
+                      onTap: () => _navegarParaOperacoes(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.trending_up,
+                      title: 'Produtividade',
+                      subtitle: 'Dados de produtividade por safra',
+                      onTap: () => _navegarParaProdutividade(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.cloud,
+                      title: 'Precipitação',
+                      subtitle: 'Registros pluviométricos',
+                      onTap: () => _navegarParaPrecipitacao(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.money,
+                      title: 'Custo Operacional',
+                      subtitle: 'Análise de custos e cenários',
+                      onTap: () => _navegarParaCusto(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.attach_file,
+                      title: 'Anexos',
+                      subtitle: 'Documentos e arquivos anexados',
+                      onTap: () => _navegarParaAnexos(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.bug_report,
+                      title: 'Relatórios de Pragas',
+                      subtitle: 'Formulários de levantamento de pragas',
+                      onTap: () => _navegarParaPragas(),
                     ),
                   ],
                 ),
@@ -118,37 +118,31 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
     );
   }
 
-  Widget _buildModuleCard({
+  Widget _buildModuleItem({
     required IconData icon,
     required String title,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 48,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: AppColors.primary.withOpacity(0.1),
+          child: Icon(icon, color: AppColors.primary),
         ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: onTap,
       ),
     );
   }

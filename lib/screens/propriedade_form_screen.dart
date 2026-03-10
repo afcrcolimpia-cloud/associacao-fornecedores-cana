@@ -135,6 +135,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       title: widget.propriedade == null ? 'Nova Propriedade' : 'Editar Propriedade',
+      showBackButton: true,
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },

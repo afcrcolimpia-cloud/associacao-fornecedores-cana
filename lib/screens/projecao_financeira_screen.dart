@@ -45,6 +45,7 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      showBackButton: true,
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),

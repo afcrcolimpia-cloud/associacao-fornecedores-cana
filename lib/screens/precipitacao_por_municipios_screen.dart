@@ -72,6 +72,7 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      showBackButton: true,
       child: _carregando
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

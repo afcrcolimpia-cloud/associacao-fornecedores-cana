@@ -92,6 +92,7 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
       return AppShell(
         selectedIndex: _selectedNavigationIndex,
         onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+        showBackButton: true,
         child: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -99,6 +100,7 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      showBackButton: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -155,6 +155,7 @@ class _CustoOperacionalDashboardScreenState
     return AppShell(
       selectedIndex: 0,
       title: 'Custo Operacional',
+      showBackButton: true,
       onNavigationSelect: (_) {},
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

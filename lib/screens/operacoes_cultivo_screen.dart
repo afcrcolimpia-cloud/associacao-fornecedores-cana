@@ -197,6 +197,7 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
+      showBackButton: true,
       title: 'Operações de Cultivo',
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

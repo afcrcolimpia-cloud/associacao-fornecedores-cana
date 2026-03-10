@@ -112,6 +112,7 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       title: widget.produtividade == null ? 'Nova Produtividade' : 'Editar Produtividade',
+      showBackButton: true,
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },

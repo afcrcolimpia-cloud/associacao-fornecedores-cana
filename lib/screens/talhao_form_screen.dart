@@ -104,6 +104,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
       title: widget.talhao == null ? 'Novo Talhão' : 'Editar Talhão',
+      showBackButton: true,
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
