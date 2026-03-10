@@ -12,7 +12,7 @@ class KpiCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const KpiCard({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
@@ -20,7 +20,7 @@ class KpiCard extends StatelessWidget {
     this.variation,
     this.isPositive = true,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

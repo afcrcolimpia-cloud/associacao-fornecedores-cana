@@ -54,14 +54,14 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                   fontSize: 14,
                   color: AppColors.newTextMuted,
                 ),
-                prefixIcon: Icon(
+                prefixIcon: const Icon(
                   Icons.search,
                   color: AppColors.newTextSecondary,
                   size: 20,
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.clear,
                           color: AppColors.newTextSecondary,
                           size: 20,
@@ -78,15 +78,15 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                 fillColor: AppColors.surfaceDark,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.borderDark),
+                  borderSide: const BorderSide(color: AppColors.borderDark),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.borderDark),
+                  borderSide: const BorderSide(color: AppColors.borderDark),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+                  borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
               ),
@@ -114,7 +114,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.error_outline,
                           size: 64,
                           color: AppColors.newDanger,
@@ -198,7 +198,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                       // COUNTER
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.people,
                             color: AppColors.newPrimary,
                             size: 20,
@@ -377,7 +377,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.visibility_outlined,
             size: 18,
             color: AppColors.newTextSecondary,
@@ -386,7 +386,7 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
           tooltip: 'Visualizar',
         ),
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.edit_outlined,
             size: 18,
             color: AppColors.newPrimary,

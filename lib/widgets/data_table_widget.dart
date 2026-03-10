@@ -13,7 +13,7 @@ class DataTableWidget extends StatefulWidget {
   final ValueChanged<int>? onSort;
 
   const DataTableWidget({
-    Key? key,
+    super.key,
     required this.columns,
     required this.rows,
     this.dataColumns = const [],
@@ -22,7 +22,7 @@ class DataTableWidget extends StatefulWidget {
     this.sortColumnIndex,
     this.sortAscending = true,
     this.onSort,
-  }) : super(key: key);
+  });
 
   @override
   State<DataTableWidget> createState() => _DataTableWidgetState();
@@ -130,12 +130,12 @@ class TableCell extends StatelessWidget {
   final Color? backgroundColor;
 
   const TableCell({
-    Key? key,
+    super.key,
     required this.value,
     this.textAlign = TextAlign.left,
     this.textStyle,
     this.backgroundColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -161,10 +161,10 @@ class StatusBadge extends StatelessWidget {
   final String status; // 'success', 'warning', 'danger', 'info'
 
   const StatusBadge({
-    Key? key,
+    super.key,
     required this.label,
     required this.status,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

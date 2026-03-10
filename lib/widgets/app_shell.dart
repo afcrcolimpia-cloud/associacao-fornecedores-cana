@@ -9,12 +9,12 @@ class AppShell extends StatefulWidget {
   final ValueChanged<int> onNavigationSelect;
 
   const AppShell({
-    Key? key,
+    super.key,
     required this.child,
     this.title,
     required this.selectedIndex,
     required this.onNavigationSelect,
-  }) : super(key: key);
+  });
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -79,7 +79,7 @@ class _AppShellState extends State<AppShell> {
 
     return Container(
       width: width,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surfaceDark,
         border: Border(
           right: BorderSide(color: AppColors.borderDark, width: 1),
@@ -188,7 +188,7 @@ class _AppShellState extends State<AppShell> {
   Widget _buildHeader() {
     return Container(
       height: 60,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surfaceDark,
         border: Border(
           bottom: BorderSide(color: AppColors.borderDark, width: 1),
@@ -208,7 +208,7 @@ class _AppShellState extends State<AppShell> {
             ),
           const Spacer(),
           // User Menu (placeholder)
-          Icon(
+          const Icon(
             Icons.account_circle_outlined,
             color: AppColors.newTextSecondary,
             size: 28,

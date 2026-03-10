@@ -285,19 +285,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.person, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.person, color: AppColors.newTextSecondary, size: 20),
       ),
       items: _proprietarios
           .map(
@@ -334,19 +334,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.home, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.home, color: AppColors.newTextSecondary, size: 20),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -372,19 +372,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         helperStyle: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.assignment, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.assignment, color: AppColors.newTextSecondary, size: 20),
       ),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9\-.]')),
@@ -413,19 +413,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         hintStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.newTextMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.location_on, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.location_on, color: AppColors.newTextSecondary, size: 20),
       ),
     );
   }
@@ -443,19 +443,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.location_city, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.location_city, color: AppColors.newTextSecondary, size: 20),
       ),
     );
   }
@@ -473,19 +473,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.map, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.map, color: AppColors.newTextSecondary, size: 20),
       ),
       items: _estados
           .map(
@@ -516,19 +516,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         hintStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.newTextMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.mail, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.mail, color: AppColors.newTextSecondary, size: 20),
       ),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9\-]')),
@@ -560,19 +560,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         suffixStyle: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.agriculture, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.agriculture, color: AppColors.newTextSecondary, size: 20),
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
@@ -604,19 +604,19 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
         suffixStyle: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.newPrimary, width: 2),
+          borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
         ),
         filled: true,
         fillColor: AppColors.surfaceDark,
-        prefixIcon: Icon(Icons.agriculture, color: AppColors.newTextSecondary, size: 20),
+        prefixIcon: const Icon(Icons.agriculture, color: AppColors.newTextSecondary, size: 20),
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
@@ -640,7 +640,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              side: BorderSide(color: AppColors.borderDark),
+              side: const BorderSide(color: AppColors.borderDark),
             ),
             onPressed: () => Navigator.pop(context),
             child: Text(

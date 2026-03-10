@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../constants/app_colors.dart';
@@ -18,7 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _isResettingPassword = false;
+  final bool _isResettingPassword = false;
 
   @override
   void dispose() {
@@ -64,25 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
       _showSnackbar('Erro ao fazer login com Google', color: AppColors.newDanger);
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _resetPassword() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      _showSnackbar('Por favor, preencha o e-mail', color: AppColors.newWarning);
-      return;
-    }
-
-    setState(() => _isResettingPassword = true);
-
-    try {
-      await _authService.resetPassword(email);
-      _showSnackbar('Link enviado para $email');
-    } catch (e) {
-      _showSnackbar('Erro ao enviar link de recuperação', color: AppColors.newDanger);
-    } finally {
-      if (mounted) setState(() => _isResettingPassword = false);
     }
   }
 
@@ -235,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 20),
                               // Divider
-                              Row(
+                              const Row(
                                 children: [
                                   Expanded(
                                     child: Divider(
@@ -244,10 +225,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    padding: EdgeInsets.symmetric(horizontal: 16),
                                     child: Text(
                                       'OU',
-                                      style: GoogleFonts.inter(
+                                      style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.newTextSecondary,
@@ -271,11 +252,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 24),
                               // Link Recuperar Senha
-                              TextButton(
-                                onPressed: _isResettingPassword ? null : _resetPassword,
+                              const TextButton(
+                                onPressed: null,
                                 child: Text(
                                   'Esqueci minha senha',
-                                  style: GoogleFonts.inter(
+                                  style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.newPrimary,
@@ -347,19 +328,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.borderDark, width: 1),
+              borderSide: const BorderSide(color: AppColors.borderDark, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.borderDark, width: 1),
+              borderSide: const BorderSide(color: AppColors.borderDark, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.newPrimary, width: 1),
+              borderSide: const BorderSide(color: AppColors.newPrimary, width: 1),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.newDanger, width: 1),
+              borderSide: const BorderSide(color: AppColors.newDanger, width: 1),
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           ),
@@ -385,7 +366,7 @@ class _LoginScreenState extends State<LoginScreen> {
           elevation: 0,
         ),
         child: isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
@@ -425,7 +406,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: AppColors.newPrimary, width: 1),
+          side: const BorderSide(color: AppColors.newPrimary, width: 1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
