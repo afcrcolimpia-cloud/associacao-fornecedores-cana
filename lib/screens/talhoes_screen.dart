@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_bar_afcrc.dart';
+import '../widgets/header_propriedade.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
 import 'talhao_form_screen.dart';
 
 class TalhoesScreen extends StatefulWidget {
-  final Propriedade propriedade;
+  final ContextoPropriedade contexto;
 
   const TalhoesScreen({
     super.key,
-    required this.propriedade,
+    required this.contexto,
   });
 
   @override
@@ -35,6 +36,7 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
       ),
       body: Column(
         children: [
+          HeaderPropriedade(contexto: widget.contexto),
           _buildFiltros(),
           Expanded(
             child: _buildTalhoes(),
@@ -94,7 +96,7 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
 
   Widget _buildTalhoes() {
     return StreamBuilder<List<Talhao>>(
-      stream: _service.getTalhoesStream(widget.propriedade.id),
+      stream: _service.getTalhoesStream(widget.contexto.propriedade.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -324,7 +326,7 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => TalhaoFormScreen(
-          propriedade: widget.propriedade,
+          propriedade: widget.contexto.propriedade,
           talhao: talhao,
         ),
       ),

@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/app_shell.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import '../widgets/app_bar_afcrc.dart';
+import '../widgets/header_propriedade.dart';
 import '../widgets/kpi_card.dart';
 import '../constants/app_colors.dart';
 import '../services/operacao_cultivo_service.dart';
-import '../services/propriedade_service.dart';
 import '../services/talhao_service.dart';
+import '../services/pdf_generators/pdf_operacoes.dart';
 import '../models/models.dart';
 
 class OperacoesCultivoScreen extends StatefulWidget {
-  const OperacoesCultivoScreen({super.key});
+  final ContextoPropriedade contexto;
+
+  const OperacoesCultivoScreen({
+    super.key,
+    required this.contexto,
+  });
 
   @override
   State<OperacoesCultivoScreen> createState() => _OperacoesCultivoScreenState();
@@ -17,14 +25,11 @@ class OperacoesCultivoScreen extends StatefulWidget {
 
 class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
   List<OperacaoCultivo> _operacoes = [];
-  List<Propriedade> _propriedades = [];
   List<Talhao> _talhoes = [];
 
   bool _loadingOperacoes = true;
-  bool _loadingPropriedades = true;
   bool _loadingTalhoes = true;
 
-  String? _propriedadeSelecionada;
   String? _talhaoSelecionado;
 
   DateTime? _dataPlantio;
@@ -36,7 +41,6 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
   final TextEditingController _observacoesController = TextEditingController();
 
   final OperacaoCultivoService _serviceOperacoes = OperacaoCultivoService();
-  final PropriedadeService _servicePropriedades = PropriedadeService();
   final TalhaoService _serviceTalhoes = TalhaoService();
 
   @override
@@ -47,41 +51,17 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
 
   Future<void> _loadData() async {
     await Future.wait([
-      _loadPropriedades(),
+      _loadTalhoes(),
       _loadOperacoes(),
     ]);
   }
 
-  Future<void> _loadPropriedades() async {
-    try {
-      if (!mounted) return;
-      setState(() => _loadingPropriedades = true);
-
-      final propriedades = await _servicePropriedades.getPropriedades();
-
-      if (mounted) {
-        setState(() {
-          _propriedades = propriedades;
-          _loadingPropriedades = false;
-          if (propriedades.isNotEmpty && _propriedadeSelecionada == null) {
-            _propriedadeSelecionada = propriedades.first.id;
-            _loadTalhoes(propriedades.first.id);
-          }
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _loadingPropriedades = false);
-      }
-    }
-  }
-
-  Future<void> _loadTalhoes(String propriedadeId) async {
+  Future<void> _loadTalhoes() async {
     try {
       if (!mounted) return;
       setState(() => _loadingTalhoes = true);
 
-      final talhoes = await _serviceTalhoes.getTalhoesPorPropriedade(propriedadeId);
+      final talhoes = await _serviceTalhoes.getTalhoesPorPropriedade(widget.contexto.propriedade.id);
 
       if (mounted) {
         setState(() {
@@ -99,10 +79,10 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
 
   Future<void> _loadOperacoes() async {
     try {
-      if (!mounted || _propriedadeSelecionada == null) return;
+      if (!mounted) return;
       setState(() => _loadingOperacoes = true);
 
-      final operacoes = await _serviceOperacoes.getOperacoesPorPropriedade(_propriedadeSelecionada!).first;
+      final operacoes = await _serviceOperacoes.getOperacoesPorPropriedade(widget.contexto.propriedade.id).first;
 
       if (mounted) {
         setState(() {
@@ -118,7 +98,7 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
   }
 
   Future<void> _salvarOperacao() async {
-    if (_propriedadeSelecionada == null || _talhaoSelecionado == null || _dataPlantio == null) {
+    if (_talhaoSelecionado == null || _dataPlantio == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Preencha os campos obrigatórios')),
       );
@@ -127,7 +107,7 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
 
     try {
       final operacao = OperacaoCultivo(
-        propriedadeId: _propriedadeSelecionada!,
+        propriedadeId: widget.contexto.propriedade.id,
         talhaoId: _talhaoSelecionado!,
         dataPlantio: _dataPlantio!,
         dataQuebraLombo: _dataQuebraLombo,
@@ -211,15 +191,17 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AppShell(
-      selectedIndex: 0,
-      title: 'Operações de Cultivo',
-      onNavigationSelect: (_) {},
-      child: SingleChildScrollView(
+    return Scaffold(
+      appBar: const AppBarAfcrc(
+        title: 'Operações de Cultivo',
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            HeaderPropriedade(contexto: widget.contexto),
+            const SizedBox(height: 24),
             // Títulos
             Text(
               'Operações de Cultivo',
@@ -322,13 +304,8 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            _loadingPropriedades
-                                ? const SizedBox(
-                                    height: 40,
-                                    child: Center(child: CircularProgressIndicator()),
-                                  )
-                                : Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                            Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: AppColors.bgDark,
                                       border: Border.all(
@@ -337,28 +314,12 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
                                       ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: DropdownButton<String>(
-                                      value: _propriedadeSelecionada,
-                                      isExpanded: true,
-                                      underline: const SizedBox(),
-                                      onChanged: (value) {
-                                        if (value != null) {
-                                          setState(() => _propriedadeSelecionada = value);
-                                          _loadTalhoes(value);
-                                          _loadOperacoes();
-                                        }
-                                      },
-                                      dropdownColor: AppColors.surfaceDark,
+                                    child: Text(
+                                      widget.contexto.nomePropriedade,
                                       style: GoogleFonts.inter(
                                         color: AppColors.newTextPrimary,
                                         fontSize: 14,
                                       ),
-                                      items: _propriedades
-                                          .map((prop) => DropdownMenuItem(
-                                                value: prop.id,
-                                                child: Text(prop.nomePropriedade),
-                                              ))
-                                          .toList(),
                                     ),
                                   ),
                           ],
@@ -800,11 +761,7 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
                       ElevatedButton.icon(
                         icon: const Icon(Icons.file_download_outlined),
                         label: const Text('Gerar PDF'),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('PDF gerado com sucesso')),
-                          );
-                        },
+                        onPressed: () => _gerarPdfOperacoes(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.newWarning,
                           foregroundColor: AppColors.bgDark,
@@ -993,5 +950,25 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _gerarPdfOperacoes() async {
+    try {
+      final pdfBytes = await PdfOperacoesCultivo.gerar(
+        propriedade: widget.contexto.propriedade,
+        operacoes: _operacoes,
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Operacoes_Cultivo_${widget.contexto.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
+    }
   }
 }

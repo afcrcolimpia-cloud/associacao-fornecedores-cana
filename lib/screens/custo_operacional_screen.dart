@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_bar_afcrc.dart';
+import '../widgets/header_propriedade.dart';
 import '../models/models.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/exportacao_pdf_service.dart';
@@ -15,11 +16,11 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 
 class CustoOperacionalScreen extends StatefulWidget {
-  final Propriedade propriedade;
+  final ContextoPropriedade contexto;
 
   const CustoOperacionalScreen({
     super.key,
-    required this.propriedade,
+    required this.contexto,
   });
 
   @override
@@ -49,7 +50,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
         ],
       ),
       body: StreamBuilder<List<CustoOperacionalCenario>>(
-        stream: _service.getCenariosByPropriedadeStream(widget.propriedade.id),
+        stream: _service.getCenariosByPropriedadeStream(widget.contexto.propriedade.id),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -101,50 +102,48 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
 
           return Column(
             children: [
-              // Lista de cenários em abas
-              Container(
-                color: Colors.grey.withOpacity(0.1),
-                height: 60,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                  itemCount: cenarios.length,
-                  itemBuilder: (context, index) {
-                    final cenario = cenarios[index];
-                    final isSelected = _cenarioSelecionadoId == cenario.id;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: FilterChip(
-                        selected: isSelected,
-                        label: Text(cenario.nomeCenario),
-                        onSelected: (_) {
-                          setState(() => _cenarioSelecionadoId = cenario.id);
-                          _garantirTotais(cenario);
-                        },
-                        backgroundColor: Colors.white,
-                        selectedColor: AppColors.primary.withOpacity(0.2),
-                        side: BorderSide(
-                          color: isSelected
-                              ? AppColors.primary
-                              : Colors.grey.withOpacity(0.3),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              // Conteúdo do cenário selecionado
+              HeaderPropriedade(contexto: widget.contexto),
               Expanded(
-                child: _buildCenarioDetalhes(cenarioSelecionado),
+                child: _buildContenudoCenarios(cenarioSelecionado, cenarios),
               ),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildContenudoCenarios(CustoOperacionalCenario cenarioSelecionado, List<CustoOperacionalCenario> cenarios) {
+    return Column(
+      children: [
+        // Seletor de cenários
+        if (cenarios.length > 1)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: cenarios.map((cenario) {
+                  final selecionado = cenario.id == cenarioSelecionado.id;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ChoiceChip(
+                      label: Text(cenario.nomeCenario),
+                      selected: selecionado,
+                      onSelected: (_) {
+                        setState(() => _cenarioSelecionadoId = cenario.id);
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        // Detalhe do cenário selecionado
+        Expanded(
+          child: _buildCenarioDetalhes(cenarioSelecionado),
+        ),
+      ],
     );
   }
 
@@ -398,12 +397,12 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       if (!mounted) return;
 
       final pdf = await PdfCustoOperacional.gerar(
-        propriedade: widget.propriedade,
+        propriedade: widget.contexto.propriedade,
         cenario: cenario,
       );
 
       await Printing.layoutPdf(
-        name: 'Relatorio_CustoOperacional_${widget.propriedade.nomePropriedade}_${cenario.nomeCenario}.pdf',
+        name: 'Relatorio_CustoOperacional_${widget.contexto.propriedade.nomePropriedade}_${cenario.nomeCenario}.pdf',
         format: PdfPageFormat.a4,
         onLayout: (_) async => pdf,
       );
@@ -421,7 +420,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => CustoOperacionalFormScreen(
-          propriedade: widget.propriedade,
+          propriedade: widget.contexto.propriedade,
         ),
       ),
     );
@@ -436,7 +435,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => CustoOperacionalFormScreen(
-          propriedade: widget.propriedade,
+          propriedade: widget.contexto.propriedade,
           cenarioEditando: cenario,
         ),
       ),
@@ -567,7 +566,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
 
       await ExportacaoPDFService.imprimirRelatorio(
         atualizado,
-        widget.propriedade,
+        widget.contexto.propriedade,
       );
 
       if (!mounted) return;
@@ -619,7 +618,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
   Future<List<CustoOperacionalCenario>>
       _obterCenariosAtualizadosParaComparacao() async {
     final cenarios = await _service.getCenariosByPropriedade(
-      widget.propriedade.id,
+      widget.contexto.propriedade.id,
     );
 
     for (final cenario in cenarios) {
@@ -632,7 +631,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       }
     }
 
-    return _service.getCenariosByPropriedade(widget.propriedade.id);
+    return _service.getCenariosByPropriedade(widget.contexto.propriedade.id);
   }
 
   void _garantirTotais(CustoOperacionalCenario cenario) {

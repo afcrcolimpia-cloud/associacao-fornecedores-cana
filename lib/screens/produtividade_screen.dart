@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_bar_afcrc.dart';
+import '../widgets/header_propriedade.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
@@ -9,11 +10,11 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 
 class ProdutividadeScreen extends StatefulWidget {
-  final Propriedade? propriedade;
+  final ContextoPropriedade contexto;
 
   const ProdutividadeScreen({
     super.key,
-    this.propriedade,
+    required this.contexto,
   });
 
   @override
@@ -23,7 +24,6 @@ class ProdutividadeScreen extends StatefulWidget {
 class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   final ProdutividadeService _service = ProdutividadeService();
   
-  String? _propriedadeSelecionada;
   String? _anoSafraSelecionado;
   String? _anoComparacao;
   
@@ -32,10 +32,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.propriedade != null) {
-      _propriedadeSelecionada = widget.propriedade!.id;
-      _anoSafraSelecionado = DateTime.now().year.toString();
-    }
+    _anoSafraSelecionado = DateTime.now().year.toString();
   }
   
   @override
@@ -46,28 +43,25 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
-            onPressed: widget.propriedade != null && _anoSafraSelecionado != null
+            onPressed: _anoSafraSelecionado != null
                 ? _gerarPdf
                 : null,
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: widget.propriedade != null ? _mostrarFormulario : null,
+            onPressed: _mostrarFormulario,
           ),
         ],
       ),
-      body: widget.propriedade == null
-          ? const Center(
-              child: Text('Selecione uma propriedade para visualizar produtividade'),
-            )
-          : Column(
-              children: [
-                _buildFiltros(),
-                Expanded(
-                  child: _buildConteudo(),
-                ),
-              ],
-            ),
+      body: Column(
+        children: [
+          HeaderPropriedade(contexto: widget.contexto),
+          _buildFiltros(),
+          Expanded(
+            child: _buildConteudo(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -125,15 +119,15 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   }
 
   Widget _buildConteudo() {
-    if (_propriedadeSelecionada == null || _anoSafraSelecionado == null) {
+    if (_anoSafraSelecionado == null) {
       return const Center(
-        child: Text('Selecione uma propriedade e ano safra'),
+        child: Text('Selecione o ano safra'),
       );
     }
 
     return StreamBuilder<List<Produtividade>>(
       stream: _service.getProdutividadePorPropriedadeEAno(
-        _propriedadeSelecionada!,
+        widget.contexto.propriedade.id,
         _anoSafraSelecionado!,
       ),
       builder: (context, snapshot) {
@@ -248,7 +242,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   Widget _buildComparacao() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _service.compararAnos(
-        _propriedadeSelecionada!,
+        widget.contexto.propriedade.id,
         _anoSafraSelecionado!,
         _anoComparacao!,
       ),
@@ -352,7 +346,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   Widget _buildGrafico(List<Produtividade> produtividades) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _service.getDadosGraficoPorMes(
-        _propriedadeSelecionada!,
+        widget.contexto.propriedade.id,
         _anoSafraSelecionado!,
       ),
       builder: (context, snapshot) {
@@ -487,24 +481,24 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   }
 
   Future<void> _gerarPdf() async {
-    if (widget.propriedade == null || _anoSafraSelecionado == null) return;
+    if (_anoSafraSelecionado == null) return;
 
     try {
       final produtividades = await _service.getProdutividadePorPropriedadeEAno(
-        widget.propriedade!.id,
+        widget.contexto.propriedade.id,
         _anoSafraSelecionado!,
       ).first;
 
       if (!mounted) return;
 
       final pdf = await PdfProdutividade.gerar(
-        propriedade: widget.propriedade!,
+        propriedade: widget.contexto.propriedade,
         dadosProdutividade: produtividades,
         anoSafra: _anoSafraSelecionado!,
       );
 
       await Printing.layoutPdf(
-        name: 'Relatorio_Produtividade_${widget.propriedade!.nomePropriedade}_${_anoSafraSelecionado!}.pdf',
+        name: 'Relatorio_Produtividade_${widget.contexto.propriedade.nomePropriedade}_${_anoSafraSelecionado!}.pdf',
         format: PdfPageFormat.a4,
         onLayout: (_) async => pdf,
       );
@@ -518,13 +512,11 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   }
 
   Future<void> _mostrarFormulario({Produtividade? produtividade}) async {
-    if (widget.propriedade == null) return;
-
     final resultado = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => ProdutividadeFormScreen(
-          propriedade: widget.propriedade!,
+          propriedade: widget.contexto.propriedade,
           produtividade: produtividade,
         ),
       ),

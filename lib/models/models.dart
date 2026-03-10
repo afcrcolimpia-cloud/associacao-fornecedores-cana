@@ -9,6 +9,7 @@ export 'precipitacao.dart';
 export 'tratos_culturais.dart';
 export 'variedade.dart';
 export 'operacao_custos.dart';
+export 'contexto_propriedade.dart';
 // ============================================
 // MODELO: Produtividade
 // ADICIONAR NO FINAL DE lib/models/models.dart

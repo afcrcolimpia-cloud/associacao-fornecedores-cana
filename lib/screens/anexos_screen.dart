@@ -5,13 +5,17 @@ import '../constants/app_colors.dart';
 import '../config/database_config.dart';
 import '../utils/file_utils.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/header_propriedade.dart';
 import 'anexo_upload_screen.dart';
 import 'formularios_pdf_screen.dart';
 
 class AnexosScreen extends StatefulWidget {
-  final Propriedade propriedade;
+  final ContextoPropriedade contexto;
 
-  const AnexosScreen({super.key, required this.propriedade});
+  const AnexosScreen({super.key, required this.contexto});
+
+  /// Getter de conveniência para manter compatibilidade interna
+  Propriedade get propriedade => contexto.propriedade;
 
   @override
   State<AnexosScreen> createState() => _AnexosScreenState();
@@ -76,6 +80,7 @@ class _AnexosScreenState extends State<AnexosScreen> {
       child: SingleChildScrollView(
         child: Column(
           children: [
+            HeaderPropriedade(contexto: widget.contexto),
             // Header com título e ações
             Padding(
               padding: const EdgeInsets.all(16),
@@ -99,8 +104,8 @@ class _AnexosScreenState extends State<AnexosScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => FormulariosPdfScreen(
-                              propriedadeId: widget.propriedade.id,
-                              propriedade: widget.propriedade,
+                              propriedadeId: widget.contexto.propriedade.id,
+                              propriedade: widget.contexto.propriedade,
                             ),
                           ),
                         );
@@ -115,7 +120,7 @@ class _AnexosScreenState extends State<AnexosScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: StreamBuilder<List<Anexo>>(
-                stream: _anexoService.getAnexosByPropriedadeStream(widget.propriedade.id),
+                stream: _anexoService.getAnexosByPropriedadeStream(widget.contexto.propriedade.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Padding(
@@ -307,7 +312,7 @@ class _AnexosScreenState extends State<AnexosScreen> {
     if (!context.mounted) return;
     final result = await Navigator.push<String?>(
       context,
-      MaterialPageRoute(builder: (_) => AnexoUploadScreen(propriedade: widget.propriedade)),
+      MaterialPageRoute(builder: (_) => AnexoUploadScreen(propriedade: widget.contexto.propriedade)),
     );
     if (!mounted) return;
     if (result != null) {

@@ -4,7 +4,6 @@ import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../services/talhao_service.dart';
 import 'propriedade_form_screen.dart';
-import 'talhoes_screen.dart';
 
 class PropriedadeDetailScreen extends StatefulWidget {
   final String propriedadeId;
@@ -300,7 +299,7 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
             ElevatedButton.icon(
               icon: const Icon(Icons.add),
               label: const Text('Novo'),
-              onPressed: () => _abrirTelasTalhoes(propriedade),
+              onPressed: () => _criarNovoTalhao(propriedade),
             ),
           ],
         ),
@@ -355,7 +354,7 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
                     trailing: talhao.ativo
                         ? const Icon(Icons.check_circle, color: Colors.green)
                         : const Icon(Icons.cancel, color: Colors.red),
-                    onTap: () => _abrirTelasTalhoes(propriedade),
+                    onTap: () => _criarNovoTalhao(propriedade),
                   ),
                 );
               },
@@ -411,12 +410,29 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
     }
   }
 
-  void _abrirTelasTalhoes(Propriedade propriedade) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TalhoesScreen(propriedade: propriedade),
-      ),
+  Future<void> _criarNovoTalhao(Propriedade propriedade) async {
+    // TODO: Implementar navegação para TalhaoFormScreen
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Criar novo talhão - em desenvolvimento')),
     );
   }
+
+  // TODO: Implementar _abrirHub com PropriedadeHubScreen após /implementar-fluxo
+  // Future<void> _abrirHub(Propriedade propriedade) async {
+  //   final proprietario = await ProprietarioService()
+  //       .getProprietario(propriedade.proprietarioId);
+  //   if (proprietario != null && mounted) {
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (context) => PropriedadeHubScreen(
+  //           contexto: ContextoPropriedade(
+  //             proprietario: proprietario,
+  //             propriedade: propriedade,
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
 }

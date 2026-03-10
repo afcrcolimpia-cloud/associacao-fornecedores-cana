@@ -1,8 +1,7 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../services/auth_service.dart';
-import 'login_screen.dart';
+import '../widgets/app_shell.dart';
 import 'dashboard_screen.dart';
 import 'proprietarios_screen.dart';
 import 'propriedades_screen.dart';
@@ -16,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -34,45 +34,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final authService = AuthService();
-
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 1,
-        surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'AFCRC — Catanduva/SP',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.textSecondary),
-            tooltip: 'Sair',
-            onPressed: () async {
-              await authService.signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              }
-            },
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0))),
-            ),
+    return AppShell(
+      title: 'Home',
+      selectedIndex: _selectedIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedIndex = index);
+      },
+      child: Column(
+        children: [
+          // TabBar para alternare entre Dashboard e Gestão
+          Container(
+            color: AppColors.surfaceDark,
             child: TabBar(
               controller: _tabController,
               labelColor: AppColors.primary,
@@ -80,18 +52,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               indicatorColor: AppColors.primary,
               indicatorWeight: 3,
               tabs: const [
-                Tab(icon: Icon(Icons.dashboard, size: 20), text: 'Dashboard'),
-                Tab(icon: Icon(Icons.agriculture, size: 20), text: 'Gestão'),
+                Tab(icon: Icon(Icons.dashboard_outlined, size: 20), text: 'Dashboard'),
+                Tab(icon: Icon(Icons.agriculture_outlined, size: 20), text: 'Gestão'),
               ],
             ),
           ),
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          DashboardScreen(),
-          _GestaoTab(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                DashboardScreen(),
+                _GestaoTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -122,41 +96,32 @@ class _GestaoTabState extends State<_GestaoTab> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Container(
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0))),
-            ),
-            child: TabBar(
-              controller: _subTabController,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: AppColors.primary,
-              indicatorWeight: 3,
-              tabs: const [
-                Tab(text: 'Proprietários', icon: Icon(Icons.person, size: 18)),
-                Tab(text: 'Propriedades', icon: Icon(Icons.home_work, size: 18)),
-              ],
-            ),
+    return Column(
+      children: [
+        Container(
+          color: AppColors.surfaceDark,
+          child: TabBar(
+            controller: _subTabController,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicatorColor: AppColors.primary,
+            indicatorWeight: 3,
+            tabs: const [
+              Tab(text: 'Proprietários', icon: Icon(Icons.person_outline, size: 18)),
+              Tab(text: 'Propriedades', icon: Icon(Icons.home_work_outlined, size: 18)),
+            ],
           ),
         ),
-      ),
-      body: TabBarView(
-        controller: _subTabController,
-        children: const [
-          ProprietariosScreen(),
-          PropriedadesScreen(),
-        ],
-      ),
+        Expanded(
+          child: TabBarView(
+            controller: _subTabController,
+            children: const [
+              ProprietariosScreen(),
+              PropriedadesScreen(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
-
-
-// Removed old tab content classes - functionality moved to PropriedadeDetailScreen

@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import 'package:gestao_cana_app/constants/app_colors.dart';
-import 'package:gestao_cana_app/widgets/app_shell.dart';
-import 'package:gestao_cana_app/utils/municipios_sp.dart' as sp;
+import 'package:gestao_cana_app/widgets/app_bar_afcrc.dart';
+import 'package:gestao_cana_app/widgets/header_propriedade.dart';
+import 'package:gestao_cana_app/models/models.dart';
+import 'package:gestao_cana_app/services/precipitacao_service.dart';
+import 'package:gestao_cana_app/services/pdf_generators/pdf_precipitacao.dart';
 
 class PrecipitacaoScreen extends StatefulWidget {
-  const PrecipitacaoScreen({super.key});
+  final ContextoPropriedade contexto;
+
+  const PrecipitacaoScreen({
+    super.key,
+    required this.contexto,
+  });
 
   @override
   State<PrecipitacaoScreen> createState() => _PrecipitacaoScreenState();
 }
 
 class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
+  final PrecipitacaoService _precipitacaoService = PrecipitacaoService();
+  List<Precipitacao> _precipitacoes = [];
   List<String> _safras = [];
+  List<String> _municipios = [];
   String? _selectedSafra;
   String? _selectedMunicipio;
-  // ignore: unused_field
   bool _isLoading = true;
-  
-  // Dados mock para demonstração (serão substituídos por dados reais)
-  final List<double> _monthlyData = [120, 95, 110, 140, 160, 185, 180, 175, 160, 145, 132, 115];
+
+  List<double> _monthlyData = List.filled(12, 0.0);
   final List<String> _months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
   @override
@@ -30,14 +41,34 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
 
   Future<void> _loadData() async {
     try {
-      // TODO: Carregar dados reais via services
-      // final safras = await _agregadaService.getSafras().first;
-      // final dados = await _precipitacaoService.getPrecipitacao().first;
-      
+      final precipitacoes = await _precipitacaoService.getPrecipitacoesByPropriedade(
+        widget.contexto.propriedade.id,
+      );
+
+      final anosSet = <int>{};
+      final municipiosSet = <String>{};
+      for (final p in precipitacoes) {
+        anosSet.add(p.ano);
+        if (p.municipio.isNotEmpty) municipiosSet.add(p.municipio);
+      }
+
+      final anos = anosSet.toList()..sort((a, b) => b.compareTo(a));
+      final municipios = municipiosSet.toList()..sort();
+
+      final propMunicipio = widget.contexto.municipio;
+      if (propMunicipio.isNotEmpty && !municipios.contains(propMunicipio)) {
+        municipios.insert(0, propMunicipio);
+      }
+
       setState(() {
-        _safras = ['2024', '2023', '2022'];
+        _precipitacoes = precipitacoes;
+        _safras = anos.map((a) => a.toString()).toList();
+        _municipios = municipios;
         _selectedSafra = _safras.isNotEmpty ? _safras.first : null;
-        _selectedMunicipio = sp.MunicipiosSP.municipiosList.isNotEmpty ? sp.MunicipiosSP.municipiosList.first : null;
+        _selectedMunicipio = municipios.isNotEmpty
+            ? (municipios.contains(propMunicipio) ? propMunicipio : municipios.first)
+            : null;
+        _computeMonthlyData();
         _isLoading = false;
       });
     } catch (e) {
@@ -46,44 +77,64 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
     }
   }
 
-  double _getMonthlyTotal() => _monthlyData.fold(0, (sum, val) => sum + val);
-  double _getMonthlyAverage() => _getMonthlyTotal() / 12;
+  void _computeMonthlyData() {
+    final data = List<double>.filled(12, 0.0);
+    final anoFiltro = int.tryParse(_selectedSafra ?? '');
+
+    for (final p in _precipitacoes) {
+      if (anoFiltro != null && p.ano != anoFiltro) continue;
+      if (_selectedMunicipio != null && p.municipio != _selectedMunicipio) continue;
+      if (p.mes >= 1 && p.mes <= 12) {
+        data[p.mes - 1] += p.milimetros;
+      }
+    }
+
+    _monthlyData = data;
+  }
+
+  double _getMonthlyTotal() => _monthlyData.fold(0.0, (sum, val) => sum + val);
+  double _getMonthlyAverage() {
+    final nonZero = _monthlyData.where((v) => v > 0).length;
+    return nonZero > 0 ? _getMonthlyTotal() / nonZero : 0;
+  }
   String _getWettestMonth() {
+    if (_monthlyData.every((v) => v == 0)) return '-';
     final maxIndex = _monthlyData.indexWhere((val) => val == _monthlyData.reduce((a, b) => a > b ? a : b));
     return _months[maxIndex];
   }
   String _getDriestMonth() {
-    final minIndex = _monthlyData.indexWhere((val) => val == _monthlyData.reduce((a, b) => a < b ? a : b));
-    return _months[minIndex];
+    final nonZero = <int>[];
+    for (int i = 0; i < _monthlyData.length; i++) {
+      if (_monthlyData[i] > 0) nonZero.add(i);
+    }
+    if (nonZero.isEmpty) return '-';
+    final minIdx = nonZero.reduce((a, b) => _monthlyData[a] < _monthlyData[b] ? a : b);
+    return _months[minIdx];
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppShell(
-      onNavigationSelect: (index) {},
-      selectedIndex: 5,
-      child: SingleChildScrollView(
+    return Scaffold(
+      appBar: const AppBarAfcrc(
+        title: 'Monitoramento Pluviométrico',
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Título
-            Padding(
-              padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 8),
-              child: Text(
-                'Monitoramento Pluviométrico',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppColors.newTextPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+            HeaderPropriedade(contexto: widget.contexto),
+            if (_precipitacoes.isEmpty) ...[
+              const SizedBox(height: 48),
+              const Center(
+                child: Text(
+                  'Nenhum dado de precipitação disponível',
+                  style: TextStyle(color: AppColors.newTextSecondary, fontSize: 16),
+                ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(left: 16, right: 16, bottom: 16),
-              child: Text(
-                'Catanduva/SP',
-                style: TextStyle(color: AppColors.newTextSecondary, fontSize: 14),
-              ),
-            ),
+            ] else ...[
+            const SizedBox(height: 16),
 
             // 4 KPI Cards
             Padding(
@@ -146,7 +197,12 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                                   child: Text(safra, style: const TextStyle(color: Colors.white)),
                                 ))
                             .toList(),
-                        onChanged: (value) => setState(() => _selectedSafra = value),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSafra = value;
+                            _computeMonthlyData();
+                          });
+                        },
                         style: const TextStyle(color: Colors.white),
                         dropdownColor: AppColors.surfaceDark,
                       ),
@@ -166,13 +222,18 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                         underline: const SizedBox(),
                         hint: const Text('Município', style: TextStyle(color: AppColors.newTextSecondary)),
                         value: _selectedMunicipio,
-                        items: sp.MunicipiosSP.municipiosList
+                        items: _municipios
                             .map((municipio) => DropdownMenuItem(
                                   value: municipio,
                                   child: Text(municipio, style: const TextStyle(color: Colors.white)),
                                 ))
                             .toList(),
-                        onChanged: (value) => setState(() => _selectedMunicipio = value),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedMunicipio = value;
+                            _computeMonthlyData();
+                          });
+                        },
                         style: const TextStyle(color: Colors.white),
                         dropdownColor: AppColors.surfaceDark,
                       ),
@@ -282,7 +343,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                     ],
                     rows: [
                       DataRow(cells: [
-                        const DataCell(Text('Catanduva', style: TextStyle(color: AppColors.newTextPrimary))),
+                        DataCell(Text(_selectedMunicipio ?? '-', style: const TextStyle(color: AppColors.newTextPrimary))),
                         ...List.generate(
                           12,
                           (index) => DataCell(Text(_monthlyData[index].toStringAsFixed(0),
@@ -303,11 +364,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PDF exportado com sucesso!')),
-                  );
-                },
+                onPressed: () => _gerarPdfPrecipitacao(),
                 icon: const Icon(Icons.picture_as_pdf),
                 label: const Text('Exportar PDF'),
                 style: ElevatedButton.styleFrom(
@@ -318,6 +375,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                 ),
               ),
             ),
+            ],
           ],
         ),
       ),
@@ -360,5 +418,32 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _gerarPdfPrecipitacao() async {
+    try {
+      final service = PrecipitacaoService();
+      final precipitacoes = await service.getPrecipitacoesByPropriedade(
+        widget.contexto.propriedade.id,
+      );
+      final ano = int.tryParse(_selectedSafra ?? '') ?? DateTime.now().year;
+      
+      final pdfBytes = await PdfPrecipitacao.gerar(
+        propriedade: widget.contexto.propriedade,
+        dadosPrecipitacao: precipitacoes,
+        ano: ano,
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Precipitacao_${widget.contexto.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
+    }
   }
 }

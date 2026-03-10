@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_bar_afcrc.dart';
+import '../widgets/header_propriedade.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
@@ -10,11 +11,11 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 
 class TratosCulturaisScreen extends StatefulWidget {
-  final Propriedade propriedade;
+  final ContextoPropriedade contexto;
 
   const TratosCulturaisScreen({
     super.key,
-    required this.propriedade,
+    required this.contexto,
   });
 
   @override
@@ -31,14 +32,14 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('🔵 TratosCulturaisScreen - Propriedade ID: ${widget.propriedade.id}');
-    debugPrint('🔵 TratosCulturaisScreen - Propriedade Nome: ${widget.propriedade.nomePropriedade}');
+    debugPrint('🔵 TratosCulturaisScreen - Propriedade ID: ${widget.contexto.propriedade.id}');
+    debugPrint('🔵 TratosCulturaisScreen - Propriedade Nome: ${widget.contexto.propriedade.nomePropriedade}');
     _carregarTalhoes();
   }
 
   Future<void> _carregarTalhoes() async {
     try {
-      final talhoes = await _talhaoService.getTalhoesPorPropriedade(widget.propriedade.id);
+      final talhoes = await _talhaoService.getTalhoesPorPropriedade(widget.contexto.propriedade.id);
       debugPrint('🟢 Talhões carregados: ${talhoes.length}');
       if (mounted) {
         setState(() {
@@ -54,7 +55,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarAfcrc(
-        title: 'Tratos Culturais — ${widget.propriedade.nomePropriedade}',
+        title: 'Tratos Culturais',
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
@@ -68,6 +69,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
       ),
       body: Column(
         children: [
+          HeaderPropriedade(contexto: widget.contexto),
           _buildFiltros(),
           Expanded(
             child: _buildTabela(),
@@ -119,7 +121,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
 
   Widget _buildTabela() {
     return StreamBuilder<List<TratosCulturais>>(
-      stream: _service.getTratosByPropriedadeStream(widget.propriedade.id),
+      stream: _service.getTratosByPropriedadeStream(widget.contexto.propriedade.id),
       builder: (context, snapshot) {
         debugPrint('🟡 Stream State: ${snapshot.connectionState}');
         debugPrint('🟡 Has Data: ${snapshot.hasData}');
@@ -241,7 +243,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
 
   Future<void> _gerarPdf() async {
     try {
-      final tratos = await _service.getTratosByPropriedade(widget.propriedade.id);
+      final tratos = await _service.getTratosByPropriedade(widget.contexto.propriedade.id);
       
       final tratosFiltrados =
           tratos.where((t) => t.anoSafra == _filtroAnoSafra.toString()).toList();
@@ -249,13 +251,13 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
       if (!mounted) return;
 
       final pdf = await PdfTratosCulturais.gerar(
-        propriedade: widget.propriedade,
+        propriedade: widget.contexto.propriedade,
         tratos: tratosFiltrados,
         anoSafra: _filtroAnoSafra,
       );
 
       await Printing.layoutPdf(
-        name: 'Relatorio_TratosCulturais_${widget.propriedade.nomePropriedade}_$_filtroAnoSafra.pdf',
+        name: 'Relatorio_TratosCulturais_${widget.contexto.propriedade.nomePropriedade}_$_filtroAnoSafra.pdf',
         format: PdfPageFormat.a4,
         onLayout: (_) async => pdf,
       );
@@ -273,7 +275,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => TratosCulturaisFormScreen(
-          propriedade: widget.propriedade,
+          propriedade: widget.contexto.propriedade,
           talhoes: _talhoes,
           tratos: trato,
         ),
