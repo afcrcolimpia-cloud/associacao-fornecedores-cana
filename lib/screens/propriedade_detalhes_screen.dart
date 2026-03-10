@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
 import 'propriedade_hub_screen.dart';
@@ -21,6 +21,7 @@ class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
   final ProprietarioService _proprietarioService = ProprietarioService();
   Proprietario? _proprietario;
   bool _carregando = true;
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -46,9 +47,13 @@ class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
   @override
   Widget build(BuildContext context) {
     if (_carregando) {
-      return Scaffold(
-        appBar: AppBarAfcrc(title: widget.propriedade.nome),
-        body: const Center(child: CircularProgressIndicator()),
+      return AppShell(
+        selectedIndex: _selectedNavigationIndex,
+        onNavigationSelect: (index) {
+          setState(() => _selectedNavigationIndex = index);
+        },
+        title: widget.propriedade.nome,
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -63,9 +68,13 @@ class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
     }
 
     // Fallback: mostra apenas info + botão voltar
-    return Scaffold(
-      appBar: AppBarAfcrc(title: widget.propriedade.nome),
-      body: const Center(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: widget.propriedade.nome,
+      child: const Center(
         child: Text('Não foi possível carregar os dados do proprietário.'),
       ),
     );

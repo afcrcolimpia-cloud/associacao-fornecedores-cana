@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/models.dart';
 import '../services/anexo_service.dart';
@@ -18,6 +18,7 @@ class _AnexoUploadScreenState extends State<AnexoUploadScreen> {
   final AnexoService _anexoService = AnexoService();
   PlatformFile? _file;
   bool _isUploading = false;
+  int _selectedNavigationIndex = 0;
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(withData: true);
@@ -89,9 +90,13 @@ class _AnexoUploadScreenState extends State<AnexoUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Enviar Anexo'),
-      body: Padding(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Enviar Anexo',
+      child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../services/talhao_service.dart';
@@ -21,20 +21,17 @@ class PropriedadeDetailScreen extends StatefulWidget {
 class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
   final PropriedadeService _service = PropriedadeService();
   final TalhaoService _talhaoService = TalhaoService();
+  int _selectedNavigationIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Detalhes da Propriedade',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: _editarPropriedade,
-          ),
-        ],
-      ),
-      body: FutureBuilder<Propriedade?>(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Detalhes da Propriedade',
+      child: FutureBuilder<Propriedade?>(
         future: _service.getPropriedadeById(widget.propriedadeId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

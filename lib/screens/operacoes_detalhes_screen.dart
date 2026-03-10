@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../services/dados_custo_operacional.dart';
 import '../services/custo_operacional_service.dart';
 import '../models/operacao_custos.dart';
@@ -16,6 +16,7 @@ class OperacoesDetalhesScreen extends StatefulWidget {
 
 class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
   int _indiceAbaAtiva = 0;
+  int _selectedNavigationIndex = 0;
 
   final List<String> _abas = [
     'Resumo',
@@ -118,9 +119,13 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Detalhes de Operações'),
-      body: Column(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Detalhes de Operações',
+      child: Column(
         children: [
           // Abas
           SingleChildScrollView(

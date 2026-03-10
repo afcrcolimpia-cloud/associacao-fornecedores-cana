@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../services/custo_operacional_repository.dart';
 import '../services/custo_operacional_service.dart';
@@ -183,6 +183,7 @@ class _CustoOperacionalLancamentoScreenState
   final _repo = CustoOperacionalRepository();
   final _service = CustoOperacionalService();
   final _formKey = GlobalKey<FormState>();
+  int _selectedNavigationIndex = 0;
 
   // Seleções
   CategoriaModel? _categoria;
@@ -316,12 +317,15 @@ class _CustoOperacionalLancamentoScreenState
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: widget.edicao == null ? 'Novo Lançamento' : 'Editar Lançamento',
-      ),
-      body: Form(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: widget.edicao == null ? 'Novo Lançamento' : 'Editar Lançamento',
+      child: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),

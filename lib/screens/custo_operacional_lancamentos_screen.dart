@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../services/custo_operacional_repository.dart';
 import '../services/custo_operacional_service.dart';
 import '../constants/app_colors.dart';
@@ -36,6 +36,7 @@ class _CustoOperacionalLancamentosScreenState
   final _repo = CustoOperacionalRepository();
   final _service = CustoOperacionalService();
   late TabController _tabCtrl;
+  int _selectedNavigationIndex = 0;
 
   final List<String> _abasNomes = [
     'Conservação de Solo',
@@ -167,41 +168,43 @@ class _CustoOperacionalLancamentosScreenState
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Custo Operacional Dinâmico',
-        bottom: TabBar(
-          controller: _tabCtrl,
-          isScrollable: true,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textSecondary,
-          tabs: _abasNomes.map((a) => Tab(text: a)).toList(),
-        ),
-      ),
-      body: _carregando
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabCtrl,
-              children: _abasNomes.map((nomeAba) {
-                final indiceCategoria =
-                    _categorias.indexWhere((c) => c.nome == nomeAba);
-                if (indiceCategoria < 0) {
-                  return _buildCategoriaNaoEncontrada(nomeAba);
-                }
-                final cat = _categorias[indiceCategoria];
-                final lista = _lancamentos[cat.id] ?? [];
-                final total = _totaisPorCateg[cat.id] ?? 0.0;
-                return _buildListaTab(cat, lista, total);
-              }).toList(),
-            ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Novo Lançamento'),
-        onPressed: _abrirNovoLancamento,
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Custo Operacional Dinâmico',
+      child: Column(
+        children: [
+          TabBar(
+            controller: _tabCtrl,
+            isScrollable: true,
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            tabs: _abasNomes.map((a) => Tab(text: a)).toList(),
+          ),
+          Expanded(
+            child: _carregando
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    controller: _tabCtrl,
+                    children: _abasNomes.map((nomeAba) {
+                      final indiceCategoria =
+                          _categorias.indexWhere((c) => c.nome == nomeAba);
+                      if (indiceCategoria < 0) {
+                        return _buildCategoriaNaoEncontrada(nomeAba);
+                      }
+                      final cat = _categorias[indiceCategoria];
+                      final lista = _lancamentos[cat.id] ?? [];
+                      final total = _totaisPorCateg[cat.id] ?? 0.0;
+                      return _buildListaTab(cat, lista, total);
+                    }).toList(),
+                  ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,6 @@
 // lib/screens/proprietario_detail_screen.dart
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
@@ -23,6 +23,7 @@ class ProprietarioDetailScreen extends StatefulWidget {
 class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
   final _service = ProprietarioService();
   late Proprietario _proprietario;
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -102,23 +103,13 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Detalhes do Proprietário',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            tooltip: 'Editar',
-            onPressed: _editar,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Excluir',
-            onPressed: _deletar,
-          ),
-        ],
-      ),
-      body: ListView(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      title: 'Detalhes do Proprietário',
+      child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Card(
