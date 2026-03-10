@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/anexo_service.dart';
 import '../constants/app_colors.dart';
 import '../config/database_config.dart';
 import '../utils/file_utils.dart';
+import '../widgets/app_shell.dart';
 import 'anexo_upload_screen.dart';
 import 'formularios_pdf_screen.dart';
 
@@ -26,7 +26,7 @@ class _AnexosScreenState extends State<AnexosScreen> {
     if (!mounted) return;
     if (!sucesso) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível abrir o arquivo'), backgroundColor: AppColors.error),
+        const SnackBar(content: Text('Não foi possível abrir o arquivo'), backgroundColor: AppColors.newDanger),
       );
     }
   }
@@ -56,191 +56,265 @@ class _AnexosScreenState extends State<AnexosScreen> {
     try {
       await _anexoService.deleteAnexo(anexo.id);
       if (!mounted) return;
-      // Forçar rebuild do StreamBuilder
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Anexo excluído com sucesso!'), backgroundColor: AppColors.success),
+        const SnackBar(content: Text('Anexo excluído com sucesso!'), backgroundColor: AppColors.newSuccess),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao excluir: $e'), backgroundColor: AppColors.error),
+        SnackBar(content: Text('Erro ao excluir: $e'), backgroundColor: AppColors.newDanger),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Anexos da Propriedade',
-        actions: [
-          // Botão para relatórios de pragas
-          Tooltip(
-            message: 'Gerar Relatórios de Pragas',
-            child: IconButton(
-              icon: const Icon(Icons.note_add),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FormulariosPdfScreen(
-                      propriedadeId: widget.propriedade.id,
-                      propriedade: widget.propriedade,
+    return AppShell(
+      onNavigationSelect: (index) {},
+      selectedIndex: 6,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header com título e ações
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Anexos da Propriedade',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      body: StreamBuilder<List<Anexo>>(
-        stream: _anexoService.getAnexosByPropriedadeStream(widget.propriedade.id),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError) return Center(child: Text('Erro ao carregar anexos: ${snapshot.error}'));
-
-          final anexos = snapshot.data ?? [];
-          if (anexos.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.attach_file, size: 64, color: Colors.grey),
-                  SizedBox(height: 12),
-                  Text('Nenhum anexo cadastrado'),
+                  Tooltip(
+                    message: 'Gerar Relatórios de Pragas',
+                    child: IconButton(
+                      icon: const Icon(Icons.note_add, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FormulariosPdfScreen(
+                              propriedadeId: widget.propriedade.id,
+                              propriedade: widget.propriedade,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
-            );
-          }
+            ),
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemCount: anexos.length,
-            itemBuilder: (context, index) {
-              final anexo = anexos[index];
-              final iconeData = _obterIconeECorPorExtensao(anexo.nomeArquivo);
-              
-              return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: InkWell(
-                  onTap: () => _abrirArquivo(anexo),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        // Ícone com fundo colorido
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: iconeData['cor'].withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
+            // Lista de Anexos
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: StreamBuilder<List<Anexo>>(
+                stream: _anexoService.getAnexosByPropriedadeStream(widget.propriedade.id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        children: [
+                          Icon(Icons.error, size: 48, color: AppColors.newDanger),
+                          const SizedBox(height: 12),
+                          Text('Erro ao carregar anexos: ${snapshot.error}'),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final anexos = snapshot.data ?? [];
+
+                  if (anexos.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Column(
+                        children: [
+                          Icon(Icons.attach_file, size: 64, color: Colors.grey[600]),
+                          const SizedBox(height: 12),
+                          const Text('Nenhum anexo cadastrado'),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: _abrirTelaDeUpload,
+                            icon: const Icon(Icons.upload_file),
+                            label: const Text('Adicionar Arquivo'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.newSuccess,
+                              foregroundColor: Colors.white,
+                            ),
                           ),
-                          child: Icon(
-                            iconeData['icone'] as IconData,
-                            color: iconeData['cor'] as Color,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        
-                        // Informações do arquivo
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                anexo.nomeArquivo,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: List.generate(
+                      anexos.length,
+                      (index) {
+                        final anexo = anexos[index];
+                        final iconeData = _obterIconeECorPorExtensao(anexo.nomeArquivo);
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Card(
+                            elevation: 2,
+                            color: AppColors.bgDark,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: InkWell(
+                              onTap: () => _abrirArquivo(anexo),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    // Ícone
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: (iconeData['cor'] as Color).withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        iconeData['icone'] as IconData,
+                                        color: iconeData['cor'] as Color,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+
+                                    // Informações
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            anexo.nomeArquivo,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _anexoService.formatarTamanho(anexo.tamanhoBytes),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[400],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Menu de ações
+                                    PopupMenuButton<int>(
+                                      color: AppColors.surfaceDark,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      onSelected: (v) async {
+                                        if (v == 1) {
+                                          if (!context.mounted) return;
+                                          _abrirArquivo(anexo);
+                                        }
+                                        if (v == 2) {
+                                          if (!context.mounted) return;
+                                          _excluirAnexo(anexo);
+                                        }
+                                      },
+                                      itemBuilder: (_) => [
+                                        const PopupMenuItem(
+                                          value: 1,
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.open_in_new, size: 18, color: Colors.white),
+                                              SizedBox(width: 8),
+                                              Text('Abrir', style: TextStyle(color: Colors.white)),
+                                            ],
+                                          ),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 2,
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete, size: 18, color: Colors.red),
+                                              SizedBox(width: 8),
+                                              Text('Excluir', style: TextStyle(color: Colors.red)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _anexoService.formatarTamanho(anexo.tamanhoBytes),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        // Menu de ações
-                        PopupMenuButton<int>(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          onSelected: (v) async {
-                            if (v == 1) {
-                              if (!context.mounted) return;
-                              _abrirArquivo(anexo);
-                            }
-                            if (v == 2) {
-                              if (!context.mounted) return;
-                              _excluirAnexo(anexo);
-                            }
-                          },
-                          itemBuilder: (_) => [
-                            const PopupMenuItem(
-                              value: 1,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.open_in_new, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Abrir'),
-                                ],
                               ),
                             ),
-                            const PopupMenuItem(
-                              value: 2,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete, size: 18, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('Excluir', style: TextStyle(color: Colors.red)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        );
+                      },
                     ),
+                  );
+                },
+              ),
+            ),
+
+            // Botão flutuante para novo anexo
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ElevatedButton.icon(
+                onPressed: _abrirTelaDeUpload,
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Novo Anexo'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.newSuccess,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
                   ),
                 ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          if (!context.mounted) return;
-          final result = await Navigator.push<String?>(
-            context,
-            MaterialPageRoute(builder: (_) => AnexoUploadScreen(propriedade: widget.propriedade)),
-          );
-          if (!mounted) return;
-          if (result != null) {
-            // safe: verificamos `context.mounted` e `mounted` antes deste ponto
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Arquivo enviado'), backgroundColor: AppColors.success));
-          }
-        },
-        icon: const Icon(Icons.upload_file),
-        label: const Text('Novo Anexo'),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _abrirTelaDeUpload() async {
+    if (!context.mounted) return;
+    final result = await Navigator.push<String?>(
+      context,
+      MaterialPageRoute(builder: (_) => AnexoUploadScreen(propriedade: widget.propriedade)),
+    );
+    if (!mounted) return;
+    if (result != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Arquivo enviado com sucesso!'), backgroundColor: AppColors.newSuccess),
+      );
+    }
   }
 
   /// Retorna ícone e cor baseado na extensão do arquivo
