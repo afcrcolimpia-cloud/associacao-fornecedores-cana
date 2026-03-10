@@ -42,12 +42,16 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
       builder: (context, snapshot) {
         final todosTalhoes = snapshot.data ?? [];
         final somaArea = _calcularSomaArea(todosTalhoes);
+        final areaReforma = _calcularAreaReforma(todosTalhoes);
+        final areaLiquida = somaArea - areaReforma;
         return Column(
           children: [
             HeaderPropriedade(
               contexto: widget.contexto,
               infoExtra: [
-                MapEntry('Área Talhões', '${somaArea.toStringAsFixed(1)} ha'),
+                MapEntry('Área Total', '${somaArea.toStringAsFixed(1)} ha'),
+                MapEntry('Reforma', '${areaReforma.toStringAsFixed(1)} ha'),
+                MapEntry('Área Líquida', '${areaLiquida.toStringAsFixed(1)} ha'),
                 MapEntry('Qtd Talhões', '${todosTalhoes.length}'),
               ],
             ),
@@ -88,6 +92,8 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
                 _buildFiltroChip('Ativos', 'ativos'),
                 const SizedBox(width: 8),
                 _buildFiltroChip('Inativos', 'inativos'),
+                const SizedBox(width: 8),
+                _buildFiltroChip('Reforma', 'reforma'),
               ],
             ),
           ),
@@ -113,6 +119,12 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
     return talhoes.fold<double>(0, (soma, t) => soma + (t.areaHa ?? 0));
   }
 
+  double _calcularAreaReforma(List<Talhao> talhoes) {
+    return talhoes
+        .where((t) => t.isReforma)
+        .fold<double>(0, (soma, t) => soma + (t.areaHa ?? 0));
+  }
+
   Widget _buildTalhoesFiltrados(List<Talhao> todosTalhoes, AsyncSnapshot<List<Talhao>> snapshot) {
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const Center(child: CircularProgressIndicator());
@@ -129,6 +141,8 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
           talhoes = talhoes.where((t) => t.ativo).toList();
         } else if (_filtro == 'inativos') {
           talhoes = talhoes.where((t) => !t.ativo).toList();
+        } else if (_filtro == 'reforma') {
+          talhoes = talhoes.where((t) => t.isReforma).toList();
         }
 
         // Aplicar busca
