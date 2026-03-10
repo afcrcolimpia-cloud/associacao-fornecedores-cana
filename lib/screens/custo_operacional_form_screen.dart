@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/custo_operacional_repository.dart';
@@ -47,6 +47,7 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
   bool _isSaving = false;
   bool _carregandoCategorias = true;
   bool _usandoFallbackAfcrc = false;
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -448,9 +449,13 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
 
     // Mostrar tela de carregamento enquanto categorias são carregadas
     if (_carregandoCategorias) {
-      return Scaffold(
-        appBar: AppBarAfcrc(title: isEditando ? 'Editar Cenário' : 'Novo Cenário'),
-        body: const Center(
+      return AppShell(
+        selectedIndex: _selectedNavigationIndex,
+        title: isEditando ? 'Editar Cenário' : 'Novo Cenário',
+        onNavigationSelect: (index) {
+          setState(() => _selectedNavigationIndex = index);
+        },
+        child: const Center(
           child: CircularProgressIndicator(),
         ),
       );
@@ -458,33 +463,45 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
 
     // Se não há categorias após carregar, mostrar erro
     if (_categorias.isEmpty) {
-      return Scaffold(
-        appBar: AppBarAfcrc(title: isEditando ? 'Editar Cenário' : 'Novo Cenário'),
-        body: const Center(
+      return AppShell(
+        selectedIndex: _selectedNavigationIndex,
+        title: isEditando ? 'Editar Cenário' : 'Novo Cenário',
+        onNavigationSelect: (index) {
+          setState(() => _selectedNavigationIndex = index);
+        },
+        child: const Center(
           child: Text('Nenhuma categoria disponível'),
         ),
       );
     }
 
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: isEditando ? 'Editar Cenário' : 'Novo Cenário',
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: [
-            const Tab(text: 'Parâmetros'),
-            ..._categorias.map((cat) => Tab(text: cat.nome)),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: isEditando ? 'Editar Cenário' : 'Novo Cenário',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: Column(
         children: [
-          // ABA 1: PARÂMETROS TÉCNICOS
-          _buildAbaParametros(),
-          // ABAS 2+: CATEGORIAS
-          ..._categorias.map((categoria) => _buildAbaCategoria(categoria)),
+          TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabs: [
+              const Tab(text: 'Parâmetros'),
+              ..._categorias.map((cat) => Tab(text: cat.nome)),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // ABA 1: PARÂMETROS TÉCNICOS
+                _buildAbaParametros(),
+                // ABAS 2+: CATEGORIAS
+                ..._categorias.map((categoria) => _buildAbaCategoria(categoria)),
+              ],
+            ),
+          ),
         ],
       ),
     );

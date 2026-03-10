@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
@@ -34,6 +34,7 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
   String? _talhaoSelecionado;
   int? _mesSelecionado;
   bool _isLoading = false;
+  int _selectedNavigationIndex = 0;
   List<Talhao> _talhoes = [];
 
   final List<String> _meses = [
@@ -108,11 +109,13 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: widget.produtividade == null ? 'Nova Produtividade' : 'Editar Produtividade',
-      ),
-      body: _isLoading
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: widget.produtividade == null ? 'Nova Produtividade' : 'Editar Produtividade',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,

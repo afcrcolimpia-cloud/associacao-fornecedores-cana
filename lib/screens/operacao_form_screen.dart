@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/operacao_cultivo_service.dart';
 import '../services/talhao_service.dart';
@@ -28,6 +28,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
   List<Talhao> _talhoes = [];
   bool _isLoading = true;
   bool _isSaving = false;
+  int _selectedNavigationIndex = 0;
 
   String? _talhaoSelecionado;
   DateTime? _dataPlantio;
@@ -191,29 +192,42 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
   Widget build(BuildContext context) {
     final bool isEdicao = widget.operacao != null;
     
-    return Scaffold(
-      appBar: AppBarAfcrc(title: isEdicao ? 'Editar Operação' : 'Nova Operação'),
-      body: _isLoading
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: isEdicao ? 'Editar Operação' : 'Nova Operação',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  _buildSelecaoTalhao(isEdicao),
-                  const SizedBox(height: 16),
-                  _buildDatasOperacoes(),
-                  const SizedBox(height: 16),
-                  _buildObservacoes(),
-                  if (!isEdicao && _talhoes.length > 1) ...[
-                    const SizedBox(height: 16),
-                    _buildOpcaoCopiar(),
-                  ],
-                  const SizedBox(height: 80),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _buildSelecaoTalhao(isEdicao),
+                        const SizedBox(height: 16),
+                        _buildDatasOperacoes(),
+                        const SizedBox(height: 16),
+                        _buildObservacoes(),
+                        if (!isEdicao && _talhoes.length > 1) ...[
+                          const SizedBox(height: 16),
+                          _buildOpcaoCopiar(),
+                        ],
+                        const SizedBox(height: 80),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildBotaoSalvar(isEdicao),
+                  ),
                 ],
               ),
             ),
-      bottomNavigationBar: _buildBotaoSalvar(isEdicao),
     );
   }
 

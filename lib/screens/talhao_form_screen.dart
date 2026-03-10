@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
@@ -31,6 +31,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
   String? _culturaSelecionada;
   bool _ativo = true;
   bool _isLoading = false;
+  int _selectedNavigationIndex = 0;
 
   final List<String> _culturas = [
     'Cana-de-açúcar',
@@ -100,11 +101,13 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: widget.talhao == null ? 'Novo Talhão' : 'Editar Talhão',
-      ),
-      body: _isLoading
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: widget.talhao == null ? 'Novo Talhão' : 'Editar Talhão',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,

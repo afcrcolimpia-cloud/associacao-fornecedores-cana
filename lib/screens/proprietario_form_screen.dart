@@ -1,6 +1,6 @@
 // lib/screens/proprietario_form_screen.dart
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
@@ -34,6 +34,7 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
   
   bool _isLoading = false;
   bool _isCPF = true;
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -139,9 +140,13 @@ class _ProprietarioFormScreenState extends State<ProprietarioFormScreen> {
   Widget build(BuildContext context) {
     final isEdicao = widget.proprietario != null;
 
-    return Scaffold(
-      appBar: AppBarAfcrc(title: isEdicao ? 'Editar Proprietário' : 'Novo Proprietário'),
-      body: Form(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      title: isEdicao ? 'Editar Proprietário' : 'Novo Proprietário',
+      onNavigationSelect: (index) {
+        setState(() => _selectedNavigationIndex = index);
+      },
+      child: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
