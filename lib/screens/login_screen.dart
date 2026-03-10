@@ -60,6 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _authService.signInWithGoogle();
+      // No Flutter Web, signInWithOAuth redireciona o browser.
+      // O AuthGate (main.dart) detecta o retorno via onAuthStateChange.
+      // Não é necessário navegar manualmente aqui.
     } catch (e) {
       _showSnackbar('Erro ao fazer login com Google', color: AppColors.newDanger);
     } finally {

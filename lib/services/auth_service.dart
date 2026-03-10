@@ -52,25 +52,34 @@ class AuthService {
   }
 
   // --- GOOGLE SIGN-IN ---
-  Future<User?> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     try {
-      debugPrint('?? [Auth] Iniciando login com Google...');
+      debugPrint('🔐 [Auth] Iniciando login com Google...');
       // IMPORTANTE: Configure no Supabase Dashboard:
       // 1. Authentication > Providers > Google
-      // 2. Adicione suas credenciais OAuth
-      // 3. Configure Redirect URL: io.supabase.flutterquickstart://login-callback
+      // 2. Adicione suas credenciais OAuth (Client ID + Client Secret)
+      // 3. No Google Cloud Console, adicione a Redirect URL do Supabase
+      //    como Authorized Redirect URI
+
+      // No Flutter Web, signInWithOAuth abre uma nova aba para o Google.
+      // O retorno é capturado automaticamente pelo AuthGate via onAuthStateChange.
+      // redirectTo deve ser a URL da aplicação web (não deep link mobile).
+      final redirectUrl = Uri.base.origin;
+      debugPrint('🔐 [Auth] Redirect URL: $redirectUrl');
+
       await _supabase.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'io.supabase.flutterquickstart://login-callback',
+        redirectTo: kIsWeb ? redirectUrl : null,
+        authScreenLaunchMode: kIsWeb
+            ? LaunchMode.platformDefault
+            : LaunchMode.externalApplication,
       );
-      final user = _supabase.auth.currentUser;
-      debugPrint('? [Auth] Login com Google bem-sucedido! Usuario: ${user?.email}');
-      return user;
+      debugPrint('✅ [Auth] OAuth iniciado — aguardando retorno do Google...');
     } on AuthException catch (e) {
-      debugPrint('? [Auth] AuthException no Google login: ${e.message} (Code: ${e.statusCode})');
+      debugPrint('❌ [Auth] AuthException no Google login: ${e.message} (Code: ${e.statusCode})');
       throw _handleAuthError(e);
     } catch (e) {
-      debugPrint('? [Auth] Erro ao autenticar com Google: $e');
+      debugPrint('❌ [Auth] Erro ao autenticar com Google: $e');
       throw 'Erro ao autenticar com Google: $e';
     }
   }
