@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/proprietario_service.dart';
+import 'propriedade_hub_screen.dart';
 
 class PropriedadeDetalhesScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -18,6 +19,7 @@ class PropriedadeDetalhesScreen extends StatefulWidget {
 
 class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
   final ProprietarioService _proprietarioService = ProprietarioService();
+  Proprietario? _proprietario;
   bool _carregando = true;
 
   @override
@@ -28,11 +30,13 @@ class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
 
   Future<void> _carregarContexto() async {
     try {
-      // Carregar proprietário para exibir contexto
-      await _proprietarioService
+      final proprietario = await _proprietarioService
           .getProprietario(widget.propriedade.proprietarioId);
       if (mounted) {
-        setState(() => _carregando = false);
+        setState(() {
+          _proprietario = proprietario;
+          _carregando = false;
+        });
       }
     } catch (e) {
       if (mounted) setState(() => _carregando = false);
@@ -48,10 +52,15 @@ class _PropriedadeDetalhesScreenState extends State<PropriedadeDetalhesScreen> {
       );
     }
 
-    // TODO: Redirecionar para PropriedadeHubScreen quando implementar /implementar-fluxo
-    // if (_contexto != null) {
-    //   return PropriedadeHubScreen(contexto: _contexto!);
-    // }
+    // Redirecionar para PropriedadeHubScreen quando proprietário foi carregado
+    if (_proprietario != null) {
+      return PropriedadeHubScreen(
+        contexto: ContextoPropriedade(
+          proprietario: _proprietario!,
+          propriedade: widget.propriedade,
+        ),
+      );
+    }
 
     // Fallback: mostra apenas info + botão voltar
     return Scaffold(

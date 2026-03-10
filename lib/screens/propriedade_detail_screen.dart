@@ -4,6 +4,7 @@ import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../services/talhao_service.dart';
 import 'propriedade_form_screen.dart';
+import 'talhao_form_screen.dart';
 
 class PropriedadeDetailScreen extends StatefulWidget {
   final String propriedadeId;
@@ -411,28 +412,14 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
   }
 
   Future<void> _criarNovoTalhao(Propriedade propriedade) async {
-    // TODO: Implementar navegação para TalhaoFormScreen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Criar novo talhão - em desenvolvimento')),
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TalhaoFormScreen(
+          propriedade: propriedade,
+        ),
+      ),
     );
+    setState(() {});
   }
-
-  // TODO: Implementar _abrirHub com PropriedadeHubScreen após /implementar-fluxo
-  // Future<void> _abrirHub(Propriedade propriedade) async {
-  //   final proprietario = await ProprietarioService()
-  //       .getProprietario(propriedade.proprietarioId);
-  //   if (proprietario != null && mounted) {
-  //     Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (context) => PropriedadeHubScreen(
-  //           contexto: ContextoPropriedade(
-  //             proprietario: proprietario,
-  //             propriedade: propriedade,
-  //           ),
-  //         ),
-  //       ),
-  //     );
-  //   }
-  // }
 }

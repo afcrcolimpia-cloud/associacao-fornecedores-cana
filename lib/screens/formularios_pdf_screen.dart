@@ -12,11 +12,13 @@ import '../services/proprietario_service.dart';
 import '../services/anexo_service.dart';
 
 class FormulariosPdfScreen extends StatefulWidget {
-  final String propriedadeId;
+  final ContextoPropriedade? contexto;
+  final String? propriedadeId;
   final Propriedade? propriedade;
 
   const FormulariosPdfScreen({
-    required this.propriedadeId,
+    this.contexto,
+    this.propriedadeId,
     this.propriedade,
     super.key,
   });
@@ -41,22 +43,34 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
 
   Future<void> _carregarDados() async {
     try {
-      final propriedadeService = PropriedadeService();
-      final talhaoService = TalhaoService();
-      final proprietarioService = ProprietarioService();
+      // Se contexto foi fornecido, usar dados dele diretamente
+      if (widget.contexto != null) {
+        _propriedade = widget.contexto!.propriedade;
+        _proprietario = widget.contexto!.proprietario;
+        
+        final talhaoService = TalhaoService();
+        _talhoes = await talhaoService
+            .getTalhoesByPropriedadeStream(_propriedade.id)
+            .first;
+      } else {
+        // Caso contrário, carregar manualmente
+        final propriedadeService = PropriedadeService();
+        final talhaoService = TalhaoService();
+        final proprietarioService = ProprietarioService();
 
-      // Buscar propriedade
-      _propriedade = widget.propriedade ??
-          (await propriedadeService.getPropriedadeById(widget.propriedadeId))!;
+        // Buscar propriedade
+        _propriedade = widget.propriedade ??
+            (await propriedadeService.getPropriedadeById(widget.propriedadeId!))!;
 
-      // Buscar talhões
-      _talhoes = await talhaoService
-          .getTalhoesByPropriedadeStream(_propriedade.id)
-          .first;
+        // Buscar talhões
+        _talhoes = await talhaoService
+            .getTalhoesByPropriedadeStream(_propriedade.id)
+            .first;
 
-      // Buscar proprietário
-      _proprietario =
-      _proprietario = await proprietarioService.getProprietario(_propriedade.proprietarioId);
+        // Buscar proprietário
+        _proprietario =
+            await proprietarioService.getProprietario(_propriedade.proprietarioId);
+      }
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -204,19 +218,19 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
             children: [
               switch (_tipoFormulario) {
                 0 => SphenophorusForm(
-                    propriedadeId: widget.propriedadeId,
+                    propriedadeId: _propriedade.id,
                     propriedade: _propriedade,
                     talhoes: _talhoes,
                     proprietario: _proprietario,
                   ),
                 1 => BrocaForm(
-                    propriedadeId: widget.propriedadeId,
+                    propriedadeId: _propriedade.id,
                     propriedade: _propriedade,
                     talhoes: _talhoes,
                     proprietario: _proprietario,
                   ),
                 2 => BrocaCigarrinhaForm(
-                    propriedadeId: widget.propriedadeId,
+                    propriedadeId: _propriedade.id,
                     propriedade: _propriedade,
                     talhoes: _talhoes,
                     proprietario: _proprietario,
