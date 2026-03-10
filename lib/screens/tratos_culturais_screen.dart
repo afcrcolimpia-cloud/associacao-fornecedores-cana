@@ -4,7 +4,10 @@ import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
 import '../services/tratos_culturais_service.dart';
+import '../services/pdf_generators/pdf_tratos.dart';
 import 'tratos_culturais_form_screen.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 class TratosCulturaisScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -53,6 +56,10 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
       appBar: AppBarAfcrc(
         title: 'Tratos Culturais — ${widget.propriedade.nomePropriedade}',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: () => _gerarPdf(),
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => _abrirFormulario(),
@@ -230,6 +237,35 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
         );
       },
     );
+  }
+
+  Future<void> _gerarPdf() async {
+    try {
+      final tratos = await _service.getTratosByPropriedade(widget.propriedade.id);
+      
+      final tratosFiltrados =
+          tratos.where((t) => t.anoSafra == _filtroAnoSafra.toString()).toList();
+
+      if (!mounted) return;
+
+      final pdf = await PdfTratosCulturais.gerar(
+        propriedade: widget.propriedade,
+        tratos: tratosFiltrados,
+        anoSafra: _filtroAnoSafra,
+      );
+
+      await Printing.layoutPdf(
+        name: 'Relatorio_TratosCulturais_${widget.propriedade.nomePropriedade}_$_filtroAnoSafra.pdf',
+        format: PdfPageFormat.a4,
+        onLayout: (_) async => pdf,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _abrirFormulario({TratosCulturais? trato}) async {

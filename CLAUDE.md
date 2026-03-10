@@ -28,7 +28,7 @@ Use estes comandos curtos — o Claude já sabe o que fazer:
 | `/testar` | Roda flutter test e reporta os resultados |
 | `/status` | Mostra o que está modificado no projeto (git status resumido) |
 | `/dashboard` | Corrige o dashboard para mostrar apenas dados reais do Supabase, sem valores fictícios ou hardcoded |
-| `/pdf-relatorios` | Implementa botões Gerar PDF e Salvar nas telas de Produtividade, Precipitação, Operações de Cultivo, Custo Operacional e Tratos Culturais, seguindo o padrão do relatório de pragas |
+| `/pdf-relatorios` | Implementa botões Gerar PDF e Salvar nas telas de Produtividade, Precipitação, Operações de Cultivo, Custo Operacional e Tratos Culturais, seguindo o padrão do relatório de pragas | E uma Aba dentro de Anexo com nome de Relatorio Gestão 360 para gerar o relatorios Produtividade, Precipitação, Operações de Cultivo, Custo Operacional e Tratos Culturais todas em um só pdf puchando por propriedade e talhao
 | `/redesign` | Executa o redesign visual completo do app baseado nas telas aprovadas do Stitch — aplica novo Design System, AppShell com sidebar, paleta de cores e tipografia em todas as 11 telas |
 | `/implementar-fluxo` | Implementa a arquitetura de contexto de propriedade: cria ContextoPropriedade, HeaderPropriedade, PropriedadeHubScreen e geradores PDF para todas as telas operacionais |
 

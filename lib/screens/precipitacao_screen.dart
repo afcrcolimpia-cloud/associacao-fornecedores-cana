@@ -7,8 +7,11 @@ import 'package:table_calendar/table_calendar.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/precipitacao_service.dart';
+import '../services/pdf_generators/pdf_precipitacao.dart';
 import '../utils/formatters.dart';
 import '../utils/municipios_sp.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 class PrecipitacaoScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -161,6 +164,33 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
     }
   }
 
+  Future<void> _gerarPdf() async {
+    try {
+      final precipitacoes =
+          await _service.getPrecipitacoesByPropriedade(widget.propriedade.id);
+
+      if (!mounted) return;
+
+      final pdf = await PdfPrecipitacao.gerar(
+        propriedade: widget.propriedade,
+        dadosPrecipitacao: precipitacoes,
+        ano: _anoSelecionado,
+      );
+
+      await Printing.layoutPdf(
+        name: 'Relatorio_Precipitacao_${widget.propriedade.nomePropriedade}_$_anoSelecionado.pdf',
+        format: PdfPageFormat.a4,
+        onLayout: (_) async => pdf,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+        );
+      }
+    }
+  }
+
   double _calcularSomaTotal() {
     double soma = 0;
     for (var eventos in _eventosMap.values) {
@@ -211,7 +241,15 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Precipitação'),
+      appBar: AppBarAfcrc(
+        title: 'Precipitação',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: _gerarPdf,
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),

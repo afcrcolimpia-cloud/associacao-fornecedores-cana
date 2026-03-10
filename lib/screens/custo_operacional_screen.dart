@@ -3,6 +3,7 @@ import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/exportacao_pdf_service.dart';
+import '../services/pdf_generators/pdf_custo.dart';
 import '../constants/app_colors.dart';
 import 'custo_operacional_form_screen.dart';
 import 'historico_custo_operacional_screen.dart';
@@ -10,6 +11,8 @@ import 'matriz_sensibilidade_screen.dart';
 import 'graficos_comparativo_screen.dart';
 import 'projecao_financeira_screen.dart';
 import 'operacoes_detalhes_screen.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 class CustoOperacionalScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -33,6 +36,12 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       appBar: AppBarAfcrc(
         title: 'Custo Operacional',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: _cenarioSelecionadoId != null
+                ? () => _gerarPdf(_cenarioSelecionadoId!)
+                : null,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _criarNovoCenario,
@@ -377,6 +386,34 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _gerarPdf(String cenarioId) async {
+    try {
+      final cenario = await _service.getCenario(cenarioId);
+      if (cenario == null) {
+        throw Exception('Cenário não encontrado');
+      }
+
+      if (!mounted) return;
+
+      final pdf = await PdfCustoOperacional.gerar(
+        propriedade: widget.propriedade,
+        cenario: cenario,
+      );
+
+      await Printing.layoutPdf(
+        name: 'Relatorio_CustoOperacional_${widget.propriedade.nomePropriedade}_${cenario.nomeCenario}.pdf',
+        format: PdfPageFormat.a4,
+        onLayout: (_) async => pdf,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _criarNovoCenario() async {

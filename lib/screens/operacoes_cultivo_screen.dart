@@ -3,9 +3,12 @@ import '../widgets/app_bar_afcrc.dart';
 import '../models/models.dart';
 import '../services/operacao_cultivo_service.dart';
 import '../services/talhao_service.dart';
+import '../services/pdf_generators/pdf_operacoes.dart';
 import '../constants/app_colors.dart';
 import '../widgets/operacao_card.dart';
 import 'operacao_form_screen.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 class OperacoesCultivoScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -125,6 +128,33 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
     }
   }
 
+  Future<void> _gerarPdf() async {
+    try {
+      final operacoes = await _service.getOperacoesPorPropriedade(
+        widget.propriedade.id,
+      ).first;
+
+      if (!mounted) return;
+
+      final pdf = await PdfOperacoesCultivo.gerar(
+        propriedade: widget.propriedade,
+        operacoes: operacoes,
+      );
+
+      await Printing.layoutPdf(
+        name: 'Relatorio_Operacoes_${widget.propriedade.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+        onLayout: (_) async => pdf,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,6 +184,10 @@ class _OperacoesCultivoScreenState extends State<OperacoesCultivoScreen> {
                 ),
               ),
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: _gerarPdf,
           ),
         ],
       ),

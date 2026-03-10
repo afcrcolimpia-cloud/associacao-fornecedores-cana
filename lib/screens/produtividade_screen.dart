@@ -3,7 +3,10 @@ import '../widgets/app_bar_afcrc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
+import '../services/pdf_generators/pdf_produtividade.dart';
 import 'produtividade_form_screen.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 class ProdutividadeScreen extends StatefulWidget {
   final Propriedade? propriedade;
@@ -41,6 +44,12 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
       appBar: AppBarAfcrc(
         title: 'Produtividade',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: widget.propriedade != null && _anoSafraSelecionado != null
+                ? _gerarPdf
+                : null,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: widget.propriedade != null ? _mostrarFormulario : null,
@@ -475,6 +484,37 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
     ];
     return meses[mes - 1];
+  }
+
+  Future<void> _gerarPdf() async {
+    if (widget.propriedade == null || _anoSafraSelecionado == null) return;
+
+    try {
+      final produtividades = await _service.getProdutividadePorPropriedadeEAno(
+        widget.propriedade!.id,
+        _anoSafraSelecionado!,
+      ).first;
+
+      if (!mounted) return;
+
+      final pdf = await PdfProdutividade.gerar(
+        propriedade: widget.propriedade!,
+        dadosProdutividade: produtividades,
+        anoSafra: _anoSafraSelecionado!,
+      );
+
+      await Printing.layoutPdf(
+        name: 'Relatorio_Produtividade_${widget.propriedade!.nomePropriedade}_${_anoSafraSelecionado!}.pdf',
+        format: PdfPageFormat.a4,
+        onLayout: (_) async => pdf,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _mostrarFormulario({Produtividade? produtividade}) async {
