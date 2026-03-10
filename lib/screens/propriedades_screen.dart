@@ -408,19 +408,6 @@ class _PropriedadesScreenState extends State<PropriedadesScreen> {
     );
   }
 
-  Future<void> _mostrarFormulario() async {
-    final resultado = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PropriedadeFormScreen(),
-      ),
-    );
-
-    if (resultado == true && mounted) {
-      setState(() {});
-    }
-  }
-
   void _abrirPropriedadesDoProprietario(Proprietario proprietario) {
     Navigator.push(
       context,

@@ -3,7 +3,6 @@ import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../services/talhao_service.dart';
-import 'propriedade_form_screen.dart';
 import 'talhao_form_screen.dart';
 
 class PropriedadeDetailScreen extends StatefulWidget {
@@ -389,23 +388,6 @@ class _PropriedadeDetailScreenState extends State<PropriedadeDetailScreen> {
 
   String _formatarData(DateTime data) {
     return '${data.day}/${data.month}/${data.year} ${data.hour}:${data.minute}';
-  }
-
-  Future<void> _editarPropriedade() async {
-    final propriedade = await _service.getPropriedadeById(widget.propriedadeId);
-    
-    if (propriedade != null && mounted) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PropriedadeFormScreen(
-            propriedade: propriedade,
-          ),
-        ),
-      );
-      
-      setState(() {});
-    }
   }
 
   Future<void> _criarNovoTalhao(Propriedade propriedade) async {

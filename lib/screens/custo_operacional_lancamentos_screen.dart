@@ -102,21 +102,6 @@ class _CustoOperacionalLancamentosScreenState
     await _carregar();
   }
 
-  Future<void> _abrirNovoLancamento() async {
-    final ok = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CustoOperacionalLancamentoScreen(
-          propriedadeId: widget.propriedadeId,
-          talhaoId: widget.talhaoId,
-          safra: widget.safra,
-        ),
-      ),
-    );
-    if (ok != true) return;
-    await _recalcularECarregar();
-  }
-
   Future<void> _abrirEditar(LancamentoModel lancamento) async {
     final ok = await Navigator.push<bool>(
       context,

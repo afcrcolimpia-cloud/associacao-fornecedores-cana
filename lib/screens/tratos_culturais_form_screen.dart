@@ -45,7 +45,6 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
   late TextEditingController _extraNome3Controller;
   late TextEditingController _extraValor3Controller;
 
-  bool _isLoading = false;
   int _selectedNavigationIndex = 0;
 
   @override
@@ -118,86 +117,6 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     super.dispose();
   }
 
-  Future<void> _salvar() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    // Valida\u00e7\u00e3o adicional para talhaoId
-    if (_talhaoSelecionado.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('\u26a0\ufe0f Selecione um talh\u00e3o antes de salvar.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final camposExtras = <String, double>{};
-      if (_extraNome1Controller.text.isNotEmpty) {
-        camposExtras[_extraNome1Controller.text] = double.tryParse(_extraValor1Controller.text) ?? 0.0;
-      }
-      if (_extraNome2Controller.text.isNotEmpty) {
-        camposExtras[_extraNome2Controller.text] = double.tryParse(_extraValor2Controller.text) ?? 0.0;
-      }
-      if (_extraNome3Controller.text.isNotEmpty) {
-        camposExtras[_extraNome3Controller.text] = double.tryParse(_extraValor3Controller.text) ?? 0.0;
-      }
-
-      final tratos = TratosCulturais(
-        id: widget.tratos?.id ?? '',
-        talhaoId: _talhaoSelecionado.isEmpty ? null : _talhaoSelecionado,
-        propriedadeId: widget.propriedade.id,
-        anoSafra: _anoSafra.toString(),
-        adubos: _adubos,
-        herbicidas: _herbicidas,
-        inseticidas: _inseticidas,
-        maturadores: _maturadores,
-        calagem: double.tryParse(_calagemController.text),
-        gessagem: double.tryParse(_gessagemController.text),
-        oxidoDeCilcio: double.tryParse(_oxidoController.text),
-        camposExtras: camposExtras.isNotEmpty ? camposExtras : null,
-        criadoEm: widget.tratos?.criadoEm ?? DateTime.now(),
-        atualizadoEm: DateTime.now(),
-      );
-
-      if (widget.tratos == null) {
-        await _service.addTratos(tratos);
-      } else {
-        await _service.updateTratos(tratos);
-      }
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.tratos == null
-                  ? 'Tratos cadastrados com sucesso!'
-                  : 'Tratos atualizados com sucesso!',
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   void _adicionarInsumo(List<Insumo> lista, String categoria) {
     if (lista.length >= 10) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -232,24 +151,6 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     setState(() {
       lista.removeAt(index);
     });
-  }
-
-  void _carregarDadosTalhao(String talhaoId) {
-    try {
-      final talhao = widget.talhoes.firstWhere((t) => t.id == talhaoId);
-      // Mostra um toast com as informa\u00e7\u00f5es do talh\u00e3o
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Talh\u00e3o: ${talhao.nome} | Variedade: ${talhao.variedade ?? "N/A"} | \u00c1rea: ${talhao.areaHa?.toStringAsFixed(2) ?? "N/A"} ha',
-          ),
-          duration: const Duration(seconds: 3),
-          backgroundColor: AppColors.success.withOpacity(0.8),
-        ),
-      );
-    } catch (e) {
-      debugPrint('Talh\u00e3o n\u00e3o encontrado: $e');
-    }
   }
 
   @override
@@ -320,40 +221,6 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
             onPressed: lista.length < 10
                 ? () => _adicionarInsumo(lista, categoria.toLowerCase())
                 : null,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExtraCampo(String label, TextEditingController nomeController,
-      TextEditingController valorController) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextFormField(
-            controller: nomeController,
-            decoration: InputDecoration(
-              labelText: '$label - Nome',
-              hintText: 'Ex: Nitrogenio',
-              prefixIcon: const Icon(Icons.label),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: TextFormField(
-            controller: valorController,
-            decoration: InputDecoration(
-              labelText: '$label - Valor',
-              suffixText: 'kg/ha',
-              prefixIcon: const Icon(Icons.numbers),
-            ),
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-            ],
           ),
         ),
       ],

@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/app_shell.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
-import '../services/proprietario_service.dart';
 import '../utils/formatters.dart';
-import 'proprietario_form_screen.dart';
 
 class ProprietarioDetailScreen extends StatefulWidget {
   final Proprietario proprietario;
@@ -21,7 +19,6 @@ class ProprietarioDetailScreen extends StatefulWidget {
 }
 
 class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
-  final _service = ProprietarioService();
   late Proprietario _proprietario;
   int _selectedNavigationIndex = 0;
 
@@ -29,76 +26,6 @@ class _ProprietarioDetailScreenState extends State<ProprietarioDetailScreen> {
   void initState() {
     super.initState();
     _proprietario = widget.proprietario;
-  }
-
-  Future<void> _deletar() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text('Deseja realmente excluir ${_proprietario.nome}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('CANCELAR'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
-            child: const Text('EXCLUIR'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      try {
-        await _service.deleteProprietario(_proprietario.id);
-
-        if (mounted) {
-          Navigator.of(context).pop(true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Proprietário excluído com sucesso!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao excluir: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _editar() async {
-    if (!mounted) return;
-
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProprietarioFormScreen(
-          proprietario: _proprietario,
-        ),
-      ),
-    );
-
-    if (result == true && mounted) {
-      final atualizado = await _service.getProprietario(_proprietario.id);
-      if (atualizado != null && mounted) {
-        setState(() {
-          _proprietario = atualizado;
-        });
-      }
-    }
   }
 
   @override
