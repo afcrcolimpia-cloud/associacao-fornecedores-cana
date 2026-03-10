@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../services/custo_operacional_analise.dart';
 import '../services/custo_operacional_service.dart';
 import '../constants/app_colors.dart';
 
-class MatrizSensibilidadeScreen extends StatelessWidget {
+class MatrizSensibilidadeScreen extends StatefulWidget {
   final CustoOperacionalCenario cenario;
 
   const MatrizSensibilidadeScreen({
@@ -13,18 +13,31 @@ class MatrizSensibilidadeScreen extends StatelessWidget {
   });
 
   @override
+  State<MatrizSensibilidadeScreen> createState() => _MatrizSensibilidadeScreenState();
+}
+
+class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
+  int _selectedNavigationIndex = 0;
+
+  @override
   Widget build(BuildContext context) {
     final matrizSensibilidade =
-        CustoOperacionalAnalise.gerarMatrizSensibilidade(cenario);
+        CustoOperacionalAnalise.gerarMatrizSensibilidade(widget.cenario);
 
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Matriz de Sensibilidade'),
-      body: SingleChildScrollView(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Matriz de Sensibilidade',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
               // Card com informações do cenário
               Card(
                 elevation: 2,
@@ -34,7 +47,7 @@ class MatrizSensibilidadeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        cenario.nomeCenario,
+                        widget.cenario.nomeCenario,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

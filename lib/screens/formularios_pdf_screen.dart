@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:printing/printing.dart';
 import '../services/pdf_generators/pdf_sphenophorus.dart';
 import '../services/pdf_generators/pdf_broca_infestacao.dart';
@@ -34,6 +34,7 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
   late List<Talhao> _talhoes = [];
   late Proprietario? _proprietario;
   bool _isLoading = true;
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -88,15 +89,29 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        appBar: AppBarAfcrc(title: 'Relatórios de Pragas'),
-        body: Center(child: CircularProgressIndicator()),
+      return AppShell(
+        selectedIndex: _selectedNavigationIndex,
+        onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Relatórios de Pragas'),
-      body: _tipoFormulario == -1 ? _buildSelectorPage() : _buildFormulario(),
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Text(
+              'Relatórios de Pragas',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+          Expanded(child: _tipoFormulario == -1 ? _buildSelectorPage() : _buildFormulario()),
+        ],
+      ),
     );
   }
 

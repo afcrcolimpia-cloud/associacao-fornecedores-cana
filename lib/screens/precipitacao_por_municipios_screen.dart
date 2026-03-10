@@ -1,7 +1,7 @@
 ﻿// lib/screens/precipitacao_por_municipios_screen.dart
 
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../constants/app_colors.dart';
 import '../models/precipitacao.dart';
 import '../services/precipitacao_agregada_service.dart';
@@ -22,6 +22,7 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
   List<String> _municipiosFiltrados = [];
   bool _carregando = true;
   String _tipoVisualizacao = 'todos'; // 'todos' ou 'selecionado'
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -68,13 +69,21 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Precipitação por Municípios'),
-      body: _carregando
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      child: _carregando
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Column(
                 children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Text(
+                      'Precipitação por Municípios',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
                   // Abas de visualização
                   Container(
                     color: Colors.grey[100],

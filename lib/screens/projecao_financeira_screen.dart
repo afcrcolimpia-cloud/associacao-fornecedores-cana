@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/custo_operacional_analise.dart';
 import '../services/custo_operacional_service.dart';
@@ -21,6 +21,7 @@ class ProjecaoFinanceiraScreen extends StatefulWidget {
 class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
   late List<ProjecaoFinanceira> projacoes;
   int _periodos = 12;
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -41,14 +42,20 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Projeção Financeira'),
-      body: SingleChildScrollView(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Projeção Financeira',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
               // Card com informações do cenário
               Card(
                 elevation: 2,

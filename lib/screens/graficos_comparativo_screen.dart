@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/custo_operacional_analise.dart';
 import '../services/custo_operacional_service.dart';
@@ -21,6 +21,7 @@ class GraficosComparativoScreen extends StatefulWidget {
 class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
   late Map<String, dynamic> dadosComparacao;
   int _tipoGrafico = 0; // 0: Margem, 1: Produção, 2: Custo
+  int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
@@ -31,14 +32,20 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarAfcrc(title: 'Comparação de Cenários'),
-      body: SingleChildScrollView(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Comparação de Cenários',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
               // Segmented buttons para seleção de gráfico
               Wrap(
                 spacing: 8,

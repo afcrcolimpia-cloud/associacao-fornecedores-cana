@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_bar_afcrc.dart';
+import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
 import '../widgets/propriedade_card.dart';
@@ -25,21 +25,32 @@ class _PropriedadesPorProprietarioScreenState extends State<PropriedadesPorPropr
   final PropriedadeService _service = PropriedadeService();
   String _filtro = 'todas';
   String _busca = '';
+  int _selectedNavigationIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBarAfcrc(
-        title: 'Propriedades de ${widget.proprietarioNome}',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _mostrarFormulario,
-          ),
-        ],
-      ),
-      body: Column(
+    return AppShell(
+      selectedIndex: _selectedNavigationIndex,
+      onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      child: Column(
         children: [
+          // Header com título e ação
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Propriedades de ${widget.proprietarioNome}',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  onPressed: _mostrarFormulario,
+                ),
+              ],
+            ),
+          ),
           _buildFiltros(),
           Expanded(
             child: _buildPropriedades(),
