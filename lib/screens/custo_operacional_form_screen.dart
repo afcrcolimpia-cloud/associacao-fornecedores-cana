@@ -203,6 +203,151 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
     super.dispose();
   }
 
+  void _abrirCalculadoraAdministrativa() {
+    final contadorCtrl = TextEditingController();
+    final escritorioCtrl = TextEditingController();
+    final gerenteCtrl = TextEditingController();
+    final internetCtrl = TextEditingController();
+    final licencasCtrl = TextEditingController();
+    final outrosCtrl = TextEditingController();
+    final areaCtrl = TextEditingController(
+      text: widget.propriedade.areaHa?.toString() ?? '',
+    );
+    final baseCtrl = TextEditingController(text: '18536.17');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Calcular Despesas Administrativas'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Insira os gastos anuais (R\$):',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              _buildInputAdm('Contador', contadorCtrl),
+              _buildInputAdm('Escritório', escritorioCtrl),
+              _buildInputAdm('Gerente', gerenteCtrl),
+              _buildInputAdm('Internet', internetCtrl),
+              _buildInputAdm('Licenças', licencasCtrl),
+              _buildInputAdm('Outros', outrosCtrl),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              _buildInputAdm('Área Cultivada (ha)', areaCtrl),
+              _buildInputAdm('Base Operacional (R\$/ha)', baseCtrl,
+                  hint: 'Padrão: 18.536,17 (AFCRC)'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _calcularAdministrativo(
+                contador: double.tryParse(contadorCtrl.text) ?? 0,
+                escritorio: double.tryParse(escritorioCtrl.text) ?? 0,
+                gerente: double.tryParse(gerenteCtrl.text) ?? 0,
+                internet: double.tryParse(internetCtrl.text) ?? 0,
+                licencas: double.tryParse(licencasCtrl.text) ?? 0,
+                outros: double.tryParse(outrosCtrl.text) ?? 0,
+                area: double.tryParse(areaCtrl.text) ?? 1,
+                baseOperacional: double.tryParse(baseCtrl.text) ?? 18536.17,
+              );
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text(
+              'Calcular e Aplicar',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputAdm(String label, TextEditingController controller,
+      {String? hint}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          isDense: true,
+        ),
+      ),
+    );
+  }
+
+  void _calcularAdministrativo({
+    required double contador,
+    required double escritorio,
+    required double gerente,
+    required double internet,
+    required double licencas,
+    required double outros,
+    required double area,
+    required double baseOperacional,
+  }) {
+    if (area <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro: Informe uma área válida maior que 0'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Soma todos os gastos anuais
+    final totalAnual = contador + escritorio + gerente + internet + licencas + outros;
+
+    // Custo administrativo por hectare
+    final admPorHa = totalAnual / area;
+
+    // Percentual = (Adm R$/ha ÷ Base) × 100
+    final percentualAdm = (admPorHa / baseOperacional) * 100;
+
+    // Aplicar ao campo
+    setState(() {
+      _custoAdministrativoController.text = percentualAdm.toStringAsFixed(4);
+    });
+
+    // Mostrar resumo
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('✅ Cálculo Realizado:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Total Anual: R\$ ${totalAnual.toStringAsFixed(2)}'),
+            Text('Por Hectare: R\$ ${admPorHa.toStringAsFixed(2)}'),
+            Text(
+                'Percentual: ${percentualAdm.toStringAsFixed(4)}% (aplicado)'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -542,16 +687,36 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
               ],
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _custoAdministrativoController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Administrativo',
-                suffixText: '%',
-                border: OutlineInputBorder(),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _custoAdministrativoController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Administrativo',
+                      suffixText: '%',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: 'Calcular automaticamente',
+                  child: ElevatedButton.icon(
+                    onPressed: _abrirCalculadoraAdministrativa,
+                    icon: const Icon(Icons.calculate, size: 20),
+                    label: const Text('Calc'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 40),
 
