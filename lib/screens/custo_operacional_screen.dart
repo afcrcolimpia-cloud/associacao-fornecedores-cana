@@ -454,10 +454,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => HistoricoCustoOperacionalScreen(
-          cenarioId: cenario.id!,
-          nomeCenario: cenario.nomeCenario,
-        ),
+        builder: (_) => const HistoricoCustoOperacionalScreen(),
       ),
     );
   }

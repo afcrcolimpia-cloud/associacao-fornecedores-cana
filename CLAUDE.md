@@ -257,6 +257,18 @@ Rodar `flutter analyze`, listar todos os erros encontrados e corrigi-los um por 
 ### /limpar
 Remover da raiz do projeto: `errors.txt`, `errors_gestao.txt`, `errors_utf8.txt`, `update_screen.py`. Remover também `lib/assets/config/` (duplicata) e `lib/services/## Chat Customization Diagnostics.md`.
 
+---
+
+### ⚠️ PADRÃO OBRIGATÓRIO APÓS CADA TAREFA COMPLETADA
+1. Rodar `flutter analyze` para verificar se há problemas
+2. Se houver erros/warnings: SEMPRE corrigi-los antes de continuar
+3. Rodar `/limpar` se houver arquivos temporários
+4. Fazer commit da tarefa finalizada
+5. **SOMENTE DEPOIS** passar para a próxima etapa
+6. Reportar resumo do progresso em Português
+
+---
+
 ### /pendencias
 Listar todas as pendências do CLAUDE.md e perguntar quais resolver.
 
