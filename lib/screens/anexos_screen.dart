@@ -129,7 +129,7 @@ class _AnexosScreenState extends State<AnexosScreen> {
                       padding: const EdgeInsets.all(32),
                       child: Column(
                         children: [
-                          Icon(Icons.error, size: 48, color: AppColors.newDanger),
+                          const Icon(Icons.error, size: 48, color: AppColors.newDanger),
                           const SizedBox(height: 12),
                           Text('Erro ao carregar anexos: ${snapshot.error}'),
                         ],

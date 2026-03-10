@@ -77,8 +77,8 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                     ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+            const Padding(
+              padding: EdgeInsets.only(left: 16, right: 16, bottom: 16),
               child: Text(
                 'Catanduva/SP',
                 style: TextStyle(color: AppColors.newTextSecondary, fontSize: 14),
@@ -138,7 +138,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                       child: DropdownButton<String>(
                         isExpanded: true,
                         underline: const SizedBox(),
-                        hint: Text('Selecionar Safra', style: TextStyle(color: AppColors.newTextSecondary)),
+                        hint: const Text('Selecionar Safra', style: TextStyle(color: AppColors.newTextSecondary)),
                         value: _selectedSafra,
                         items: _safras
                             .map((safra) => DropdownMenuItem(
@@ -164,7 +164,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                       child: DropdownButton<String>(
                         isExpanded: true,
                         underline: const SizedBox(),
-                        hint: Text('Município', style: TextStyle(color: AppColors.newTextSecondary)),
+                        hint: const Text('Município', style: TextStyle(color: AppColors.newTextSecondary)),
                         value: _selectedMunicipio,
                         items: sp.MunicipiosSP.municipiosList
                             .map((municipio) => DropdownMenuItem(
@@ -215,7 +215,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                       show: true,
                       drawVerticalLine: false,
                       horizontalInterval: 50,
-                      getDrawingHorizontalLine: (value) => FlLine(
+                      getDrawingHorizontalLine: (value) => const FlLine(
                         color: AppColors.borderDark,
                         strokeWidth: 0.5,
                       ),
@@ -227,7 +227,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                           reservedSize: 40,
                           getTitlesWidget: (value, meta) => Text(
                             '${value.toInt()}',
-                            style: TextStyle(color: AppColors.newTextSecondary, fontSize: 10),
+                            style: const TextStyle(color: AppColors.newTextSecondary, fontSize: 10),
                           ),
                         ),
                       ),
@@ -236,7 +236,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                           showTitles: true,
                           getTitlesWidget: (value, meta) => Text(
                             _months[value.toInt()],
-                            style: TextStyle(color: AppColors.newTextSecondary, fontSize: 10),
+                            style: const TextStyle(color: AppColors.newTextSecondary, fontSize: 10),
                           ),
                         ),
                       ),
@@ -266,30 +266,30 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
                     columnSpacing: 12,
                     headingRowColor: MaterialStateProperty.all(AppColors.bgDark),
                     columns: [
-                      DataColumn(
+                      const DataColumn(
                         label: Text('Município', style: TextStyle(color: AppColors.newTextPrimary, fontWeight: FontWeight.bold)),
                       ),
                       ...List.generate(
                         12,
                         (index) => DataColumn(
                           label: Text(_months[index],
-                              style: TextStyle(color: AppColors.newTextPrimary, fontWeight: FontWeight.bold, fontSize: 11)),
+                              style: const TextStyle(color: AppColors.newTextPrimary, fontWeight: FontWeight.bold, fontSize: 11)),
                         ),
                       ),
-                      DataColumn(
+                      const DataColumn(
                         label: Text('Total', style: TextStyle(color: AppColors.newSuccess, fontWeight: FontWeight.bold)),
                       ),
                     ],
                     rows: [
                       DataRow(cells: [
-                        DataCell(Text('Catanduva', style: TextStyle(color: AppColors.newTextPrimary))),
+                        const DataCell(Text('Catanduva', style: TextStyle(color: AppColors.newTextPrimary))),
                         ...List.generate(
                           12,
-                          (index) => DataCell(Text('${_monthlyData[index].toStringAsFixed(0)}',
-                              style: TextStyle(color: AppColors.newTextSecondary, fontSize: 12))),
+                          (index) => DataCell(Text(_monthlyData[index].toStringAsFixed(0),
+                              style: const TextStyle(color: AppColors.newTextSecondary, fontSize: 12))),
                         ),
-                        DataCell(Text('${_getMonthlyTotal().toStringAsFixed(0)}',
-                            style: TextStyle(color: AppColors.newSuccess, fontWeight: FontWeight.bold))),
+                        DataCell(Text(_getMonthlyTotal().toStringAsFixed(0),
+                            style: const TextStyle(color: AppColors.newSuccess, fontWeight: FontWeight.bold))),
                       ]),
                     ],
                   ),
@@ -338,7 +338,7 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 10,
               color: AppColors.newTextSecondary,
               fontWeight: FontWeight.w500,
