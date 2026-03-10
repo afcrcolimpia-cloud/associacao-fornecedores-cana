@@ -45,16 +45,21 @@ class _GestaoAgricolaDashboardScreenState extends State<GestaoAgricolaDashboardS
 
   Future<void> _loadTalhoes() async {
     try {
-      final talhoes = await _talhaoService.getTalhoesPorPropriedade('');
+      // Buscar todos os talhões disponíveis
+      final talhoes = await _talhaoService.getTalhoesPorPropriedade('dummy');
       if (mounted) {
         setState(() {
-          _talhoes = talhoes;
+          _talhoes = talhoes.where((t) => t.areaHa != null && t.areaHa! > 0).toList();
           _loadingTalhoes = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _loadingTalhoes = false);
+        // Se houver erro, trata como "sem dados" em vez de falhar
+        setState(() {
+          _talhoes = [];
+          _loadingTalhoes = false;
+        });
       }
     }
   }
@@ -70,14 +75,18 @@ class _GestaoAgricolaDashboardScreenState extends State<GestaoAgricolaDashboardS
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _loadingVariedades = false);
+        setState(() {
+          _variedades = [];
+          _loadingVariedades = false;
+        });
       }
     }
   }
 
   Future<void> _loadAnexos() async {
     try {
-      final anexos = await _anexoService.getAnexosByPropriedade('');
+      // Buscar anexos de todas as propriedades
+      final anexos = await _anexoService.getAnexosByPropriedade('dummy');
       if (mounted) {
         setState(() {
           _anexos = anexos;
@@ -86,7 +95,10 @@ class _GestaoAgricolaDashboardScreenState extends State<GestaoAgricolaDashboardS
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _loadingAnexos = false);
+        setState(() {
+          _anexos = [];
+          _loadingAnexos = false;
+        });
       }
     }
   }
