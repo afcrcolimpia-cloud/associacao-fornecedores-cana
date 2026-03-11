@@ -85,25 +85,13 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
   }
 
   double _totalResumoRHa() {
-    if (widget.cenario.totalOperacional != null && widget.cenario.totalOperacional! > 0) {
-      return widget.cenario.totalOperacional!;
-    }
-    return DadosCustoOperacional.resumo.fold<double>(
-      0.0,
-      (soma, item) => soma + item.rHa,
-    );
+    // Sempre calcula o custo anualizado R$/ha corretamente
+    return DadosCustoOperacional.totalOperacional.rHa;
   }
 
   double _totalResumoRT() {
-    if (widget.cenario.totalOperacional != null && widget.cenario.totalOperacional! > 0) {
-      final produtividade = _obterParametrosEditados().produtividade;
-      if (produtividade <= 0) return 0.0;
-      return widget.cenario.totalOperacional! / produtividade;
-    }
-    return DadosCustoOperacional.resumo.fold<double>(
-      0.0,
-      (soma, item) => soma + item.rT,
-    );
+    // Sempre calcula o custo anualizado R$/t corretamente
+    return DadosCustoOperacional.totalOperacional.rT;
   }
 
   double _calcularPrecoRecebidoPorTonEditado() {
