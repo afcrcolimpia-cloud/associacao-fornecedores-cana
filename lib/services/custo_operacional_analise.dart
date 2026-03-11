@@ -17,7 +17,7 @@ class CustoOperacionalAnalise {
   /// Fórmula: (Formação / longevidade) + Manutenção + Colheita + Admin + Arrendamento
   /// Quando margemLucroPorTonelada está salva no banco, usa cálculo reverso:
   ///   custoRT = precoRecebido - margem → custoAnualizado = custoRT × produtividade
-  /// Quando não está salva, usa dados de referência AFCRC.
+  /// Quando não está salva, calcula via service centralizado.
   static double _custoAnualizadoRHa(CustoOperacionalCenario cenario) {
     if (cenario.margemLucroPorTonelada != null) {
       // Cálculo reverso a partir da margem salva
@@ -26,21 +26,22 @@ class CustoOperacionalAnalise {
       final custoRT = precoRT - margemRT;
       return custoRT * cenario.produtividade;
     }
-    // Fallback: usar dados de referência AFCRC
-    final ref = DadosCustoOperacional.totalOperacional;
-    return ref.rHa;
+    // Fallback: usar service centralizado com parâmetros do cenário
+    final resumo = CustoOperacionalService().calcularResumoComTotais(
+      cenario: cenario,
+    );
+    return resumo.totalOperacional.rHa;
   }
 
   static double _calcularMargemPorTonelada(CustoOperacionalCenario cenario) {
     if (cenario.margemLucroPorTonelada != null) {
       return cenario.margemLucroPorTonelada!;
     }
-    // Fallback: calcular usando dados de referência AFCRC
-    final produtividade = cenario.produtividade;
-    if (produtividade <= 0) return 0.0;
-    final custoAnualizado = _custoAnualizadoRHa(cenario);
-    final receitaPorHectare = _calcularReceitaPorHectare(cenario);
-    return (receitaPorHectare - custoAnualizado) / produtividade;
+    // Fallback: usar service centralizado com parâmetros do cenário
+    final resumo = CustoOperacionalService().calcularResumoComTotais(
+      cenario: cenario,
+    );
+    return resumo.margemLucro.rT;
   }
   /// Matriz de sensibilidade - Preço vs Produtividade
   static MatrizSensibilidade gerarMatrizSensibilidade(

@@ -209,7 +209,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
               ),
               _buildParametroRow(
                 'Administrativo',
-                'R\$ ${cenario.custoAdministrativo?.toStringAsFixed(2) ?? '168,00'}/ha',
+                '${cenario.custoAdministrativo?.toStringAsFixed(2) ?? '10,00'}%',
               ),
             ],
           ),

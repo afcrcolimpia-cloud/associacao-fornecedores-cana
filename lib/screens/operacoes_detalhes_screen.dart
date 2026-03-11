@@ -5,6 +5,9 @@ import '../services/custo_operacional_service.dart';
 import '../models/operacao_custos.dart';
 import '../constants/app_colors.dart';
 
+// Usa CustoOperacionalService.calcularResumoComTotais() para que
+// todas as telas reflitam as MESMAS fórmulas centralizadas.
+
 class OperacoesDetalhesScreen extends StatefulWidget {
   final CustoOperacionalCenario cenario;
   const OperacoesDetalhesScreen({super.key, required this.cenario});
@@ -84,25 +87,32 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
     );
   }
 
-  double _totalResumoRHa() {
-    // Sempre calcula o custo anualizado R$/ha corretamente
-    return DadosCustoOperacional.totalOperacional.rHa;
+  /// Cria um cenário virtual a partir dos parâmetros editados
+  /// para calcular o resumo usando o service centralizado.
+  CustoOperacionalCenario _cenarioEditado() {
+    final p = _obterParametrosEditados();
+    return CustoOperacionalCenario(
+      id: widget.cenario.id,
+      propriedadeId: widget.cenario.propriedadeId,
+      periodoRef: widget.cenario.periodoRef,
+      nomeCenario: widget.cenario.nomeCenario,
+      produtividade: p.produtividade,
+      atr: p.atr,
+      longevidade: p.longevidade,
+      doseMuda: p.doseMuda,
+      precoDiesel: p.precoDiesel,
+      custoAdministrativo: p.custoAdmin,
+      arrendamento: p.arrendamento,
+      atrArrend: p.atrArrend,
+      precoAtr: p.precoATR,
+    );
   }
 
-  double _totalResumoRT() {
-    // Sempre calcula o custo anualizado R$/t corretamente
-    return DadosCustoOperacional.totalOperacional.rT;
-  }
-
-  double _calcularPrecoRecebidoPorTonEditado() {
-    final params = _obterParametrosEditados();
-    return params.atr * params.precoATR;
-  }
-
-  double _calcularMargemPorTonEditada() {
-    final totalOperacionalPorTon = _totalResumoRT();
-    final precoRecebidoPorTon = _calcularPrecoRecebidoPorTonEditado();
-    return precoRecebidoPorTon - totalOperacionalPorTon;
+  /// Calcula resumo dinâmico usando a mesma lógica do service.
+  ResumoCustoOperacionalCalculado _resumoDinamico() {
+    return CustoOperacionalService().calcularResumoComTotais(
+      cenario: _cenarioEditado(),
+    );
   }
 
   @override
@@ -180,10 +190,11 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
     }
   }
   Widget _buildResumo() {
-    final totalRHa = _totalResumoRHa();
-    final totalRT = _totalResumoRT();
-    final precoRecebidoRT = _calcularPrecoRecebidoPorTonEditado();
-    final margemRT = _calcularMargemPorTonEditada();
+    final resumo = _resumoDinamico();
+    final totalRHa = resumo.totalOperacional.rHa;
+    final totalRT = resumo.totalOperacional.rT;
+    final precoRecebidoRT = resumo.precoRecebido.rT;
+    final margemRT = resumo.margemLucro.rT;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +234,7 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
                       ),
                     ],
                     rows: [
-                      ...DadosCustoOperacional.resumo.map(
+                      ...resumo.linhasResumo.map(
                         (r) => DataRow(
                           cells: [
                             DataCell(Text(r.estagio)),

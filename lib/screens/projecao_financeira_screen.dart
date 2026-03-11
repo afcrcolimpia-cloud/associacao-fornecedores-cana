@@ -3,7 +3,6 @@ import '../widgets/app_shell.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/custo_operacional_analise.dart';
 import '../services/custo_operacional_service.dart';
-import '../services/dados_custo_operacional.dart';
 import '../constants/app_colors.dart';
 
 class ProjecaoFinanceiraScreen extends StatefulWidget {
@@ -32,15 +31,11 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
   }
 
   double _custoAnualizado() {
-    final cenario = widget.cenario;
-    if (cenario.margemLucroPorTonelada != null) {
-      final precoRT = cenario.atr.toDouble() * (cenario.precoAtr ?? 0.0);
-      final margemRT = cenario.margemLucroPorTonelada!;
-      final custoRT = precoRT - margemRT;
-      return custoRT * cenario.produtividade;
-    }
-    // Fallback: usar dados de referência AFCRC
-    return DadosCustoOperacional.totalOperacional.rHa;
+    // Usa o service centralizado para calcular — nunca duplicar lógica
+    final resumo = CustoOperacionalService().calcularResumoComTotais(
+      cenario: widget.cenario,
+    );
+    return resumo.totalOperacional.rHa;
   }
 
   void _atualizarProjecao(int novosPeriodos) {
