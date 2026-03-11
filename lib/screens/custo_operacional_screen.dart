@@ -3,6 +3,7 @@ import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../models/models.dart';
 import '../services/custo_operacional_service.dart';
+import '../services/dados_custo_operacional.dart';
 import '../services/exportacao_pdf_service.dart';
 import '../constants/app_colors.dart';
 import 'custo_operacional_form_screen.dart';
@@ -233,23 +234,13 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
           ),
           const SizedBox(height: 16),
 
-          // RESULTADOS
+          // COMPOSIÇÃO DO CUSTO OPERACIONAL
+          _buildComposicaoCusto(cenario),
+          const SizedBox(height: 16),
+
+          // RESULTADOS ECONÔMICOS
           if (cenario.totalOperacional != null && cenario.margemLucro != null)
-            _buildCard(
-              title: 'Resultados Economicos',
-              children: [
-                _buildParametroRow(
-                  'Total Operacional',
-                  'R\$ ${cenario.totalOperacional?.toStringAsFixed(2) ?? '-'}/ha',
-                  color: AppColors.primary,
-                ),
-                _buildParametroRow(
-                  'Margem de Lucro',
-                  '${cenario.margemLucro?.toStringAsFixed(2) ?? '-'}%',
-                  color: cenario.margemLucro! > 0 ? Colors.green : Colors.red,
-                ),
-              ],
-            ),
+            _buildResultadosEconomicos(cenario),
           const SizedBox(height: 24),
 
           // BOTÕES DE AÇÃO
@@ -629,6 +620,104 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
     }
 
     return _service.getCenariosByPropriedade(widget.contexto.propriedade.id);
+  }
+
+  Widget _buildComposicaoCusto(CustoOperacionalCenario cenario) {
+    final resumo = _service.calcularResumoComTotais(cenario: cenario);
+    final longevidade = cenario.longevidade ?? DadosCustoOperacional.parametros.longevidade;
+    final linhasFormacao = resumo.linhasResumo.where((r) => r.ehFormacao).toList();
+    final linhasRecorrentes = resumo.linhasResumo.where((r) => !r.ehFormacao).toList();
+    final subtotalFormacao = linhasFormacao.fold<double>(0, (s, r) => s + r.rHaBruto);
+    final formacaoAmortizada = linhasFormacao.fold<double>(0, (s, r) => s + r.rHa);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Composição do Custo Operacional',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Valores iguais às operações. Formação amortizada por $longevidade safras.',
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            // Formação
+            ...linhasFormacao.map((r) => _buildParametroRow(
+              r.estagio,
+              'R\$ ${r.rHaBruto.toStringAsFixed(2)}/ha',
+            )),
+            const Divider(height: 16),
+            _buildParametroRow(
+              'Subtotal Formação',
+              'R\$ ${subtotalFormacao.toStringAsFixed(2)}/ha',
+              color: AppColors.primary,
+            ),
+            _buildParametroRow(
+              'Formação Amortizada (÷ $longevidade)',
+              'R\$ ${formacaoAmortizada.toStringAsFixed(2)}/ha',
+              color: Colors.green,
+            ),
+            const Divider(height: 16),
+            // Recorrentes
+            ...linhasRecorrentes.map((r) => _buildParametroRow(
+              r.estagio,
+              'R\$ ${r.rHaBruto.toStringAsFixed(2)}/ha',
+            )),
+            const Divider(height: 16),
+            _buildParametroRow(
+              'Total Anualizado',
+              'R\$ ${resumo.totalOperacional.rHa.toStringAsFixed(2)}/ha',
+              color: Colors.green,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultadosEconomicos(CustoOperacionalCenario cenario) {
+    final resumo = _service.calcularResumoComTotais(cenario: cenario);
+    final totalRT = resumo.totalOperacional.rT;
+    final precoRT = resumo.precoRecebido.rT;
+    final margemRT = resumo.margemLucro.rT;
+
+    return _buildCard(
+      title: 'Resultados Economicos',
+      children: [
+        _buildParametroRow(
+          'Total Operacional',
+          'R\$ ${resumo.totalOperacional.rHa.toStringAsFixed(2)}/ha',
+          color: AppColors.primary,
+        ),
+        _buildParametroRow(
+          'Custo R\$/t',
+          'R\$ ${totalRT.toStringAsFixed(2)}/t',
+        ),
+        _buildParametroRow(
+          'Preço Recebido',
+          'R\$ ${precoRT.toStringAsFixed(2)}/t',
+        ),
+        _buildParametroRow(
+          'Margem R\$/t',
+          'R\$ ${margemRT.toStringAsFixed(2)}/t',
+          color: margemRT > 0 ? Colors.green : Colors.red,
+        ),
+        _buildParametroRow(
+          'Margem de Lucro',
+          '${resumo.margemPercentual.toStringAsFixed(2)}%',
+          color: resumo.margemPercentual > 0 ? Colors.green : Colors.red,
+        ),
+      ],
+    );
   }
 
   void _garantirTotais(CustoOperacionalCenario cenario) {

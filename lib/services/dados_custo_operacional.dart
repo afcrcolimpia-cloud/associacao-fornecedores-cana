@@ -548,27 +548,34 @@ class DadosCustoOperacional {
       ResumoEstagio(
         estagio: 'Conservação de solo',
         rHa: conservHa,
+        rHaBruto: conservHa,
         rT: amort(conservHa),
         rKgATR: amort(conservHa) / atr,
         pct: pct(conservHa),
+        ehFormacao: true,
       ),
       ResumoEstagio(
         estagio: 'Preparo de solo',
         rHa: prepHa,
+        rHaBruto: prepHa,
         rT: amort(prepHa),
         rKgATR: amort(prepHa) / atr,
         pct: pct(prepHa),
+        ehFormacao: true,
       ),
       ResumoEstagio(
         estagio: 'Plantio',
         rHa: plantHa,
+        rHaBruto: plantHa,
         rT: amort(plantHa),
         rKgATR: amort(plantHa) / atr,
         pct: pct(plantHa),
+        ehFormacao: true,
       ),
       ResumoEstagio(
         estagio: 'Manutenção de soqueira',
         rHa: manutHa,
+        rHaBruto: manutHa,
         rT: dir(manutHa),
         rKgATR: dir(manutHa) / atr,
         pct: pct(manutHa),
@@ -576,6 +583,7 @@ class DadosCustoOperacional {
       ResumoEstagio(
         estagio: 'Sistema de colheita',
         rHa: colhHa,
+        rHaBruto: colhHa,
         rT: dir(colhHa),
         rKgATR: dir(colhHa) / atr,
         pct: pct(colhHa),
@@ -583,6 +591,7 @@ class DadosCustoOperacional {
       ResumoEstagio(
         estagio: 'Administrativo',
         rHa: admHa,
+        rHaBruto: admHa,
         rT: dir(admHa),
         rKgATR: dir(admHa) / atr,
         pct: pct(admHa),
@@ -590,6 +599,7 @@ class DadosCustoOperacional {
       ResumoEstagio(
         estagio: 'Arrendamento',
         rHa: arrendHa,
+        rHaBruto: arrendHa,
         rT: dir(arrendHa),
         rKgATR: dir(arrendHa) / atr,
         pct: pct(arrendHa),

@@ -104,26 +104,32 @@ class EstagioCustos {
 /// Modelo para resumo de estágio
 class ResumoEstagio {
   final String estagio;
-  final double rHa;
+  final double rHa;         // R$/ha anualizado (amortizado para formação)
+  final double rHaBruto;    // R$/ha bruto (valor real da operação, sem amortização)
   final double rT;
   final double rKgATR;
   final String pct;
+  final bool ehFormacao;    // true para Conservação, Preparo, Plantio
 
   ResumoEstagio({
     required this.estagio,
     required this.rHa,
+    this.rHaBruto = 0,
     required this.rT,
     required this.rKgATR,
     required this.pct,
+    this.ehFormacao = false,
   });
 
   factory ResumoEstagio.fromJson(Map<String, dynamic> json) {
     return ResumoEstagio(
       estagio: json['estagio'] ?? '',
       rHa: (json['rHa'] as num?)?.toDouble() ?? 0.0,
+      rHaBruto: (json['rHaBruto'] as num?)?.toDouble() ?? 0.0,
       rT: (json['rT'] as num?)?.toDouble() ?? 0.0,
       rKgATR: (json['rKgATR'] as num?)?.toDouble() ?? 0.0,
       pct: json['pct'] ?? '0%',
+      ehFormacao: json['ehFormacao'] ?? false,
     );
   }
 
@@ -131,9 +137,11 @@ class ResumoEstagio {
     return {
       'estagio': estagio,
       'rHa': rHa,
+      'rHaBruto': rHaBruto,
       'rT': rT,
       'rKgATR': rKgATR,
       'pct': pct,
+      'ehFormacao': ehFormacao,
     };
   }
 }

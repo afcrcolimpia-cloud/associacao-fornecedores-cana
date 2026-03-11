@@ -242,9 +242,11 @@ class CustoOperacionalService {
       return ResumoEstagio(
         estagio: estagio,
         rHa: rHaAnualizado,
+        rHaBruto: rHa,
         rT: rT,
         rKgATR: rKgAtr,
         pct: '${participacao.toStringAsFixed(1)}%',
+        ehFormacao: amortizar,
       );
     }
 

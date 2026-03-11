@@ -196,6 +196,26 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
     final precoRecebidoRT = resumo.precoRecebido.rT;
     final margemRT = resumo.margemLucro.rT;
 
+    // Separar linhas de formação e recorrentes
+    final linhasFormacao = resumo.linhasResumo.where((r) => r.ehFormacao).toList();
+    final linhasRecorrentes = resumo.linhasResumo.where((r) => !r.ehFormacao).toList();
+
+    // Totais brutos de formação
+    final subtotalFormacaoBruto = linhasFormacao.fold<double>(
+      0.0, (soma, r) => soma + r.rHaBruto,
+    );
+    // Formação amortizada
+    final formacaoAmortizada = linhasFormacao.fold<double>(
+      0.0, (soma, r) => soma + r.rHa,
+    );
+    // Subtotal recorrentes
+    final subtotalRecorrentes = linhasRecorrentes.fold<double>(
+      0.0, (soma, r) => soma + r.rHa,
+    );
+
+    // Obter longevidade do cenário
+    final longevidade = _cenarioEditado().longevidade ?? DadosCustoOperacional.parametros.longevidade;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -210,92 +230,158 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
                   'Composição do Custo Operacional',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Valores R\$/ha iguais às abas de operações. Formação amortizada por $longevidade safras.',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
                 const SizedBox(height: 12),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    columnSpacing: 20,
                     columns: const [
                       DataColumn(label: Text('Estágio')),
-                      DataColumn(
-                        label: Text('R\$/ha'),
-                        numeric: true,
-                      ),
-                      DataColumn(
-                        label: Text('R\$/t'),
-                        numeric: true,
-                      ),
-                      DataColumn(
-                        label: Text('R\$/kg ATR'),
-                        numeric: true,
-                      ),
-                      DataColumn(
-                        label: Text('Part. (%)'),
-                        numeric: true,
-                      ),
+                      DataColumn(label: Text('R\$/ha'), numeric: true),
+                      DataColumn(label: Text('R\$/t'), numeric: true),
+                      DataColumn(label: Text('Part. (%)'), numeric: true),
                     ],
                     rows: [
-                      ...resumo.linhasResumo.map(
+                      // ── FORMAÇÃO (valores brutos, iguais às operações) ──
+                      ...linhasFormacao.map(
                         (r) => DataRow(
                           cells: [
                             DataCell(Text(r.estagio)),
-                            DataCell(
-                              Text(_fmt(r.rHa)),
-                              showEditIcon: false,
-                            ),
-                            DataCell(
-                              Text(_fmt(r.rT)),
-                              showEditIcon: false,
-                            ),
-                            DataCell(
-                              Text(_fmt(r.rKgATR, 6)),
-                              showEditIcon: false,
-                            ),
-                            DataCell(
-                              Text(r.pct),
-                              showEditIcon: false,
-                            ),
+                            DataCell(Text(_fmt(r.rHaBruto))),
+                            DataCell(Text('-', style: TextStyle(color: Colors.grey.shade400))),
+                            DataCell(Text('-', style: TextStyle(color: Colors.grey.shade400))),
                           ],
                         ),
                       ),
+                      // Subtotal Formação (bruto)
                       DataRow(
+                        color: WidgetStateProperty.all(
+                          AppColors.newPrimary.withOpacity(0.08),
+                        ),
                         cells: [
-                          const DataCell(
-                            Text(
-                              'Total',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              _fmt(totalRHa),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              _fmt(totalRT),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ),
-                          const DataCell(
-                            Text(
-                              '-',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const DataCell(
-                            Text(
-                              '100%',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
+                          const DataCell(Text(
+                            'Subtotal Formação',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          )),
+                          DataCell(Text(
+                            _fmt(subtotalFormacaoBruto),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          )),
+                          const DataCell(Text('-')),
+                          const DataCell(Text('-')),
                         ],
+                      ),
+                      // Formação Amortizada (÷ longevidade)
+                      DataRow(
+                        color: WidgetStateProperty.all(
+                          Colors.green.withOpacity(0.08),
+                        ),
+                        cells: [
+                          DataCell(Text(
+                            'Formação Amortizada (÷ $longevidade)',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )),
+                          DataCell(Text(
+                            _fmt(formacaoAmortizada),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          )),
+                          DataCell(Text(
+                            _fmt(linhasFormacao.fold<double>(0, (s, r) => s + r.rT)),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          )),
+                          DataCell(Text(
+                            '${(formacaoAmortizada / (totalRHa > 0 ? totalRHa : 1) * 100).toStringAsFixed(1)}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          )),
+                        ],
+                      ),
+                      // ── CUSTOS RECORRENTES (valores iguais nas duas telas) ──
+                      ...linhasRecorrentes.map(
+                        (r) => DataRow(
+                          cells: [
+                            DataCell(Text(r.estagio)),
+                            DataCell(Text(_fmt(r.rHaBruto))),
+                            DataCell(Text(_fmt(r.rT))),
+                            DataCell(Text(r.pct)),
+                          ],
+                        ),
+                      ),
+                      // ── TOTAL ANUALIZADO ──
+                      DataRow(
+                        color: WidgetStateProperty.all(
+                          Colors.green.withOpacity(0.12),
+                        ),
+                        cells: [
+                          const DataCell(Text(
+                            'Total Anualizado',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          )),
+                          DataCell(Text(
+                            _fmt(totalRHa),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                              fontSize: 14,
+                            ),
+                          )),
+                          DataCell(Text(
+                            _fmt(totalRT),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                              fontSize: 14,
+                            ),
+                          )),
+                          const DataCell(Text(
+                            '100%',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          )),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Nota explicativa sobre cálculo
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgDark,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.borderDark),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Cálculo do Custo Anualizado:',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Formação (${_fmt(subtotalFormacaoBruto)}) ÷ $longevidade = ${_fmt(formacaoAmortizada)} + '
+                        'Recorrentes (${_fmt(subtotalRecorrentes)}) = ${_fmt(totalRHa)} R\$/ha',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                     ],
                   ),
