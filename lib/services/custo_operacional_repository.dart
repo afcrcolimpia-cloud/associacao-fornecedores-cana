@@ -223,6 +223,13 @@ class LancamentoModel {
 // ─────────────────────────────────────────────
 
 class CustoOperacionalRepository {
+  static const String _catCols = 'id, nome, ordem, ativo';
+  static const String _opCols = 'id, categoria_id, nome, ativo';
+  static const String _maqCols = 'id, nome, valor_und, ativo';
+  static const String _impCols = 'id, nome, valor_und, ativo';
+  static const String _insCols = 'id, nome, valor_und, unidade, ativo';
+  static const String _lancCols = 'id, propriedade_id, talhao_id, categoria_id, safra, operacao_id, operacao_custom, maquina_id, maquina_custom, maquina_valor, implemento_id, implemento_custom, implemento_valor, rendimento, operacao_rha, insumo_id, insumo_custom, insumo_preco, insumo_dose, insumo_rha, custo_total_rha, observacao, criado_em';
+
   String? _normalizarCategoria(String? categoriaId, String? categoriaNome) {
     final bruto = '${categoriaId ?? ''} ${categoriaNome ?? ''}'.toLowerCase();
     final normalizado = bruto
@@ -253,7 +260,7 @@ class CustoOperacionalRepository {
     try {
       final res = await _db
           .from('co_categorias')
-          .select()
+          .select(_catCols)
           .eq('ativo', true)
           .order('ordem');
       return (res as List).map((e) => CategoriaModel.fromMap(e)).toList();
@@ -268,7 +275,7 @@ class CustoOperacionalRepository {
     try {
       final res = await _db
           .from('co_operacoes_catalogo')
-          .select()
+          .select(_opCols)
           .eq('categoria_id', categoriaId)
           .eq('ativo', true)
           .order('nome');
@@ -284,7 +291,7 @@ class CustoOperacionalRepository {
     try {
       final res = await _db
           .from('co_operacoes_catalogo')
-          .select()
+          .select(_opCols)
           .ilike('nome', '%$query%')
           .eq('ativo', true)
           .limit(20);
@@ -298,7 +305,7 @@ class CustoOperacionalRepository {
   /// Busca máquinas
   Future<List<MaquinaCatalogo>> getMaquinas({String? query}) async {
     try {
-      var req = _db.from('co_maquinas_catalogo').select().eq('ativo', true);
+      var req = _db.from('co_maquinas_catalogo').select(_maqCols).eq('ativo', true);
       if (query != null && query.isNotEmpty) {
         req = req.ilike('nome', '%$query%');
       }
@@ -313,7 +320,7 @@ class CustoOperacionalRepository {
   /// Busca implementos
   Future<List<ImplementoCatalogo>> getImplementos({String? query}) async {
     try {
-      var req = _db.from('co_implementos_catalogo').select().eq('ativo', true);
+      var req = _db.from('co_implementos_catalogo').select(_impCols).eq('ativo', true);
       if (query != null && query.isNotEmpty) {
         req = req.ilike('nome', '%$query%');
       }
@@ -328,7 +335,7 @@ class CustoOperacionalRepository {
   /// Busca insumos
   Future<List<InsumoCatalogo>> getInsumos({String? query}) async {
     try {
-      var req = _db.from('co_insumos_catalogo').select().eq('ativo', true);
+      var req = _db.from('co_insumos_catalogo').select(_insCols).eq('ativo', true);
       if (query != null && query.isNotEmpty) {
         req = req.ilike('nome', '%$query%');
       }
@@ -363,7 +370,7 @@ class CustoOperacionalRepository {
     int? safra,
   }) async {
     try {
-      var req = _db.from('co_lancamentos').select();
+      var req = _db.from('co_lancamentos').select(_lancCols);
       if (propriedadeId != null) req = req.eq('propriedade_id', propriedadeId);
       if (categoriaId != null) req = req.eq('categoria_id', categoriaId);
       if (safra != null) req = req.eq('safra', safra);
@@ -382,7 +389,7 @@ class CustoOperacionalRepository {
         final res = await _db
             .from('co_lancamentos')
             .insert(lancamento.toMap())
-            .select()
+            .select(_lancCols)
             .single();
         return LancamentoModel.fromMap(res);
       } else {
@@ -390,7 +397,7 @@ class CustoOperacionalRepository {
             .from('co_lancamentos')
             .update(lancamento.toMap())
             .eq('id', lancamento.id!)
-            .select()
+            .select(_lancCols)
             .single();
         return LancamentoModel.fromMap(res);
       }
@@ -446,7 +453,7 @@ class CustoOperacionalRepository {
       final res = await _db
           .from('co_maquinas_catalogo')
           .insert({'nome': nome, 'valor_und': valorUnd})
-          .select()
+          .select(_maqCols)
           .single();
       return MaquinaCatalogo.fromMap(res);
     } catch (e) {
@@ -461,7 +468,7 @@ class CustoOperacionalRepository {
       final res = await _db
           .from('co_implementos_catalogo')
           .insert({'nome': nome, 'valor_und': valorUnd})
-          .select()
+          .select(_impCols)
           .single();
       return ImplementoCatalogo.fromMap(res);
     } catch (e) {
@@ -481,7 +488,7 @@ class CustoOperacionalRepository {
             'valor_und': valorUnd,
             'unidade': unidade,
           })
-          .select()
+          .select(_insCols)
           .single();
       return InsumoCatalogo.fromMap(res);
     } catch (e) {

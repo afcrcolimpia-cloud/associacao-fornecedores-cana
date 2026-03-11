@@ -5,6 +5,7 @@ import '../models/models.dart';
 class ProdutividadeService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _tableName = 'produtividade';
+  static const String _cols = 'id, propriedade_id, talhao_id, ano_safra, variedade, estagio, mes_colheita, peso_liquido_toneladas, media_atr, observacoes, created_at, updated_at';
 
   // Stream de produtividade por propriedade
   Stream<List<Produtividade>> getProdutividadePorPropriedade(String propriedadeId) {
@@ -49,7 +50,7 @@ class ProdutividadeService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('id', id)
           .maybeSingle();
       
@@ -137,13 +138,13 @@ class ProdutividadeService {
     try {
       final dadosAtual = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .eq('ano_safra', anoAtual);
 
       final dadosAnterior = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .eq('ano_safra', anoAnterior);
 
@@ -202,7 +203,7 @@ class ProdutividadeService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .eq('ano_safra', anoSafra);
 
@@ -277,7 +278,7 @@ class ProdutividadeService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .eq('ano_safra', anoSafra)
           .order('mes_colheita', ascending: true);

@@ -110,6 +110,8 @@ class CustoOperacionalService {
   final String tableName = 'custo_operacional_cenarios';
   final String historyTable = 'custo_operacional_historico';
   final CustoOperacionalRepository _repo = CustoOperacionalRepository();
+  static const String _cenarioCols = 'id, propriedade_id, periodo_ref, nome_cenario, produtividade, atr, longevidade, dose_muda, preco_diesel, custo_administrativo, arrendamento, atr_arrend, preco_atr, total_operacional, margem_lucro, margem_lucro_por_tonelada, ativo, criado_em, atualizado_em';
+  static const String _historicoCols = 'id, cenario_id, campo_alterado, valor_anterior, valor_novo, alterado_em, alterado_por';
 
   // ==================== LEITURA ====================
 
@@ -120,7 +122,7 @@ class CustoOperacionalService {
     try {
       final data = await _supabase
           .from(tableName)
-          .select()
+          .select(_cenarioCols)
           .eq('propriedade_id', propriedadeId)
           .eq('ativo', true)
           .order('atualizado_em', ascending: false);
@@ -138,7 +140,7 @@ class CustoOperacionalService {
     try {
       final data = await _supabase
           .from(tableName)
-          .select()
+          .select(_cenarioCols)
           .eq('id', cenarioId)
           .maybeSingle();
 
@@ -229,6 +231,11 @@ class CustoOperacionalService {
       arrendamentoHa: arrendamentoHa,
     );
 
+    // Custo anualizado R$/ha = (Formação / longevidade) + restante
+    final formacaoHa = conservacaoHa + preparoHa + plantioHa;
+    final custoAnualizadoRHa = (formacaoHa / longevidade) +
+        manutencaoHa + colheitaHa + administrativoHa + arrendamentoHa;
+
     ResumoEstagio resumoLinha({
       required String estagio,
       required double rHa,
@@ -303,12 +310,12 @@ class CustoOperacionalService {
     return ResumoCustoOperacionalCalculado(
       linhasResumo: linhasResumo,
       totalOperacional: TotalOperacional(
-        rHa: totalRHa,
+        rHa: custoAnualizadoRHa,
         rT: totalRT,
         rKgATR: totalRKgAtr,
       ),
       precoRecebido: TotalOperacional(
-        rHa: 0.0,
+        rHa: precoRecebidoRT * produtividade,
         rT: precoRecebidoRT,
         rKgATR: precoRecebidoRKgAtr,
       ),
@@ -665,7 +672,7 @@ class CustoOperacionalService {
     try {
       final data = await _supabase
           .from(historyTable)
-          .select()
+          .select(_historicoCols)
           .eq('cenario_id', cenarioId)
           .order('alterado_em', ascending: false);
 
@@ -678,9 +685,11 @@ class CustoOperacionalService {
   // ==================== CÃLCULOS ECONÃ”MICOS ====================
 
   /// Calcular margem R$/t
+  /// IMPORTANTE: totalOperacional aqui deve ser o custo ANUALIZADO R$/ha
+  /// (com formação amortizada pela longevidade), não o custo total do ciclo.
   /// Fórmula: Preço R$/t − Total R$/t
   ///   Preço R$/t = ATR (kg/t) × Preço ATR (R$/kg)
-  ///   Total R$/t = totalOperacional (R$/ha) ÷ produtividade
+  ///   Total R$/t = custoAnualizado (R$/ha) ÷ produtividade
   /// Margem R$/ha = margemPorTonelada × produtividade
   double calcularMargemPorTonelada(
     double totalOperacional,

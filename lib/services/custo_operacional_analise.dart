@@ -14,18 +14,28 @@ class CustoOperacionalAnalise {
   }
 
   /// Calcula o custo anualizado R$/ha considerando amortização da formação.
-  /// Derivado do R$/t correto (preço - margem) × produtividade.
+  /// Fórmula: (Formação / longevidade) + Manutenção + Colheita + Admin + Arrendamento
+  /// Quando margemLucroPorTonelada está salva no banco, usa cálculo reverso:
+  ///   custoRT = precoRecebido - margem → custoAnualizado = custoRT × produtividade
+  /// Quando não está salva, usa dados de referência AFCRC.
   static double _custoAnualizadoRHa(CustoOperacionalCenario cenario) {
-    final precoRT = cenario.atr.toDouble() * (cenario.precoAtr ?? 0.0);
-    final margemRT = cenario.margemLucroPorTonelada ?? 0.0;
-    final custoRT = precoRT - margemRT;
-    return custoRT * cenario.produtividade;
+    if (cenario.margemLucroPorTonelada != null) {
+      // Cálculo reverso a partir da margem salva
+      final precoRT = cenario.atr.toDouble() * (cenario.precoAtr ?? 0.0);
+      final margemRT = cenario.margemLucroPorTonelada!;
+      final custoRT = precoRT - margemRT;
+      return custoRT * cenario.produtividade;
+    }
+    // Fallback: usar dados de referência AFCRC
+    final ref = DadosCustoOperacional.totalOperacional;
+    return ref.rHa;
   }
 
   static double _calcularMargemPorTonelada(CustoOperacionalCenario cenario) {
     if (cenario.margemLucroPorTonelada != null) {
       return cenario.margemLucroPorTonelada!;
     }
+    // Fallback: calcular usando dados de referência AFCRC
     final produtividade = cenario.produtividade;
     if (produtividade <= 0) return 0.0;
     final custoAnualizado = _custoAnualizadoRHa(cenario);

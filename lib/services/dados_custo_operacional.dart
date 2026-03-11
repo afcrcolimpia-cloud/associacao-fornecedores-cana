@@ -608,10 +608,12 @@ class DadosCustoOperacional {
     final colhHa   = colheita.total;
     final admHa    = p.custoAdmin;
     final arrendHa = p.arrendamento * p.atrArrend * p.precoATR;
-    final totHa    = formHa + manutHa + colhHa + admHa + arrendHa;
     final prod     = p.produtividade;
     final atr      = p.atr.toDouble();
     final lon      = p.longevidade;
+
+    // Custo anualizado R$/ha = (Formação / longevidade) + restante
+    final custoAnualizadoHa = (formHa / lon) + manutHa + colhHa + admHa + arrendHa;
 
     final totRpt = (formHa / prod) / lon
         + manutHa / prod
@@ -620,7 +622,7 @@ class DadosCustoOperacional {
         + arrendHa / prod;
 
     return TotalOperacional(
-      rHa: totHa,
+      rHa: custoAnualizadoHa,
       rT: totRpt,
       rKgATR: totRpt / atr,
     );

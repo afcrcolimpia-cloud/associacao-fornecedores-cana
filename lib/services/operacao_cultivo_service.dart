@@ -4,6 +4,7 @@ import '../models/models.dart';
 class OperacaoCultivoService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _tableName = 'operacoes_cultivo';
+  static const String _cols = 'id, propriedade_id, talhao_id, data_plantio, data_quebra_lombo, data_colheita, data_1a_aplic_herbicida, data_2a_aplic_herbicida, observacoes, created_at, updated_at';
 
   // Stream de operações por propriedade
   Stream<List<OperacaoCultivo>> getOperacoesPorPropriedade(String propriedadeId) {
@@ -30,7 +31,7 @@ class OperacaoCultivoService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('id', id)
           .maybeSingle();
 
@@ -114,7 +115,7 @@ class OperacaoCultivoService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId);
 
       final operacoes = data.map((json) => OperacaoCultivo.fromJson(json)).toList();
@@ -153,7 +154,7 @@ class OperacaoCultivoService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('talhao_id', talhaoId)
           .order('data_plantio', ascending: false)
           .limit(1)

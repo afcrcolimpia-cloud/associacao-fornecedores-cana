@@ -6,13 +6,14 @@ import '../models/variedade.dart';
 class VariedadeService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _table = 'variedades';
+  static const String _cols = 'id, codigo, nome, caracteristicas, ambiente_producao, meses_colheita, ativa, criado_em, atualizado_em';
 
   /// Obtém todas as variedades ativas
   Future<List<Variedade>> getVariedadesAtivas() async {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('ativa', true)
           .order('codigo', ascending: true);
 
@@ -27,12 +28,12 @@ class VariedadeService {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .order('codigo', ascending: true);
 
       return (data as List).map((v) => Variedade.fromJson(v)).toList();
     } catch (e) {
-      throw Exception('Erro ao buscar variedades: $e');
+      throw Exception('Erro ao buscar todas as variedades: $e');
     }
   }
 
@@ -51,7 +52,7 @@ class VariedadeService {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('id', id)
           .single();
 
@@ -66,7 +67,7 @@ class VariedadeService {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('codigo', codigo)
           .single();
 
@@ -152,7 +153,7 @@ class VariedadeService {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('ambiente_producao', ambiente)
           .eq('ativa', true)
           .order('codigo', ascending: true);

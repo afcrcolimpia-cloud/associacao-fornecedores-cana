@@ -239,6 +239,52 @@ Municipio  → lista em utils/municipios_sp.dart
 
 ---
 
+## 🔄 Sincronização Obrigatória — Supabase + GitHub
+
+### Regras de sincronização (SEMPRE cumprir)
+
+1. **Supabase e código SEMPRE andam juntos** — toda alteração no banco (tabelas, colunas, RLS, functions) DEVE ter a migration SQL correspondente em `lib/sql/`
+2. **GitHub é a fonte da verdade** — todo código e migration SQL DEVE estar commitado no repositório
+3. **Após cada tarefa concluída:**
+   - Rodar `flutter analyze` — corrigir se houver erros
+   - Criar migration SQL se houve alteração no banco
+   - Fazer `git add` + `git commit` com mensagem descritiva em português
+   - Fazer `git push` para manter o repositório remoto atualizado
+4. **NUNCA alterar o banco Supabase sem:**
+   - Criar o arquivo `.pgsql` correspondente em `lib/sql/`
+   - Commitar e pushar a migration
+5. **NUNCA fazer mudanças no código sem commitar** — cada funcionalidade ou correção é um commit separado
+6. **Ordem obrigatória após qualquer alteração:**
+   ```
+   flutter analyze → corrigir erros → git add . → git commit -m "descrição" → git push
+   ```
+
+### Fórmulas de Custo Operacional — Referência Oficial
+
+Estas são as fórmulas corretas do sistema. NUNCA alterar sem validação:
+
+```
+Custo Anualizado R$/ha = (Formação ÷ Longevidade) + Manutenção + Colheita + Admin + Arrendamento
+Custo R$/t = Custo Anualizado R$/ha ÷ Produtividade (t/ha)
+Preço Recebido R$/t = ATR × Preço ATR
+Margem R$/t = Preço Recebido R$/t − Custo R$/t
+Margem % = (Margem R$/t ÷ Preço Recebido R$/t) × 100
+
+Exemplo AFCRC 2026:
+  Formação = Conservação + Preparo + Plantio ≈ R$ 9.005/ha
+  Longevidade = 5 cortes
+  Formação amortizada = 9.005 / 5 = R$ 1.801/ha
+  Custo anualizado = 1.801 + 5.418 + 2.858 + 1.224 + 750 = R$ 12.051/ha
+  R$/t = 12.051 / 84,6 = R$ 142,45/t
+  Preço recebido = 138 × 1,1945 = R$ 164,84/t
+  Margem = 164,84 − 142,45 = R$ 22,39/t
+  Margem % = 22,39 / 164,84 × 100 = 13,6%
+```
+
+IMPORTANTE: `totalOperacional.rHa` SEMPRE armazena o **custo anualizado** (com formação amortizada), NUNCA o custo bruto total.
+
+---
+
 ## ⚠️ Pendências identificadas no projeto
 
 - `lib/assets/config/` é duplicata de `lib/config/` → consolidar e remover

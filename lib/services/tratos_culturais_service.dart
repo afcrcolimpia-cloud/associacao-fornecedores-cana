@@ -10,8 +10,8 @@ class TratosCulturaisService {
     try {
       final response = await _supabase
           .from(tableName)
-          .select()
-          .eq('propriedadeId', propriedadeId);
+          .select('id, propriedade_id, talhao_id, ano_safra, adubos, herbicidas, inseticidas, maturadores, calagem, gessagem, oxido_de_calcio, campos_extras, data_aplicacao, observacoes, criado_em, atualizado_em')
+          .eq('propriedade_id', propriedadeId);
 
       return (response as List)
           .map((data) => TratosCulturais.fromJson(data))
@@ -26,8 +26,8 @@ class TratosCulturaisService {
     try {
       final response = await _supabase
           .from(tableName)
-          .select()
-          .eq('talhaoId', talhaoId);
+          .select('id, propriedade_id, talhao_id, ano_safra, adubos, herbicidas, inseticidas, maturadores, calagem, gessagem, oxido_de_calcio, campos_extras, data_aplicacao, observacoes, criado_em, atualizado_em')
+          .eq('talhao_id', talhaoId);
 
       return (response as List)
           .map((data) => TratosCulturais.fromJson(data as Map<String, dynamic>))
@@ -46,10 +46,10 @@ class TratosCulturaisService {
     try {
       final response = await _supabase
           .from(tableName)
-          .select()
-          .eq('propriedadeId', propriedadeId)
-          .eq('talhaoId', talhaoId)
-          .eq('anoSafra', anoSafra);
+          .select('id, propriedade_id, talhao_id, ano_safra, adubos, herbicidas, inseticidas, maturadores, calagem, gessagem, oxido_de_calcio, campos_extras, data_aplicacao, observacoes, criado_em, atualizado_em')
+          .eq('propriedade_id', propriedadeId)
+          .eq('talhao_id', talhaoId)
+          .eq('ano_safra', anoSafra);
 
       if ((response as List).isEmpty) return null;
       return TratosCulturais.fromJson(response.first);
@@ -63,7 +63,7 @@ class TratosCulturaisService {
     return _supabase
         .from(tableName)
         .stream(primaryKey: ['id'])
-        .eq('propriedadeId', propriedadeId)
+        .eq('propriedade_id', propriedadeId)
         .map((list) => list
             .map((data) => TratosCulturais.fromJson(data))
             .toList());

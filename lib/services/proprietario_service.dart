@@ -6,6 +6,7 @@ import '../models/models.dart';
 class ProprietarioService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String tableName = 'proprietarios';
+  static const String _cols = 'id, nome, cpf_cnpj, telefone, email, endereco, cidade, estado, cep, ativo, criado_em, atualizado_em';
 
   // --- MÉTODOS DE LEITURA ---
 
@@ -21,7 +22,7 @@ class ProprietarioService {
     try {
       final data = await _supabase
           .from(tableName)
-          .select()
+          .select(_cols)
           .eq('id', id)
           .single();
 
@@ -40,7 +41,7 @@ class ProprietarioService {
     try {
       final data = await _supabase
           .from(tableName)
-          .select()
+          .select(_cols)
           .eq('cpf_cnpj', cpfCnpj) // ✅ CORRIGIDO: cpf_cnpj (snake_case)
           .maybeSingle();
 
@@ -55,7 +56,7 @@ class ProprietarioService {
     try {
       final data = await _supabase
           .from(tableName)
-          .select()
+          .select(_cols)
           .order('nome', ascending: true);
 
       return data.map((map) => Proprietario.fromJson(map)).toList();

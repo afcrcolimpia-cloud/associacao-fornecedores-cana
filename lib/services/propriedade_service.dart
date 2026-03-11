@@ -5,13 +5,14 @@ import '../models/models.dart';
 class PropriedadeService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _tableName = 'propriedades';
+  static const String _cols = 'id, proprietario_id, nome_propriedade, numero_fa, endereco, cidade, estado, cep, area_ha, area_alqueires, ativa, criado_em, atualizado_em';
 
   // Buscar todas as propriedades
   Future<List<Propriedade>> getPropriedades() async {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .order('nome_propriedade', ascending: true);
       
       return data.map((json) => Propriedade.fromJson(json)).toList();
@@ -26,7 +27,7 @@ class PropriedadeService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('proprietario_id', proprietarioId)
           .order('nome_propriedade', ascending: true);
       
@@ -42,7 +43,7 @@ class PropriedadeService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('id', id)
           .maybeSingle();
       
@@ -166,7 +167,7 @@ class PropriedadeService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('numero_fa', numeroFA)
           .maybeSingle();
       

@@ -8,6 +8,7 @@ class AnexoService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String tableName = 'anexos';
   final String bucketName = 'anexos-propriedades';
+  static const String _cols = 'id, propriedade_id, tipo_anexo, nome_arquivo, url_arquivo, caminho_storage, tamanho_bytes, tipo_mime, criado_em, atualizado_em';
 
   // ------------------------------
   // STREAM DE ANEXOS POR PROPRIEDADE
@@ -28,7 +29,7 @@ class AnexoService {
     try {
       final data = await _supabase
           .from(tableName)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .order('criado_em', ascending: false);
 
@@ -42,7 +43,7 @@ class AnexoService {
     try {
       final data = await _supabase
           .from(tableName)
-          .select()
+          .select(_cols)
           .eq('id', id)
           .single();
 

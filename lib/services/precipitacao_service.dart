@@ -8,12 +8,13 @@ class PrecipitacaoService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _table = 'precipitacoes';
   static const Uuid _uuid = Uuid();
+  static const String _cols = 'id, propriedade_id, municipio, data, mes, ano, milimetros, observacoes, criado_em, atualizado_em';
 
   Future<List<Precipitacao>> getPrecipitacoesByPropriedade(String propriedadeId) async {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .order('data', ascending: false);
 
@@ -97,7 +98,7 @@ class PrecipitacaoService {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId);
 
       final precipitacoes = (data as List)
@@ -143,7 +144,7 @@ class PrecipitacaoService {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .gte('data', dataInicio.toIso8601String().split('T')[0])
           .lte('data', dataFim.toIso8601String().split('T')[0])

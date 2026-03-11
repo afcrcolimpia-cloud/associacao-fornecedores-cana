@@ -5,6 +5,7 @@ import '../models/models.dart';
 class TalhaoService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _tableName = 'talhoes';
+  static const String _cols = 'id, propriedade_id, numero_talhao, area_ha, area_alqueires, variedade, cultura, ano_plantio, corte, data_plantio, tipo_talhao, ativo, observacoes, criado_em, atualizado_em';
 
   // Stream de talhões por propriedade
   Stream<List<Talhao>> getTalhoesStream(String propriedadeId) {
@@ -21,7 +22,7 @@ class TalhaoService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('propriedade_id', propriedadeId)
           .order('numero_talhao', ascending: true);
       
@@ -37,7 +38,7 @@ class TalhaoService {
     try {
       final data = await _supabase
           .from(_tableName)
-          .select()
+          .select(_cols)
           .eq('id', id)
           .maybeSingle();
       

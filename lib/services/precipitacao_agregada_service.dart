@@ -6,13 +6,14 @@ import '../models/precipitacao.dart';
 class PrecipitacaoAgregadaService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _table = 'precipitacoes';
+  static const String _cols = 'id, propriedade_id, municipio, data, mes, ano, milimetros, observacoes, criado_em, atualizado_em';
 
   /// Obtém todas as precipitações
   Future<List<Precipitacao>> getTodas() async {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .order('data', ascending: false);
 
       return (data as List).map((p) => Precipitacao.fromJson(p)).toList();
@@ -82,7 +83,7 @@ class PrecipitacaoAgregadaService {
     try {
       final data = await _supabase
           .from(_table)
-          .select()
+          .select(_cols)
           .eq('municipio', municipio)
           .order('data', ascending: false);
 
@@ -154,13 +155,13 @@ class PrecipitacaoAgregadaService {
       if (municipio != null) {
         data = await _supabase
             .from(_table)
-            .select()
+            .select(_cols)
             .eq('municipio', municipio)
             .order('data', ascending: true);
       } else {
         data = await _supabase
             .from(_table)
-            .select()
+            .select(_cols)
             .order('data', ascending: true);
       }
 
@@ -191,10 +192,10 @@ class PrecipitacaoAgregadaService {
       if (municipio != null) {
         data = await _supabase
             .from(_table)
-            .select()
+            .select(_cols)
             .eq('municipio', municipio);
       } else {
-        data = await _supabase.from(_table).select();
+        data = await _supabase.from(_table).select(_cols);
       }
 
       final precipitacoes = (data)
