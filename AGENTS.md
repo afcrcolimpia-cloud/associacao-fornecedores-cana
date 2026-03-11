@@ -256,7 +256,7 @@ Municipio  → lista em utils/municipios_sp.dart
 5. **NUNCA fazer mudanças no código sem commitar** — cada funcionalidade ou correção é um commit separado
 6. **Ordem obrigatória após qualquer alteração:**
    ```
-   flutter analyze → corrigir erros → git add . → git commit -m "descrição" → git push
+   flutter clean → flutter pub get → flutter analyze → corrigir erros → verificar Supabase (migration SQL se necessário) → git add . → git commit -m "descrição" → git push
    ```
 
 ### Fórmulas de Custo Operacional — Referência Oficial

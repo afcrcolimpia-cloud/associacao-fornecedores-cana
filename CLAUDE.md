@@ -264,7 +264,7 @@ Municipio  → lista em utils/municipios_sp.dart
 5. **NUNCA fazer mudanças no código sem commitar** — cada funcionalidade ou correção é um commit separado
 6. **Ordem obrigatória após qualquer alteração:**
    ```
-   flutter analyze → corrigir erros → git add . → git commit -m "descrição" → git push
+   flutter clean → flutter pub get → flutter analyze → corrigir erros → verificar Supabase (migration SQL se necessário) → git add . → git commit -m "descrição" → git push
    ```
 
 ### Fórmulas de Custo Operacional — Referência Oficial
@@ -314,12 +314,23 @@ Remover da raiz do projeto: `errors.txt`, `errors_gestao.txt`, `errors_utf8.txt`
 ---
 
 ### ⚠️ PADRÃO OBRIGATÓRIO APÓS CADA TAREFA COMPLETADA
-1. Rodar `flutter analyze` para verificar se há problemas
-2. Se houver erros/warnings: SEMPRE corrigi-los antes de continuar
-3. Rodar `/limpar` se houver arquivos temporários
-4. Fazer commit da tarefa finalizada
-5. **SOMENTE DEPOIS** passar para a próxima etapa
-6. Reportar resumo do progresso em Português
+1. Rodar `flutter clean` para limpar cache de build
+2. Rodar `flutter pub get` para garantir dependências atualizadas
+3. Rodar `flutter analyze` para verificar se há problemas
+4. Se houver erros/warnings: SEMPRE corrigi-los antes de continuar
+5. Verificar Supabase para TODA operação com banco de dados:
+   - Se criou/alterou tabela, coluna, RLS ou function → criar migration SQL em `lib/sql/`
+   - Se criou/alterou service com queries → conferir `.select('col1, col2')` (nunca `*`)
+   - Se criou tabela nova → garantir RLS ativa + policy
+   - Se alterou model → garantir que o service reflete os mesmos campos do banco
+   - Se houve qualquer mudança no schema → migration SQL obrigatória antes do commit
+6. Rodar `/limpar` se houver arquivos temporários
+7. Fazer `git add .` para adicionar todas as alterações
+8. Fazer `git commit -m "descrição da tarefa"` com mensagem descritiva em português
+9. Fazer `git push` para enviar ao GitHub
+10. Verificar no GitHub se o commit aparece corretamente
+11. **SOMENTE DEPOIS** passar para a próxima etapa
+12. Reportar resumo do progresso em Português
 
 ---
 
