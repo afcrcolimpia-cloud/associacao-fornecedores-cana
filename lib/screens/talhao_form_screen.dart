@@ -29,6 +29,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
   final _observacoesController = TextEditingController();
 
   String? _culturaSelecionada;
+  String _tipoTalhao = 'producao';
   bool _ativo = true;
   bool _isLoading = false;
   int _selectedNavigationIndex = 0;
@@ -86,6 +87,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
     }
     
     _variedadeController.text = talhao.variedade ?? '';
+    _tipoTalhao = talhao.tipoTalhao ?? 'producao';
     _ativo = talhao.ativo;
   }
 
@@ -151,6 +153,17 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  const Text(
+                    'Status',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  _buildTipoTalhaoField(),
+                  const SizedBox(height: 16),
                   SwitchListTile(
                     title: const Text('Talhão Ativo'),
                     subtitle: const Text('O talhão está em operação?'),
@@ -180,6 +193,26 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
           return 'Número do talhão é obrigatório';
         }
         return null;
+      },
+    );
+  }
+
+  Widget _buildTipoTalhaoField() {
+    return DropdownButtonFormField<String>(
+      value: _tipoTalhao,
+      decoration: const InputDecoration(
+        labelText: 'Tipo do Talhão',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.category),
+      ),
+      items: const [
+        DropdownMenuItem(value: 'producao', child: Text('Produção')),
+        DropdownMenuItem(value: 'reforma', child: Text('Reforma')),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          setState(() => _tipoTalhao = value);
+        }
       },
     );
   }
@@ -323,7 +356,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
         anoPlantio: widget.talhao?.anoPlantio,
         corte: widget.talhao?.corte,
         dataPlantio: widget.talhao?.dataPlantio,
-        tipoTalhao: widget.talhao?.tipoTalhao ?? 'producao',
+        tipoTalhao: _tipoTalhao,
         ativo: _ativo,
         observacoes: widget.talhao?.observacoes,
         criadoEm: widget.talhao?.criadoEm ?? DateTime.now(),

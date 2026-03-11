@@ -3,6 +3,7 @@ import '../models/models.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../constants/app_colors.dart';
+import '../services/talhao_service.dart';
 import 'talhoes_screen.dart';
 import 'tratos_culturais_screen.dart';
 import 'operacoes_cultivo_screen.dart';
@@ -28,6 +29,33 @@ class PropriedadeHubScreen extends StatefulWidget {
 
 class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
   int _selectedIndex = 0;
+  final TalhaoService _talhaoService = TalhaoService();
+  double _areaTotalHa = 0;
+  double _areaReformaHa = 0;
+  int _qtdTalhoes = 0;
+  bool _carregandoEstatisticas = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarEstatisticas();
+  }
+
+  Future<void> _carregarEstatisticas() async {
+    final talhoes = await _talhaoService.getTalhoesPorPropriedade(
+      widget.contexto.propriedade.id,
+    );
+    if (mounted) {
+      setState(() {
+        _qtdTalhoes = talhoes.length;
+        _areaTotalHa = talhoes.fold<double>(0, (s, t) => s + (t.areaHa ?? 0));
+        _areaReformaHa = talhoes
+            .where((t) => t.isReforma)
+            .fold<double>(0, (s, t) => s + (t.areaHa ?? 0));
+        _carregandoEstatisticas = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +73,17 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
         ),
         body: Column(
           children: [
-            HeaderPropriedade(contexto: widget.contexto),
+            HeaderPropriedade(
+              contexto: widget.contexto,
+              infoExtra: _carregandoEstatisticas
+                  ? []
+                  : [
+                      MapEntry('Área Total', '${_areaTotalHa.toStringAsFixed(1)} ha'),
+                      MapEntry('Reforma', '${_areaReformaHa.toStringAsFixed(1)} ha'),
+                      MapEntry('Área Líquida', '${(_areaTotalHa - _areaReformaHa).toStringAsFixed(1)} ha'),
+                      MapEntry('Talhões', '$_qtdTalhoes'),
+                    ],
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -147,8 +185,8 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
     );
   }
 
-  void _navegarParaTalhoes() {
-    Navigator.push(
+  void _navegarParaTalhoes() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => TalhoesScreen(
@@ -156,6 +194,7 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
         ),
       ),
     );
+    _carregarEstatisticas();
   }
 
   void _navegarParaTratos() {
