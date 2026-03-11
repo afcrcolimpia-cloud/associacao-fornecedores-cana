@@ -12,7 +12,8 @@ class AnaliseSoloService {
       'acidez_potencial, aluminio, somas_bases, ctc, saturacao_bases, '
       'boro, cobre, ferro, manganes, zinco, '
       'argila, silte, areia, '
-      'observacoes, criado_em, atualizado_em';
+      'observacoes, cultura, prnt, produtividade_esperada, '
+      'criado_em, atualizado_em';
 
   /// Stream de análises por propriedade
   Stream<List<AnaliseSolo>> getAnalisesPorPropriedadeStream(String propriedadeId) {
@@ -107,6 +108,9 @@ class AnaliseSoloService {
         'silte': analise.silte,
         'areia': analise.areia,
         'observacoes': analise.observacoes,
+        'cultura': analise.cultura,
+        'prnt': analise.prnt,
+        'produtividade_esperada': analise.produtividadeEsperada,
       });
     } catch (e) {
       debugPrint('Erro ao criar análise: $e');
@@ -145,6 +149,9 @@ class AnaliseSoloService {
         'silte': analise.silte,
         'areia': analise.areia,
         'observacoes': analise.observacoes,
+        'cultura': analise.cultura,
+        'prnt': analise.prnt,
+        'produtividade_esperada': analise.produtividadeEsperada,
         'atualizado_em': DateTime.now().toIso8601String(),
       }).eq('id', analise.id);
     } catch (e) {

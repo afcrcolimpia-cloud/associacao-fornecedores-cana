@@ -12,7 +12,7 @@ import 'precipitacao_screen.dart';
 import 'custo_operacional_screen.dart';
 import 'anexos_screen.dart';
 import 'formularios_pdf_screen.dart';
-import 'interpretacao_analise_solo_screen.dart';
+import 'analise_solo_screen.dart';
 
 /// Tela central (Hub) de uma propriedade
 /// Agrupa todos os módulos operacionais e dados da propriedade
@@ -274,7 +274,7 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => InterpretacaoAnaliseSoloScreen(
+        builder: (context) => AnaliseSoloScreen(
           contexto: widget.contexto,
         ),
       ),

@@ -45,9 +45,17 @@ CREATE TABLE IF NOT EXISTS analises_solo (
     areia NUMERIC(6,1),                -- g/kg
 
     observacoes TEXT,
+    cultura TEXT,
+    prnt NUMERIC(5,1),
+    produtividade_esperada NUMERIC(8,1),
     criado_em TIMESTAMPTZ DEFAULT NOW(),
     atualizado_em TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Caso a tabela já exista, adicionar as novas colunas:
+-- ALTER TABLE analises_solo ADD COLUMN IF NOT EXISTS cultura TEXT;
+-- ALTER TABLE analises_solo ADD COLUMN IF NOT EXISTS prnt NUMERIC(5,1);
+-- ALTER TABLE analises_solo ADD COLUMN IF NOT EXISTS produtividade_esperada NUMERIC(8,1);
 
 -- Índices
 CREATE INDEX IF NOT EXISTS idx_analises_solo_propriedade ON analises_solo(propriedade_id);
