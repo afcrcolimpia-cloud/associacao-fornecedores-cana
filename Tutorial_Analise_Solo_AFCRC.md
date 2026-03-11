@@ -262,27 +262,33 @@ NC = [mt × Al − mt² × H+Al + (X × 10 − Ca − Mg)] × 10 ÷ PRNT
 | 🟡 Amarelo | Até 2 t/ha | Planejar para próxima safra |
 | 🔴 Vermelho | Acima de 2 t/ha | Ação urgente — consultar agrônomo |
 
+> ❗ **Dose mínima para Cana-de-açúcar (B-100 2022):** quando calagem for necessária, a dose não deve ser inferior a **1,5 t/ha** (PRNT = 100%). O sistema aplica esse mínimo automaticamente.
+
 ---
 
 ## 9. Gessagem e Relações Iônicas
 
 ### 💧 Gessagem
 
-**Quando aplicar:** os **dois critérios** precisam ser verdadeiros ao mesmo tempo:
-- Ca²⁺ ≤ 8 mmolc/dm³ **E**
-- V% ≤ 30%
+**Quando aplicar (B-100 2022):** basta **um** dos critérios ser verdadeiro:
+- V% (saturação por bases) **< 40%**, **OU**
+- m% (saturação por alumínio) **> 30%**
 
-**Fórmula da dose:**
+> ⚠️ O B-100 recomenda avaliar esses critérios na camada de **25–50 cm** de profundidade.
+
+**Fórmula da dose (B-100 2022):**
 ```
-Dose (t/ha) = (50 − V%) × CTC ÷ 500
+Dose (kg/ha) = Argila (g/kg) × 6
 ```
+*Exemplo: 35% de argila = 350 g/kg × 6 = 2.100 kg/ha = 2,1 t/ha*
 
 **Como aplicar:** Incorporar a 20–40 cm de profundidade.
 
 | Semáforo | Situação |
 |---|---|
-| 🟢 Verde | Ca > 8 mmolc **ou** V% > 30% — não necessária |
-| 🔴 Vermelho | Ca ≤ 8 mmolc **e** V% ≤ 30% — aplicar |
+| 🟢 Verde | V% ≥ 40% **e** m% ≤ 30% — não necessária |
+| 🟡 Amarelo | Gessagem não necessária, mas S-SO₄²⁻ < 15 mg/dm³ — aplicar 1 t/ha como fonte de S |
+| 🔴 Vermelho | V% < 40% **ou** m% > 30% — aplicar gesso |
 
 ---
 

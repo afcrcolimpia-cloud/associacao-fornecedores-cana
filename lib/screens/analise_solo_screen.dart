@@ -548,6 +548,13 @@ class _AnaliseSoloScreenState extends State<AnaliseSoloScreen>
             _linhaCalc('Método 2 (Neutraliz. Al)', '${r.calagemMetodo2.toStringAsFixed(2)} t/ha'),
             _linhaCalc('Resultado Final (maior)', '${r.calagemFinal.toStringAsFixed(2)} t/ha',
                 bold: true),
+            if (r.doseMinimaCalagemAplicada)
+              const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Text('* Dose mínima 1,5 t/ha (PRNT=100%) aplicada — B-100 2022',
+                    style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic,
+                        color: AppColors.newWarning)),
+              ),
           ],
         ),
       ),
@@ -575,8 +582,14 @@ class _AnaliseSoloScreenState extends State<AnaliseSoloScreen>
             ]),
             if (r.gessagemNecessaria) ...[
               const SizedBox(height: 8),
-              const Text('Critérios atendidos: Ca²⁺ ≤ 8 mmolc/dm³ e V% ≤ 30%',
+              const Text('Critérios B-100: V% < 40% ou m% > 30%',
                   style: TextStyle(fontSize: 11, color: AppColors.newTextSecondary)),
+            ],
+            if (r.fonteS) ...[
+              const SizedBox(height: 8),
+              Text('Fonte de S: aplicar ${r.doseFonteS.toStringAsFixed(1)} t/ha de gesso '
+                  '(S-SO₄²⁻ < 15 mg/dm³)',
+                  style: const TextStyle(fontSize: 11, color: AppColors.newWarning)),
             ],
           ],
         ),

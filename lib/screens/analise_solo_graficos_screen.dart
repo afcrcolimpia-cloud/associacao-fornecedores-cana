@@ -313,6 +313,14 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
 
   Widget _buildCardGessagem(ResultadoInterpretacao r) {
     final cor = _corSemaforo(r.semaforoGessagem);
+    String texto;
+    if (r.gessagemNecessaria) {
+      texto = '${r.gessagemDose.toStringAsFixed(2)} t/ha';
+    } else if (r.fonteS) {
+      texto = 'Fonte S: ${r.doseFonteS.toStringAsFixed(1)} t/ha';
+    } else {
+      texto = 'Não necessária';
+    }
     return Card(
       color: AppColors.surfaceDark,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -329,8 +337,7 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
               color: cor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(r.gessagemNecessaria
-                ? '${r.gessagemDose.toStringAsFixed(2)} t/ha' : 'Não necessária',
+            child: Text(texto,
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: cor)),
           ),
         ]),

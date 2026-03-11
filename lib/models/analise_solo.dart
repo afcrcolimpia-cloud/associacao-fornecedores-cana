@@ -354,6 +354,9 @@ class ResultadoInterpretacao {
   final bool gessagemNecessaria;
   final double gessagemDose;
   final SemaforoSolo semaforoGessagem;
+  final bool fonteS;                      // Recomenda gesso como fonte de S (1 t/ha)
+  final double doseFonteS;                // 0.0 ou 1.0 t/ha
+  final bool doseMinimaCalagemAplicada;   // Dose mínima 1,5 t/ha (B-100 2022, cana)
   final double? relacaoCaMg;
   final double? relacaoCaK;
   final double? relacaoMgK;
@@ -376,6 +379,9 @@ class ResultadoInterpretacao {
     required this.gessagemNecessaria,
     required this.gessagemDose,
     required this.semaforoGessagem,
+    this.fonteS = false,
+    this.doseFonteS = 0.0,
+    this.doseMinimaCalagemAplicada = false,
     this.relacaoCaMg,
     this.relacaoCaK,
     this.relacaoMgK,
@@ -584,20 +590,30 @@ class InterpretacaoBoletim100 {
     return SemaforoSolo.vermelho;
   }
 
-  // ═══ Gessagem (Tutorial seção 9) ═══
+  // ═══ Gessagem — B-100 2022 (Cana-de-açúcar, p.180) ═══
 
-  /// Necessária quando Ca ≤ 8 mmolc/dm³ E V% ≤ 30%
-  static bool gessagemNecessaria(double ca, double vPercent) =>
-      ca <= 8 && vPercent <= 30;
+  /// B-100 2022: V% < 40% OU saturação por Al (m%) > 30%
+  /// Nota: O B-100 recomenda avaliar na camada 25-50 cm
+  static bool gessagemNecessaria(double vPercent, double mtPercent) =>
+      vPercent < 40 || mtPercent > 30;
 
-  /// Dose (t/ha) = (50 − V%) × CTC ÷ 500
-  static double gessagemDose(double vPercent, double ctc) {
-    if (vPercent >= 50) return 0;
-    return (50 - vPercent) * ctc / 500;
+  /// B-100 2022: Argila (g/kg) × 6 = kg/ha de gesso
+  /// [argilaPercent]: valor em % (ex: 35 para 35%)
+  static double gessagemDose(double? argilaPercent) {
+    if (argilaPercent == null || argilaPercent <= 0) return 0;
+    return argilaPercent * 10 * 6 / 1000; // % → g/kg × 6 → kg/ha → t/ha
   }
 
-  static SemaforoSolo semaforoGessagem(bool necessaria) =>
-      necessaria ? SemaforoSolo.vermelho : SemaforoSolo.verde;
+  /// B-100 2022: Se gessagem não necessária mas S-SO₄²⁻ < 15 mg/dm³
+  /// na camada 25-50 cm → aplicar 1 t/ha de gesso como fonte de S
+  static bool gessagemFonteS(bool gessNecessaria, double? enxofre) =>
+      !gessNecessaria && enxofre != null && enxofre < 15;
+
+  static SemaforoSolo semaforoGessagem(bool necessaria, bool fonteS) {
+    if (necessaria) return SemaforoSolo.vermelho;
+    if (fonteS) return SemaforoSolo.amarelo;
+    return SemaforoSolo.verde;
+  }
 
   // ═══ Relações iônicas (Tutorial seção 9) ═══
 
@@ -781,11 +797,25 @@ class InterpretacaoBoletim100 {
       al: al, hAl: hAl, xCmolc: cultura.xCmolc,
       ca: ca, mg: mg, prnt: prnt,
     );
-    final ncFinal = nc1 > nc2 ? nc1 : nc2;
+    var ncFinal = nc1 > nc2 ? nc1 : nc2;
 
-    // Gessagem
-    final gessNec = gessagemNecessaria(ca, vPercent);
-    final gessDose = gessNec ? gessagemDose(vPercent, ctc) : 0.0;
+    // B-100 2022 (Cana): dose mínima 1,5 t/ha (PRNT=100%)
+    bool minimoAplicado = false;
+    if (cultura.nome == 'CANA-DE-AÇÚCAR' && ncFinal > 0 && prnt > 0) {
+      final minimo = 150 / prnt; // 1,5 t/ha ajustado para PRNT
+      if (ncFinal < minimo) {
+        ncFinal = minimo;
+        minimoAplicado = true;
+      }
+    }
+
+    // Gessagem — B-100 2022: V% < 40% OU m% > 30%
+    final gessNec = gessagemNecessaria(vPercent, mtPercent);
+    final gessDose = gessNec ? gessagemDose(argilaPercent) : 0.0;
+
+    // Fonte de S — B-100 2022: se S < 15 mg/dm³ e gessagem não necessária → 1 t/ha
+    final fonteS = InterpretacaoBoletim100.gessagemFonteS(gessNec, s);
+    final doseFonteS = fonteS ? 1.0 : 0.0;
 
     // Relações iônicas
     final rCaMg = mg > 0 ? ca / mg : null;
@@ -806,7 +836,10 @@ class InterpretacaoBoletim100 {
       semaforoCalagem: semaforoCalagem(ncFinal),
       gessagemNecessaria: gessNec,
       gessagemDose: gessDose,
-      semaforoGessagem: semaforoGessagem(gessNec),
+      semaforoGessagem: semaforoGessagem(gessNec, fonteS),
+      fonteS: fonteS,
+      doseFonteS: doseFonteS,
+      doseMinimaCalagemAplicada: minimoAplicado,
       relacaoCaMg: rCaMg,
       relacaoCaK: rCaK,
       relacaoMgK: rMgK,
