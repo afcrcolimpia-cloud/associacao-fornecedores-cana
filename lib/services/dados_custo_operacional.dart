@@ -11,7 +11,7 @@ class DadosCustoOperacional {
     longevidade: 5,
     doseMuda: 16,
     precoDiesel: 5.899,
-    custoAdmin: 168.0, // R$/ha fixo — NÃO é percentual
+    custoAdmin: 10.0, // Percentual (%) sobre subtotal operacional
     arrendamento: 16.5,
     atrArrend: 118,
     precoATR: 1.1945,
@@ -528,7 +528,8 @@ class DadosCustoOperacional {
     final plantHa   = plantio.total;
     final manutHa   = manutencaoSoqueira.total;
     final colhHa    = colheita.total;
-    final admHa     = p.custoAdmin; // R$/ha fixo
+    final subtotalHa = conservHa + prepHa + plantHa + manutHa + colhHa;
+    final admHa     = subtotalHa * (p.custoAdmin / 100); // Admin em %
     final arrendHa  = p.arrendamento * p.atrArrend * p.precoATR;
     final formHa    = conservHa + prepHa + plantHa;
     final totHa     = formHa + manutHa + colhHa + admHa + arrendHa;
@@ -606,7 +607,8 @@ class DadosCustoOperacional {
     final formHa   = conservacaoSolo.total + preparoSolo.total + plantio.total;
     final manutHa  = manutencaoSoqueira.total;
     final colhHa   = colheita.total;
-    final admHa    = p.custoAdmin;
+    final subtotalHa = formHa + manutHa + colhHa;
+    final admHa    = subtotalHa * (p.custoAdmin / 100); // Admin em %
     final arrendHa = p.arrendamento * p.atrArrend * p.precoATR;
     final prod     = p.produtividade;
     final atr      = p.atr.toDouble();

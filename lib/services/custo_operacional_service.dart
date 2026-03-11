@@ -723,6 +723,23 @@ class CustoOperacionalService {
     return totalOperacional / (atr * produtividade);
   }
 
+  /// Recalcula todos os cenários ativos no Supabase (migração de dados)
+  Future<int> recalcularTodosCenarios() async {
+    final data = await _supabase
+        .from(tableName)
+        .select('id')
+        .eq('ativo', true);
+    int count = 0;
+    for (final row in data as List) {
+      final id = row['id'] as String?;
+      if (id != null) {
+        await recalcularTotaisCenario(id);
+        count++;
+      }
+    }
+    return count;
+  }
+
   Future<void> recalcularTotaisCenario(String cenarioId) async {
     final cenarioAtual = await getCenario(cenarioId);
     if (cenarioAtual == null) return;
@@ -778,8 +795,8 @@ class CustoOperacionalService {
     // (custos que ocorrem apenas 1 vez no ciclo de vida)
         administrativoHa +
 
-    // Custo Administrativo: valor fixo em R$/ha — NÃO é calculado como %
-    // O campo custoAdmin do model armazena R$/ha (padrão AFCRC 2026: R$ 168,00)
+    // Custo Administrativo: percentual (%) sobre subtotal operacional
+    // Padrão AFCRC 2026: 10% do subtotal (Conservação + Preparo + Plantio + Manutenção + Colheita)
         arrendamentoHa;
 
     // Arrendamento = arrendamento (t/ha) × ATR arrend. (kg/t) × Preço ATR (R$/kg)

@@ -28,6 +28,24 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
   final _service = CustoOperacionalService();
   String? _cenarioSelecionadoId;
   int _selectedNavigationIndex = 0;
+  bool _recalculado = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _recalcularCenariosOnce();
+  }
+
+  Future<void> _recalcularCenariosOnce() async {
+    if (_recalculado) return;
+    _recalculado = true;
+    try {
+      final count = await _service.recalcularTodosCenarios();
+      debugPrint('Recálculo concluído: $count cenários atualizados');
+    } catch (e) {
+      debugPrint('Erro ao recalcular cenários: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
