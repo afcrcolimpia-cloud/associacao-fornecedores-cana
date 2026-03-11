@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/variedade_dropdown_widget.dart';
 import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
@@ -25,8 +26,9 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
   final _numeroController = TextEditingController();
   final _areaHaController = TextEditingController();
   final _areaAlqueiresController = TextEditingController();
-  final _variedadeController = TextEditingController();
   final _observacoesController = TextEditingController();
+
+  String? _variedadeId;
 
   String? _culturaSelecionada;
   String _tipoTalhao = 'producao';
@@ -86,7 +88,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
       _culturaSelecionada = null;
     }
     
-    _variedadeController.text = talhao.variedade ?? '';
+    _variedadeId = talhao.variedade;
     _tipoTalhao = talhao.tipoTalhao ?? 'producao';
     _ativo = talhao.ativo;
   }
@@ -96,7 +98,6 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
     _numeroController.dispose();
     _areaHaController.dispose();
     _areaAlqueiresController.dispose();
-    _variedadeController.dispose();
     _observacoesController.dispose();
     super.dispose();
   }
@@ -248,13 +249,11 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
   }
 
   Widget _buildVariedadeField() {
-    return TextFormField(
-      controller: _variedadeController,
-      decoration: const InputDecoration(
-        labelText: 'Variedade Principal',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.nature),
-      ),
+    return VariedadeDropdownWidget(
+      variedadeSelecionada: _variedadeId,
+      onChanged: (value) {
+        setState(() => _variedadeId = value);
+      },
     );
   }
 
@@ -350,9 +349,7 @@ class _TalhaoFormScreenState extends State<TalhaoFormScreen> {
             ? null
             : double.parse(_areaAlqueiresController.text),
         cultura: culturaNormalizada,
-        variedade: _variedadeController.text.isEmpty
-            ? null
-            : _variedadeController.text,
+        variedade: _variedadeId,
         anoPlantio: widget.talhao?.anoPlantio,
         corte: widget.talhao?.corte,
         dataPlantio: widget.talhao?.dataPlantio,

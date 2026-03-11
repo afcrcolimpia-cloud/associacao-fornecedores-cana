@@ -6,7 +6,7 @@ import '../models/variedade.dart';
 class VariedadeService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _table = 'variedades';
-  static const String _cols = 'id, codigo, nome, caracteristicas, ambiente_producao, meses_colheita, ativa, criado_em, atualizado_em';
+  static const String _cols = 'id, codigo, nome, instituicao, destaque, ambiente_producao, epoca_colheita, ativa, criado_em, atualizado_em';
 
   /// Obtém todas as variedades ativas
   Future<List<Variedade>> getVariedadesAtivas() async {
@@ -84,13 +84,7 @@ class VariedadeService {
         throw Exception('Código da variedade é obrigatório');
       }
 
-      final now = DateTime.now();
-      final variedadeParaInserir = variedade.copyWith(
-        criadoEm: now,
-        atualizadoEm: now,
-      );
-
-      await _supabase.from(_table).insert(variedadeParaInserir.toJson());
+      await _supabase.from(_table).insert(variedade.toJson());
     } catch (e) {
       throw Exception('Erro ao criar variedade: $e');
     }
@@ -103,13 +97,9 @@ class VariedadeService {
         throw Exception('ID da variedade é obrigatório');
       }
 
-      final variedadeParaAtualizar = variedade.copyWith(
-        atualizadoEm: DateTime.now(),
-      );
-
       await _supabase
           .from(_table)
-          .update(variedadeParaAtualizar.toJson())
+          .update(variedade.toJson())
           .eq('id', variedade.id);
     } catch (e) {
       throw Exception('Erro ao atualizar variedade: $e');
@@ -148,19 +138,21 @@ class VariedadeService {
     }
   }
 
-  /// Buscar variedades por ambiente de produção
-  Future<List<Variedade>> getVariedadesPorAmbiente(String ambiente) async {
+  /// Recomendar variedades por ambiente de produção e mês de colheita
+  Future<List<Variedade>> recomendar({
+    required String ambiente,
+    String? mes,
+  }) async {
     try {
-      final data = await _supabase
-          .from(_table)
-          .select(_cols)
-          .eq('ambiente_producao', ambiente)
-          .eq('ativa', true)
-          .order('codigo', ascending: true);
+      final variedades = await getVariedadesAtivas();
 
-      return (data as List).map((v) => Variedade.fromJson(v)).toList();
+      return variedades.where((v) {
+        final ambienteOk = v.ambienteProducao.contains(ambiente);
+        final mesOk = mes == null || mes.isEmpty || v.epocaColheita.contains(mes);
+        return ambienteOk && mesOk;
+      }).toList();
     } catch (e) {
-      throw Exception('Erro ao buscar variedades por ambiente: $e');
+      throw Exception('Erro ao recomendar variedades: $e');
     }
   }
 }

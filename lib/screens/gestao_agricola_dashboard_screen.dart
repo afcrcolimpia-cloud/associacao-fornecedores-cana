@@ -367,7 +367,7 @@ class _GestaoAgricolaDashboardScreenState
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          variedade.caracteristicas,
+                          variedade.destaque,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             color: AppColors.newTextSecondary,
