@@ -99,42 +99,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
               builder: (context, snapshotTalhoes) {
                 final totalTalhoes = snapshotTalhoes.data ?? 0;
 
-                return Column(
+                return GridView.count(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.6,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   children: [
                     KpiCard(
                       label: 'Total de Proprietários',
                       value: proprietarios.length.toString(),
                       icon: Icons.people,
                       iconColor: AppColors.newPrimary,
-                      variation: 0,
-                      isPositive: true,
                     ),
-                    const SizedBox(height: 8),
                     KpiCard(
                       label: 'Total de Propriedades',
                       value: propriedades.length.toString(),
                       icon: Icons.home_work,
                       iconColor: AppColors.newSuccess,
-                      variation: 0,
-                      isPositive: true,
                     ),
-                    const SizedBox(height: 8),
                     KpiCard(
                       label: 'Total de Talhões',
                       value: totalTalhoes.toString(),
                       icon: Icons.landscape,
                       iconColor: AppColors.newWarning,
-                      variation: 0,
-                      isPositive: true,
                     ),
-                    const SizedBox(height: 8),
                     KpiCard(
                       label: 'Área Total (ha)',
                       value: areaTotal.toStringAsFixed(1),
                       icon: Icons.terrain,
                       iconColor: AppColors.newInfo,
-                      variation: 0,
-                      isPositive: true,
                     ),
                   ],
                 );

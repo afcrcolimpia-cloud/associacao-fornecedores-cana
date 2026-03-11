@@ -27,7 +27,7 @@ class KpiCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
           border: Border.all(
@@ -53,7 +53,7 @@ class KpiCard extends StatelessWidget {
                   child: Icon(
                     icon,
                     color: iconColor ?? AppColors.newPrimary,
-                    size: 24,
+                    size: 20,
                   ),
                 ),
                 if (variation != null)
@@ -81,22 +81,24 @@ class KpiCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             // Label
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: AppColors.newTextSecondary,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             // Value
             Text(
               value,
               style: GoogleFonts.inter(
-                fontSize: 32,
+                fontSize: 24,
                 fontWeight: FontWeight.w700,
                 color: AppColors.newTextPrimary,
               ),
