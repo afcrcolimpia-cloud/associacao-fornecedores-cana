@@ -4,6 +4,8 @@ import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
 import '../services/variedade_service.dart';
+import '../services/proprietario_service.dart';
+import '../services/propriedade_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/kpi_card.dart';
 
@@ -17,78 +19,50 @@ class GestaoAgricolaDashboardScreen extends StatefulWidget {
 
 class _GestaoAgricolaDashboardScreenState
     extends State<GestaoAgricolaDashboardScreen> {
-  late TalhaoService _talhaoService;
-  late VariedadeService _variedadeService;
+  final _talhaoService = TalhaoService();
+  final _variedadeService = VariedadeService();
+  final _proprietarioService = ProprietarioService();
+  final _propriedadeService = PropriedadeService();
 
   List<Talhao> _talhoes = [];
   List<Variedade> _variedades = [];
+  List<Proprietario> _proprietarios = [];
+  List<Propriedade> _propriedades = [];
 
-  bool _loadingTalhoes = true;
-  bool _loadingVariedades = true;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _talhaoService = TalhaoService();
-    _variedadeService = VariedadeService();
     _loadData();
   }
 
   Future<void> _loadData() async {
-    await Future.wait([
-      _loadTalhoes(),
-      _loadVariedades(),
-    ]);
-  }
-
-  Future<void> _loadTalhoes() async {
     try {
-      final talhoes = await _talhaoService.getTalhoesPorPropriedade('dummy');
+      final results = await Future.wait([
+        _talhaoService.getAllTalhoes(),
+        _variedadeService.getVariedadesAtivas(),
+        _proprietarioService.getProprietarios(),
+        _propriedadeService.getPropriedades(),
+      ]);
       if (mounted) {
         setState(() {
-          _talhoes = talhoes.where((t) => t.areaHa != null && t.areaHa! > 0).toList();
-          _loadingTalhoes = false;
+          _talhoes = results[0] as List<Talhao>;
+          _variedades = results[1] as List<Variedade>;
+          _proprietarios = results[2] as List<Proprietario>;
+          _propriedades = results[3] as List<Propriedade>;
+          _loading = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _talhoes = [];
-          _loadingTalhoes = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _loadVariedades() async {
-    try {
-      final variedades = await _variedadeService.getAllVariedades();
-      if (mounted) {
-        setState(() {
-          _variedades = variedades;
-          _loadingVariedades = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _variedades = [];
-          _loadingVariedades = false;
-        });
+        setState(() => _loading = false);
       }
     }
   }
 
   double _getTotalArea() {
-    if (_talhoes.isEmpty) return 0;
     return _talhoes.fold<double>(0, (sum, t) => sum + (t.areaHa ?? 0));
-  }
-
-  int _getTotalTalhoes() => _talhoes.length;
-
-  String _getVariedadeMaisCultivada() {
-    if (_variedades.isEmpty) return 'N/A';
-    return _variedades.first.nome;
   }
 
   @override
@@ -97,98 +71,112 @@ class _GestaoAgricolaDashboardScreenState
       selectedIndex: 0,
       title: 'Gestão Agrícola',
       onNavigationSelect: (_) {},
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Título
-            Text(
-              'Dashboard de Gestão Agrícola',
-              style: GoogleFonts.inter(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppColors.newTextPrimary,
+      child: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dashboard de Gestão Agrícola',
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.newTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Visão geral consolidada — dados reais do sistema',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: AppColors.newTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  _buildKPIGrid(),
+                  const SizedBox(height: 32),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (constraints.maxWidth > 900) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildTalhoesCard()),
+                            const SizedBox(width: 24),
+                            Expanded(child: _buildVariedadesCard()),
+                          ],
+                        );
+                      }
+                      return Column(
+                        children: [
+                          _buildTalhoesCard(),
+                          const SizedBox(height: 24),
+                          _buildVariedadesCard(),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Visão geral da propriedade e monitoramento técnico',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppColors.newTextSecondary,
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Grid de KPI Cards
-            _buildKPIGrid(),
-            const SizedBox(height: 32),
-
-            // Grid duas colunas: Talhões + Variedades
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth > 900) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: _buildTalhoesCard(),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        flex: 1,
-                        child: _buildVariedadesCard(),
-                      ),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    children: [
-                      _buildTalhoesCard(),
-                      const SizedBox(height: 24),
-                      _buildVariedadesCard(),
-                    ],
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   Widget _buildKPIGrid() {
-    return Column(
+    final totalArea = _getTotalArea();
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
       children: [
-        KpiCard(
-          label: 'Talhões Ativos',
-          value: '${_getTotalTalhoes()}',
-          icon: Icons.grid_view_outlined,
-          iconColor: AppColors.newPrimary,
+        SizedBox(
+          width: 220,
+          child: KpiCard(
+            label: 'Proprietários',
+            value: '${_proprietarios.length}',
+            icon: Icons.people_outlined,
+            iconColor: AppColors.newPrimary,
+          ),
         ),
-        const SizedBox(height: 8),
-        KpiCard(
-          label: 'Área Total',
-          value: '${_getTotalArea().toStringAsFixed(1)} ha',
-          icon: Icons.agriculture_outlined,
-          iconColor: AppColors.newSuccess,
+        SizedBox(
+          width: 220,
+          child: KpiCard(
+            label: 'Propriedades',
+            value: '${_propriedades.length}',
+            icon: Icons.home_work_outlined,
+            iconColor: AppColors.newInfo,
+          ),
         ),
-        const SizedBox(height: 8),
-        const KpiCard(
-          label: 'Produtividade',
-          value: 'N/A',
-          icon: Icons.trending_up_outlined,
-          iconColor: AppColors.newInfo,
+        SizedBox(
+          width: 220,
+          child: KpiCard(
+            label: 'Talhões',
+            value: '${_talhoes.length}',
+            icon: Icons.grid_view_outlined,
+            iconColor: AppColors.newSuccess,
+          ),
         ),
-        const SizedBox(height: 8),
-        KpiCard(
-          label: 'Variedade',
-          value: _getVariedadeMaisCultivada(),
-          icon: Icons.eco_outlined,
-          iconColor: AppColors.newWarning,
+        SizedBox(
+          width: 220,
+          child: KpiCard(
+            label: 'Área Total',
+            value: totalArea > 0
+                ? '${totalArea.toStringAsFixed(1)} ha'
+                : 'Nenhum dado',
+            icon: Icons.agriculture_outlined,
+            iconColor: AppColors.newWarning,
+          ),
+        ),
+        SizedBox(
+          width: 220,
+          child: KpiCard(
+            label: 'Variedades',
+            value: '${_variedades.length}',
+            icon: Icons.eco_outlined,
+            iconColor: Colors.teal,
+          ),
         ),
       ],
     );
@@ -204,19 +192,14 @@ class _GestaoAgricolaDashboardScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                const Icon(
-                  Icons.grid_view,
-                  color: AppColors.newPrimary,
-                  size: 24,
-                ),
+                const Icon(Icons.grid_view, color: AppColors.newPrimary, size: 24),
                 const SizedBox(width: 12),
                 Text(
-                  'Talhões',
+                  'Talhões (${_talhoes.length})',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -226,62 +209,57 @@ class _GestaoAgricolaDashboardScreenState
               ],
             ),
           ),
-
-          // Conteúdo
-          if (_loadingTalhoes)
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_talhoes.isEmpty)
+          if (_talhoes.isEmpty)
             Padding(
               padding: const EdgeInsets.all(20),
               child: Center(
                 child: Text(
                   'Nenhum talhão cadastrado',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.newTextMuted,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextMuted),
                 ),
               ),
             )
           else
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _talhoes.length,
-                separatorBuilder: (_, __) => const Divider(
-                  color: AppColors.borderDark,
-                  height: 1,
-                ),
-                itemBuilder: (context, index) {
-                  final talhao = _talhoes[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          talhao.nome,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.newTextPrimary,
-                          ),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              itemCount: _talhoes.length > 10 ? 10 : _talhoes.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(color: AppColors.borderDark, height: 1),
+              itemBuilder: (context, index) {
+                final talhao = _talhoes[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        talhao.nome,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.newTextPrimary,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${talhao.areaHa?.toStringAsFixed(1) ?? "N/A"} ha',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: AppColors.newTextSecondary,
-                          ),
+                      ),
+                      Text(
+                        '${talhao.areaHa?.toStringAsFixed(1) ?? "N/A"} ha',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.newTextSecondary,
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          if (_talhoes.length > 10)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Text(
+                '+ ${_talhoes.length - 10} talhões não exibidos',
+                style: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
               ),
             ),
         ],
@@ -299,19 +277,14 @@ class _GestaoAgricolaDashboardScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                const Icon(
-                  Icons.eco,
-                  color: AppColors.newWarning,
-                  size: 24,
-                ),
+                const Icon(Icons.eco, color: AppColors.newWarning, size: 24),
                 const SizedBox(width: 12),
                 Text(
-                  'Variedades',
+                  'Variedades (${_variedades.length})',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -321,43 +294,33 @@ class _GestaoAgricolaDashboardScreenState
               ],
             ),
           ),
-
-          // Conteúdo
-          if (_loadingVariedades)
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_variedades.isEmpty)
+          if (_variedades.isEmpty)
             Padding(
               padding: const EdgeInsets.all(20),
               child: Center(
                 child: Text(
                   'Nenhuma variedade cadastrada',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.newTextMuted,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.newTextMuted),
                 ),
               ),
             )
           else
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _variedades.length,
-                separatorBuilder: (_, __) => const Divider(
-                  color: AppColors.borderDark,
-                  height: 1,
-                ),
-                itemBuilder: (context, index) {
-                  final variedade = _variedades[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              itemCount: _variedades.length > 10 ? 10 : _variedades.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(color: AppColors.borderDark, height: 1),
+              itemBuilder: (context, index) {
+                final variedade = _variedades[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
                           variedade.nome,
                           style: GoogleFonts.inter(
                             fontSize: 13,
@@ -365,18 +328,29 @@ class _GestaoAgricolaDashboardScreenState
                             color: AppColors.newTextPrimary,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
+                      ),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
                           variedade.destaque,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             color: AppColors.newTextSecondary,
                           ),
+                          textAlign: TextAlign.end,
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          if (_variedades.length > 10)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Text(
+                '+ ${_variedades.length - 10} variedades não exibidas',
+                style: GoogleFonts.inter(fontSize: 11, color: AppColors.newTextMuted),
               ),
             ),
         ],

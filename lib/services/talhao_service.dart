@@ -17,6 +17,21 @@ class TalhaoService {
         .map((data) => data.map((json) => Talhao.fromJson(json)).toList());
   }
 
+  // Buscar TODOS os talhões de todas as propriedades
+  Future<List<Talhao>> getAllTalhoes() async {
+    try {
+      final data = await _supabase
+          .from(_tableName)
+          .select(_cols)
+          .order('numero_talhao', ascending: true);
+
+      return data.map((json) => Talhao.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('Erro ao buscar todos os talhões: $e');
+      return [];
+    }
+  }
+
   // Buscar talhões por propriedade
   Future<List<Talhao>> getTalhoesPorPropriedade(String propriedadeId) async {
     try {
