@@ -12,6 +12,7 @@ import 'precipitacao_screen.dart';
 import 'custo_operacional_screen.dart';
 import 'anexos_screen.dart';
 import 'formularios_pdf_screen.dart';
+import 'interpretacao_analise_solo_screen.dart';
 
 /// Tela central (Hub) de uma propriedade
 /// Agrupa todos os módulos operacionais e dados da propriedade
@@ -141,6 +142,12 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
                       onTap: () => _navegarParaAnexos(),
                     ),
                     _buildModuleItem(
+                      icon: Icons.science,
+                      title: 'Interpretação de Análises de Solo',
+                      subtitle: 'Análises de fertilidade — Boletim 100 IAC',
+                      onTap: () => _navegarParaAnalisesSolo(),
+                    ),
+                    _buildModuleItem(
                       icon: Icons.bug_report,
                       title: 'Relatórios de Pragas',
                       subtitle: 'Formulários de levantamento de pragas',
@@ -257,6 +264,17 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => AnexosScreen(
+          contexto: widget.contexto,
+        ),
+      ),
+    );
+  }
+
+  void _navegarParaAnalisesSolo() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => InterpretacaoAnaliseSoloScreen(
           contexto: widget.contexto,
         ),
       ),
