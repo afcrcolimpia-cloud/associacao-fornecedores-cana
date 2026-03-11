@@ -15,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -36,9 +35,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return AppShell(
       title: 'Home',
-      selectedIndex: _selectedIndex,
+      selectedIndex: _tabController.index,
+      showSidebar: true,
       onNavigationSelect: (index) {
-        setState(() => _selectedIndex = index);
+        setState(() {
+          _tabController.index = index;
+        });
       },
       child: Column(
         children: [

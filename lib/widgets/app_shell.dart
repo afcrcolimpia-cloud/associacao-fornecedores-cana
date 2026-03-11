@@ -8,6 +8,7 @@ class AppShell extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onNavigationSelect;
   final bool showBackButton;
+  final bool showSidebar;
 
   const AppShell({
     super.key,
@@ -16,10 +17,13 @@ class AppShell extends StatelessWidget {
     required this.selectedIndex,
     required this.onNavigationSelect,
     this.showBackButton = false,
+    this.showSidebar = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width >= 900;
+
     return Scaffold(
       backgroundColor: AppColors.bgDark,
       body: Column(
@@ -27,13 +31,132 @@ class AppShell extends StatelessWidget {
           _buildHeader(context),
           Expanded(
             child: SelectionArea(
-              child: Container(
-                color: AppColors.bgDark,
-                child: child,
+              child: Row(
+                children: [
+                  if (showSidebar && isWide) _buildSidebar(context),
+                  Expanded(
+                    child: Container(
+                      color: AppColors.bgDark,
+                      child: child,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSidebar(BuildContext context) {
+    return Container(
+      width: 240,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0DF28F), // newPrimary
+            Color(0xFF0AC47A), // verde médio
+            Color(0xFF089660), // verde escuro
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 24),
+          // Logo
+          Image.asset(
+            'assets/logo/logo.png',
+            width: 80,
+            height: 80,
+            colorBlendMode: BlendMode.multiply,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'AFCRC',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+            ),
+          ),
+          Text(
+            'Gestão Agrícola',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 32),
+          // Itens de navegação
+          _buildSidebarItem(
+            icon: Icons.dashboard_outlined,
+            label: 'Dashboard',
+            selected: selectedIndex == 0,
+            onTap: () => onNavigationSelect(0),
+          ),
+          _buildSidebarItem(
+            icon: Icons.agriculture_outlined,
+            label: 'Gestão',
+            selected: selectedIndex == 1,
+            onTap: () => onNavigationSelect(1),
+          ),
+          const Spacer(),
+          // Rodapé da sidebar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Catanduva/SP\n© AFCRC 2026',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: Colors.black.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebarItem({
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Material(
+        color: selected
+            ? Colors.black.withValues(alpha: 0.15)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          splashColor: Colors.black.withValues(alpha: 0.1),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: Colors.black.withValues(alpha: selected ? 1 : 0.7)),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: Colors.black.withValues(alpha: selected ? 1 : 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
