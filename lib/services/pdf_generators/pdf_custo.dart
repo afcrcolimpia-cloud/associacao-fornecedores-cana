@@ -107,10 +107,10 @@ class PdfCustoOperacional {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
       columnWidths: {
-        0: const pw.FixedColumnWidth(100),
-        1: const pw.FixedColumnWidth(80),
-        2: const pw.FixedColumnWidth(100),
-        3: const pw.FixedColumnWidth(80),
+        0: const pw.FlexColumnWidth(1.3),
+        1: const pw.FlexColumnWidth(1),
+        2: const pw.FlexColumnWidth(1.3),
+        3: const pw.FlexColumnWidth(1),
       },
       children: [
         pw.TableRow(
@@ -139,17 +139,17 @@ class PdfCustoOperacional {
   }
 
   static pw.Widget _th(String text, pw.Font bold) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: bold, fontSize: 8)),
+            style: pw.TextStyle(font: bold, fontSize: 9)),
       );
 
   static pw.Widget _td(String text, pw.Font font) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.start,
-            style: pw.TextStyle(font: font, fontSize: 8)),
+            style: pw.TextStyle(font: font, fontSize: 9)),
       );
 
   static pw.Widget _resumoFinanceiro(CustoOperacionalCenario cenario, pw.Font font, pw.Font bold) {

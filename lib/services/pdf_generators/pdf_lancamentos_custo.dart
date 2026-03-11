@@ -136,9 +136,9 @@ class PdfLancamentosCusto {
               0: const pw.FlexColumnWidth(2),
               1: const pw.FlexColumnWidth(1.5),
               2: const pw.FlexColumnWidth(1.5),
-              3: const pw.FixedColumnWidth(55),
-              4: const pw.FixedColumnWidth(55),
-              5: const pw.FixedColumnWidth(55),
+              3: const pw.FlexColumnWidth(1),
+              4: const pw.FlexColumnWidth(1),
+              5: const pw.FlexColumnWidth(1),
             },
             children: [
               pw.TableRow(
@@ -147,9 +147,9 @@ class PdfLancamentosCusto {
                   _th('Operação', bold),
                   _th('Máquina', bold),
                   _th('Insumo', bold),
-                  _th('Oper. R\$/ha', bold),
-                  _th('Insumo R\$/ha', bold),
-                  _th('Total R\$/ha', bold),
+                  _th('Oper.\nR\$/ha', bold),
+                  _th('Insumo\nR\$/ha', bold),
+                  _th('Total\nR\$/ha', bold),
                 ],
               ),
               ...lista.map(
@@ -181,17 +181,17 @@ class PdfLancamentosCusto {
       );
 
   static pw.Widget _th(String text, pw.Font bold) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: bold, fontSize: 7)),
+            style: pw.TextStyle(font: bold, fontSize: 8)),
       );
 
   static pw.Widget _td(String text, pw.Font font) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: font, fontSize: 7)),
+            style: pw.TextStyle(font: font, fontSize: 8)),
       );
 
   static pw.Widget _resumoGeral(

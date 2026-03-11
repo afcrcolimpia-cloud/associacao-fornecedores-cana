@@ -113,10 +113,10 @@ class PdfPrecipitacao {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
       columnWidths: {
-        0: const pw.FixedColumnWidth(60),
-        1: const pw.FixedColumnWidth(60),
-        2: const pw.FixedColumnWidth(60),
-        3: const pw.FlexColumnWidth(1),
+        0: const pw.FlexColumnWidth(1.2),
+        1: const pw.FlexColumnWidth(0.8),
+        2: const pw.FlexColumnWidth(1.5),
+        3: const pw.FlexColumnWidth(2),
       },
       children: [
         pw.TableRow(
@@ -124,7 +124,7 @@ class PdfPrecipitacao {
           children: [
             _th('Data', bold),
             _th('Mês', bold),
-            _th('Precipitação (mm)', bold),
+            _th('Precipitação\n(mm)', bold),
             _th('Observações', bold),
           ],
         ),
@@ -143,14 +143,14 @@ class PdfPrecipitacao {
   }
 
   static pw.Widget _th(String text, pw.Font bold) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: bold, fontSize: 8)),
+            style: pw.TextStyle(font: bold, fontSize: 9)),
       );
 
   static pw.Widget _td(String text, pw.Font font) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
             style: pw.TextStyle(font: font, fontSize: 9)),

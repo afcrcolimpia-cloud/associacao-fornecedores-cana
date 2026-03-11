@@ -112,12 +112,12 @@ class PdfOperacoesCultivo {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
       columnWidths: {
-        0: const pw.FixedColumnWidth(50),
-        1: const pw.FixedColumnWidth(60),
-        2: const pw.FixedColumnWidth(60),
-        3: const pw.FixedColumnWidth(60),
-        4: const pw.FixedColumnWidth(60),
-        5: const pw.FlexColumnWidth(1),
+        0: const pw.FlexColumnWidth(1),
+        1: const pw.FlexColumnWidth(1.2),
+        2: const pw.FlexColumnWidth(1.2),
+        3: const pw.FlexColumnWidth(1.2),
+        4: const pw.FlexColumnWidth(1.2),
+        5: const pw.FlexColumnWidth(2),
       },
       children: [
         pw.TableRow(
@@ -125,9 +125,9 @@ class PdfOperacoesCultivo {
           children: [
             _th('Talhão', bold),
             _th('Plantio', bold),
-            _th('Quebra Lombo', bold),
+            _th('Quebra\nLombo', bold),
             _th('Colheita', bold),
-            _th('1º Herbicida', bold),
+            _th('1º\nHerbicida', bold),
             _th('Observações', bold),
           ],
         ),
@@ -148,17 +148,17 @@ class PdfOperacoesCultivo {
   }
 
   static pw.Widget _th(String text, pw.Font bold) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: bold, fontSize: 8)),
+            style: pw.TextStyle(font: bold, fontSize: 9)),
       );
 
   static pw.Widget _td(String text, pw.Font font) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: font, fontSize: 8)),
+            style: pw.TextStyle(font: font, fontSize: 9)),
       );
 
   static pw.Widget _resumo(List<OperacaoCultivo> operacoes, pw.Font font, pw.Font bold) {

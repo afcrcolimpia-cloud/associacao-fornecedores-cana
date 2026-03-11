@@ -118,12 +118,12 @@ class PdfProdutividade {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
       columnWidths: {
-        0: const pw.FixedColumnWidth(50),
-        1: const pw.FixedColumnWidth(50),
-        2: const pw.FixedColumnWidth(50),
-        3: const pw.FixedColumnWidth(50),
-        4: const pw.FixedColumnWidth(70),
-        5: const pw.FlexColumnWidth(1),
+        0: const pw.FlexColumnWidth(1),
+        1: const pw.FlexColumnWidth(1.2),
+        2: const pw.FlexColumnWidth(1),
+        3: const pw.FlexColumnWidth(1),
+        4: const pw.FlexColumnWidth(1.2),
+        5: const pw.FlexColumnWidth(2),
       },
       children: [
         pw.TableRow(
@@ -131,9 +131,9 @@ class PdfProdutividade {
           children: [
             _th('Talhão', bold),
             _th('Variedade', bold),
-            _th('Mês Col.', bold),
-            _th('Peso Liq.', bold),
-            _th('Média ATR', bold),
+            _th('Mês\nCol.', bold),
+            _th('Peso\nLiq.', bold),
+            _th('Média\nATR', bold),
             _th('Observações', bold),
           ],
         ),
@@ -156,14 +156,14 @@ class PdfProdutividade {
   }
 
   static pw.Widget _th(String text, pw.Font bold) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: bold, fontSize: 8)),
+            style: pw.TextStyle(font: bold, fontSize: 9)),
       );
 
   static pw.Widget _td(String text, pw.Font font) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
             style: pw.TextStyle(font: font, fontSize: 9)),

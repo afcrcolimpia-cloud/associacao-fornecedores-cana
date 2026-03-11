@@ -113,12 +113,12 @@ class PdfTratosCulturais {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
       columnWidths: {
-        0: const pw.FixedColumnWidth(50),
-        1: const pw.FixedColumnWidth(50),
-        2: const pw.FixedColumnWidth(50),
-        3: const pw.FixedColumnWidth(50),
-        4: const pw.FixedColumnWidth(50),
-        5: const pw.FlexColumnWidth(1),
+        0: const pw.FlexColumnWidth(1),
+        1: const pw.FlexColumnWidth(1),
+        2: const pw.FlexColumnWidth(1.2),
+        3: const pw.FlexColumnWidth(1.2),
+        4: const pw.FlexColumnWidth(1.2),
+        5: const pw.FlexColumnWidth(2),
       },
       children: [
         pw.TableRow(
@@ -128,7 +128,7 @@ class PdfTratosCulturais {
             _th('Adubos', bold),
             _th('Herbicidas', bold),
             _th('Inseticidas', bold),
-            _th('Data Aplic.', bold),
+            _th('Data\nAplic.', bold),
             _th('Observações', bold),
           ],
         ),
@@ -149,14 +149,14 @@ class PdfTratosCulturais {
   }
 
   static pw.Widget _th(String text, pw.Font bold) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: bold, fontSize: 8)),
+            style: pw.TextStyle(font: bold, fontSize: 9)),
       );
 
   static pw.Widget _td(String text, pw.Font font) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
             style: pw.TextStyle(font: font, fontSize: 9)),

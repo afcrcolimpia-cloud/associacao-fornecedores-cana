@@ -233,11 +233,11 @@ class PdfCensoVarietal {
           border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
           columnWidths: {
             0: const pw.FlexColumnWidth(2),
-            1: const pw.FixedColumnWidth(55),
-            2: const pw.FixedColumnWidth(55),
-            3: const pw.FixedColumnWidth(65),
-            4: const pw.FixedColumnWidth(50),
-            5: const pw.FixedColumnWidth(45),
+            1: const pw.FlexColumnWidth(1),
+            2: const pw.FlexColumnWidth(1),
+            3: const pw.FlexColumnWidth(1.2),
+            4: const pw.FlexColumnWidth(1),
+            5: const pw.FlexColumnWidth(0.8),
           },
           children: [
             // Cabeçalho
@@ -245,10 +245,10 @@ class PdfCensoVarietal {
               decoration: const pw.BoxDecoration(color: PdfColors.grey200),
               children: [
                 _th('Variedade', bold),
-                _th('Ano Plantio', bold),
-                _th('Área (ha)', bold),
-                _th('% Propriedade', bold),
-                _th('Idade (anos)', bold),
+                _th('Ano\nPlantio', bold),
+                _th('Área\n(ha)', bold),
+                _th('%\nPropried.', bold),
+                _th('Idade\n(anos)', bold),
                 _th('Talhões', bold),
               ],
             ),
@@ -322,12 +322,12 @@ class PdfCensoVarietal {
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
           columnWidths: {
-            0: const pw.FixedColumnWidth(50),
+            0: const pw.FlexColumnWidth(1),
             1: const pw.FlexColumnWidth(2),
-            2: const pw.FixedColumnWidth(55),
-            3: const pw.FixedColumnWidth(55),
-            4: const pw.FixedColumnWidth(45),
-            5: const pw.FixedColumnWidth(55),
+            2: const pw.FlexColumnWidth(1),
+            3: const pw.FlexColumnWidth(1),
+            4: const pw.FlexColumnWidth(0.8),
+            5: const pw.FlexColumnWidth(1),
           },
           children: [
             pw.TableRow(

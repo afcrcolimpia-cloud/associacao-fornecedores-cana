@@ -110,24 +110,24 @@ class PdfTalhoes {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
       columnWidths: {
-        0: const pw.FixedColumnWidth(50),
-        1: const pw.FixedColumnWidth(55),
-        2: const pw.FixedColumnWidth(55),
-        3: const pw.FlexColumnWidth(1),
-        4: const pw.FixedColumnWidth(50),
-        5: const pw.FixedColumnWidth(50),
-        6: const pw.FixedColumnWidth(60),
+        0: const pw.FlexColumnWidth(1),
+        1: const pw.FlexColumnWidth(1),
+        2: const pw.FlexColumnWidth(1),
+        3: const pw.FlexColumnWidth(1.5),
+        4: const pw.FlexColumnWidth(0.8),
+        5: const pw.FlexColumnWidth(1),
+        6: const pw.FlexColumnWidth(1),
       },
       children: [
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey200),
           children: [
             _th('Talhão', bold),
-            _th('Área (ha)', bold),
-            _th('Área (alq)', bold),
+            _th('Área\n(ha)', bold),
+            _th('Área\n(alq)', bold),
             _th('Variedade', bold),
             _th('Corte', bold),
-            _th('Ano Plantio', bold),
+            _th('Ano\nPlantio', bold),
             _th('Tipo', bold),
           ],
         ),
@@ -149,17 +149,17 @@ class PdfTalhoes {
   }
 
   static pw.Widget _th(String text, pw.Font bold) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: bold, fontSize: 7)),
+            style: pw.TextStyle(font: bold, fontSize: 8)),
       );
 
   static pw.Widget _td(String text, pw.Font font) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 3),
+        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: pw.Text(text,
             textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(font: font, fontSize: 7)),
+            style: pw.TextStyle(font: font, fontSize: 8)),
       );
 
   static pw.Widget _resumo(List<Talhao> talhoes, pw.Font font, pw.Font bold) {
