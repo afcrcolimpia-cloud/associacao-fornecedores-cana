@@ -13,6 +13,7 @@ import 'custo_operacional_screen.dart';
 import 'anexos_screen.dart';
 import 'formularios_pdf_screen.dart';
 import 'analise_solo_screen.dart';
+import 'censo_varietal_screen.dart';
 
 /// Tela central (Hub) de uma propriedade
 /// Agrupa todos os módulos operacionais e dados da propriedade
@@ -136,6 +137,12 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
                       onTap: () => _navegarParaCusto(),
                     ),
                     _buildModuleItem(
+                      icon: Icons.grass,
+                      title: 'Censo Varietal',
+                      subtitle: 'Variedades plantadas e áreas por talhão',
+                      onTap: () => _navegarParaCensoVarietal(),
+                    ),
+                    _buildModuleItem(
                       icon: Icons.attach_file,
                       title: 'Anexos',
                       subtitle: 'Documentos e arquivos anexados',
@@ -253,6 +260,17 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => CustoOperacionalScreen(
+          contexto: widget.contexto,
+        ),
+      ),
+    );
+  }
+
+  void _navegarParaCensoVarietal() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CensoVarietalScreen(
           contexto: widget.contexto,
         ),
       ),
