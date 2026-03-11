@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../models/models.dart';
+import '../variedade_service.dart';
 
 class PdfTalhoes {
   static const _verde = PdfColor.fromInt(0xFF2E7D32);
@@ -17,6 +18,10 @@ class PdfTalhoes {
     final logoBytes = await rootBundle.load('assets/logo/logo.png');
     final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
 
+    // Resolver UUIDs de variedade para nomes legíveis
+    final variedadeService = VariedadeService();
+    final variedadeMap = await variedadeService.getVariedadeMap();
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -26,7 +31,7 @@ class PdfTalhoes {
           children: [
             _cabecalho(propriedade, font, fontBold, logoImage),
             pw.SizedBox(height: 14),
-            _tabela(talhoes, font, fontBold),
+            _tabela(talhoes, font, fontBold, variedadeService, variedadeMap),
             pw.SizedBox(height: 10),
             _resumo(talhoes, font, fontBold),
           ],
@@ -101,7 +106,7 @@ class PdfTalhoes {
         child: pw.Text(text, style: pw.TextStyle(font: font, fontSize: 8)),
       );
 
-  static pw.Widget _tabela(List<Talhao> talhoes, pw.Font font, pw.Font bold) {
+  static pw.Widget _tabela(List<Talhao> talhoes, pw.Font font, pw.Font bold, VariedadeService variedadeService, Map<String, Variedade> variedadeMap) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.8),
       columnWidths: {
@@ -132,7 +137,7 @@ class PdfTalhoes {
               _td(t.numeroTalhao, font),
               _td(t.areaHa?.toStringAsFixed(2) ?? '-', font),
               _td(t.areaAlqueires?.toStringAsFixed(2) ?? '-', font),
-              _td(t.variedade ?? '-', font),
+              _td(variedadeService.resolverNomeSync(t.variedade, variedadeMap), font),
               _td(t.corte?.toString() ?? '-', font),
               _td(t.anoPlantio?.toString() ?? '-', font),
               _td(t.tipoTalhao == 'reforma' ? 'Reforma' : 'Produção', font),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
 import '../services/talhao_service.dart';
+import '../services/variedade_service.dart';
 
 class ProdutividadeFormScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -30,12 +31,14 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
 
   late ProdutividadeService _produtividadeService;
   late TalhaoService _talhaoService;
+  final VariedadeService _variedadeService = VariedadeService();
   
   String? _talhaoSelecionado;
   int? _mesSelecionado;
   bool _isLoading = false;
   int _selectedNavigationIndex = 0;
   List<Talhao> _talhoes = [];
+  Map<String, Variedade> _variedadeMap = {};
 
   final List<String> _meses = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -48,10 +51,19 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
     _produtividadeService = ProdutividadeService();
     _talhaoService = TalhaoService();
     _carregarTalhoes();
+    _carregarVariedades();
     if (widget.produtividade != null) {
       _carregarDados();
     }
   }
+
+  Future<void> _carregarVariedades() async {
+    final mapa = await _variedadeService.getVariedadeMap();
+    if (mounted) setState(() => _variedadeMap = mapa);
+  }
+
+  String _nomeVariedade(String? id) =>
+      _variedadeService.resolverNomeSync(id, _variedadeMap);
 
   Future<void> _carregarTalhoes() async {
     try {
@@ -75,7 +87,7 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
     if (_talhaoSelecionado != null && _talhaoSelecionado!.isNotEmpty) {
       _carregarDadosTalhao(_talhaoSelecionado!);
     } else {
-      _variedadeController.text = prod.variedade ?? '';
+      _variedadeController.text = _nomeVariedade(prod.variedade);
       _estagioController.text = prod.estagio ?? '';
     }
   }
@@ -85,7 +97,7 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
       final talhao = _talhoes.firstWhere((t) => t.id == talhaoId);
       setState(() {
         // Preenche automaticamente os campos com os dados do talhão
-        _variedadeController.text = talhao.variedade ?? '';
+        _variedadeController.text = _nomeVariedade(talhao.variedade);
         // Se a variedade já estava preenchida diferente, apenas sobrescreve se o talhão tem dados
         if (talhao.variedade != null) {
           _estagioController.text = ''; // Limpa o estágio para o usuário preencher
@@ -200,7 +212,7 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
         return DropdownMenuItem(
           value: talhao.id,
           child: Text(
-            '${talhao.nome}${talhao.variedade != null ? ' - ${talhao.variedade}' : ''}',
+            '${talhao.nome}${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}',
           ),
         );
       }).toList(),

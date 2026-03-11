@@ -3,6 +3,7 @@ import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/operacao_cultivo_service.dart';
 import '../services/talhao_service.dart';
+import '../services/variedade_service.dart';
 import '../constants/app_colors.dart';
 import '../utils/formatters.dart';
 
@@ -24,8 +25,10 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final OperacaoCultivoService _service = OperacaoCultivoService();
   final TalhaoService _talhaoService = TalhaoService();
+  final VariedadeService _variedadeService = VariedadeService();
 
   List<Talhao> _talhoes = [];
+  Map<String, Variedade> _variedadeMap = {};
   bool _isLoading = true;
   bool _isSaving = false;
   int _selectedNavigationIndex = 0;
@@ -46,7 +49,16 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
     super.initState();
     _carregarTalhoes();
     _carregarDados();
+    _carregarVariedades();
   }
+
+  Future<void> _carregarVariedades() async {
+    final mapa = await _variedadeService.getVariedadeMap();
+    if (mounted) setState(() => _variedadeMap = mapa);
+  }
+
+  String _nomeVariedade(String? id) =>
+      _variedadeService.resolverNomeSync(id, _variedadeMap);
 
   Future<void> _carregarTalhoes() async {
     try {
@@ -177,7 +189,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '\u2705 Talh\u00e3o: ${talhao.nome} | Variedade: ${talhao.variedade ?? "N/A"} | \u00c1rea: ${talhao.areaHa?.toStringAsFixed(2) ?? "N/A"} ha',
+            '✅ Talhão: ${talhao.nome} | Variedade: ${_nomeVariedade(talhao.variedade).isEmpty ? "N/A" : _nomeVariedade(talhao.variedade)} | Área: ${talhao.areaHa?.toStringAsFixed(2) ?? "N/A"} ha',
           ),
           duration: const Duration(seconds: 3),
           backgroundColor: AppColors.success.withOpacity(0.8),
@@ -257,7 +269,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
                 return DropdownMenuItem(
                   value: talhao.id,
                   child: Text(
-                    '${talhao.numeroTalhao}${talhao.variedade != null ? ' - ${talhao.variedade}' : ''}${talhao.cultura != null ? ' (${talhao.cultura})' : ''}',
+                    '${talhao.numeroTalhao}${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}${talhao.cultura != null ? ' (${talhao.cultura})' : ''}',
                   ),
                 );
               }).toList(),

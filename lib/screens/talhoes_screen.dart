@@ -6,6 +6,7 @@ import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
+import '../services/variedade_service.dart';
 import '../services/pdf_generators/pdf_talhoes.dart';
 import 'talhao_form_screen.dart';
 
@@ -23,10 +24,29 @@ class TalhoesScreen extends StatefulWidget {
 
 class _TalhoesScreenState extends State<TalhoesScreen> {
   final TalhaoService _service = TalhaoService();
+  final VariedadeService _variedadeService = VariedadeService();
   int _selectedNavigationIndex = 0;
   String _filtro = 'todos';
   String _busca = '';
   List<Talhao> _talhoesAtuais = [];
+  Map<String, Variedade> _variedadeMap = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarVariedades();
+  }
+
+  Future<void> _carregarVariedades() async {
+    final mapa = await _variedadeService.getVariedadeMap();
+    if (mounted) {
+      setState(() => _variedadeMap = mapa);
+    }
+  }
+
+  String _nomeVariedade(String? variedadeId) {
+    return _variedadeService.resolverNomeSync(variedadeId, _variedadeMap);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +208,8 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
           talhoes = talhoes
               .where((t) =>
                   t.numeroTalhao.toLowerCase().contains(_busca) ||
-                  (t.cultura?.toLowerCase().contains(_busca) ?? false))
+                  (t.cultura?.toLowerCase().contains(_busca) ?? false) ||
+                  _nomeVariedade(t.variedade).toLowerCase().contains(_busca))
               .toList();
         }
 
@@ -269,7 +290,7 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
               // Variedade
               Expanded(
                 child: Text(
-                  talhao.variedade ?? '',
+                  _nomeVariedade(talhao.variedade),
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   overflow: TextOverflow.ellipsis,
                 ),

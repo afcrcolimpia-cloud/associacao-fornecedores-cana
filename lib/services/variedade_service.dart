@@ -8,6 +8,59 @@ class VariedadeService {
   final String _table = 'variedades';
   static const String _cols = 'id, codigo, nome, instituicao, destaque, ambiente_producao, epoca_colheita, ativa, criado_em, atualizado_em';
 
+  // Cache compartilhado: UUID → Variedade
+  static Map<String, Variedade>? _cacheMap;
+
+  /// Retorna mapa UUID → Variedade (usa cache em memória)
+  Future<Map<String, Variedade>> getVariedadeMap() async {
+    if (_cacheMap != null) return _cacheMap!;
+    final lista = await getVariedadesAtivas();
+    _cacheMap = {for (final v in lista) v.id: v};
+    return _cacheMap!;
+  }
+
+  /// Resolve UUID da variedade para texto legível "CTC 04 — Rica e Produtiva"
+  /// Se o valor já for texto (não-UUID), retorna como está.
+  Future<String> resolverNomeVariedade(String? variedadeIdOuTexto) async {
+    if (variedadeIdOuTexto == null || variedadeIdOuTexto.isEmpty) return '';
+    // Se não parece UUID, retorna como está (texto legado)
+    if (!variedadeIdOuTexto.contains('-') || variedadeIdOuTexto.length < 32) {
+      return variedadeIdOuTexto;
+    }
+    final mapa = await getVariedadeMap();
+    final v = mapa[variedadeIdOuTexto];
+    if (v != null) {
+      return '${v.codigo} — ${v.destaque}';
+    }
+    return variedadeIdOuTexto; // fallback
+  }
+
+  /// Resolve UUID da variedade para texto curto (apenas código, ex: "CTC 04")
+  String resolverCodigoSync(String? variedadeIdOuTexto, Map<String, Variedade> mapa) {
+    if (variedadeIdOuTexto == null || variedadeIdOuTexto.isEmpty) return '';
+    if (!variedadeIdOuTexto.contains('-') || variedadeIdOuTexto.length < 32) {
+      return variedadeIdOuTexto;
+    }
+    final v = mapa[variedadeIdOuTexto];
+    return v?.codigo ?? variedadeIdOuTexto;
+  }
+
+  /// Resolve UUID da variedade para texto completo "CTC 04 — Rica e Produtiva" (síncrono, requer mapa)
+  String resolverNomeSync(String? variedadeIdOuTexto, Map<String, Variedade> mapa) {
+    if (variedadeIdOuTexto == null || variedadeIdOuTexto.isEmpty) return '';
+    if (!variedadeIdOuTexto.contains('-') || variedadeIdOuTexto.length < 32) {
+      return variedadeIdOuTexto;
+    }
+    final v = mapa[variedadeIdOuTexto];
+    if (v != null) {
+      return '${v.codigo} — ${v.destaque}';
+    }
+    return variedadeIdOuTexto;
+  }
+
+  /// Limpa o cache (chamar quando variedades são alteradas)
+  static void limparCache() => _cacheMap = null;
+
   /// Obtém todas as variedades ativas
   Future<List<Variedade>> getVariedadesAtivas() async {
     try {

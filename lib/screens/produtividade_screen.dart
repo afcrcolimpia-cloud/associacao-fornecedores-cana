@@ -8,6 +8,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../constants/chart_styles.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
+import '../services/variedade_service.dart';
 import '../services/pdf_generators/pdf_produtividade.dart';
 import 'produtividade_form_screen.dart';
 
@@ -25,6 +26,7 @@ class ProdutividadeScreen extends StatefulWidget {
 
 class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   final ProdutividadeService _service = ProdutividadeService();
+  final VariedadeService _variedadeService = VariedadeService();
   int _selectedNavigationIndex = 0;
   
   String? _anoSafraSelecionado;
@@ -32,12 +34,22 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   
   bool _modoComparacao = false;
   List<Produtividade> _produtividadesAtuais = [];
+  Map<String, Variedade> _variedadeMap = {};
 
   @override
   void initState() {
     super.initState();
     _anoSafraSelecionado = DateTime.now().year.toString();
+    _carregarVariedades();
   }
+
+  Future<void> _carregarVariedades() async {
+    final mapa = await _variedadeService.getVariedadeMap();
+    if (mounted) setState(() => _variedadeMap = mapa);
+  }
+
+  String _nomeVariedade(String? id) =>
+      _variedadeService.resolverNomeSync(id, _variedadeMap);
   
   @override
   Widget build(BuildContext context) {
@@ -457,7 +469,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
             return DataRow(
               cells: [
                 DataCell(Text(prod.talhaoId ?? '-')),
-                DataCell(Text(prod.variedade ?? '-')),
+                DataCell(Text(prod.variedade != null ? _nomeVariedade(prod.variedade) : '-')),
                 DataCell(Text(prod.estagio ?? '-')),
                 DataCell(Text(_getMesNome(prod.mesColheita))),
                 DataCell(Text(

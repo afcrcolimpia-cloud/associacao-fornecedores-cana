@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../models/models.dart';
+import '../variedade_service.dart';
 
 class PdfProdutividade {
   static const _verde = PdfColor.fromInt(0xFF2E7D32);
@@ -19,6 +20,10 @@ class PdfProdutividade {
     final logoBytes = await rootBundle.load('assets/logo/logo.png');
     final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
 
+    // Resolver UUIDs de variedade para nomes legíveis
+    final variedadeService = VariedadeService();
+    final variedadeMap = await variedadeService.getVariedadeMap();
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -28,7 +33,7 @@ class PdfProdutividade {
           children: [
             _cabecalho(propriedade, font, fontBold, logoImage, anoSafra),
             pw.SizedBox(height: 14),
-            _tabela(dadosProdutividade, font, fontBold),
+            _tabela(dadosProdutividade, font, fontBold, variedadeService, variedadeMap),
             pw.SizedBox(height: 10),
             _resumo(dadosProdutividade, font, fontBold),
           ],
@@ -103,7 +108,7 @@ class PdfProdutividade {
         child: pw.Text(text, style: pw.TextStyle(font: font, fontSize: 8)),
       );
 
-  static pw.Widget _tabela(List<Produtividade> dados, pw.Font font, pw.Font bold) {
+  static pw.Widget _tabela(List<Produtividade> dados, pw.Font font, pw.Font bold, VariedadeService variedadeService, Map<String, Variedade> variedadeMap) {
     const maxLinhas = 12;
     final todasLinhas = List<Produtividade?>.from(dados);
     while (todasLinhas.length < maxLinhas) {
@@ -136,7 +141,7 @@ class PdfProdutividade {
           (p) => pw.TableRow(
             children: [
               _td(p?.talhaoId ?? '', font),
-              _td(p?.variedade ?? '', font),
+              _td(p != null ? variedadeService.resolverNomeSync(p.variedade, variedadeMap) : '', font),
               _td(p?.mesColheita != null ? p!.mesColheita.toString() : '', font),
               _td(p?.pesoLiquidoToneladas != null
                   ? p!.pesoLiquidoToneladas!.toStringAsFixed(2)
