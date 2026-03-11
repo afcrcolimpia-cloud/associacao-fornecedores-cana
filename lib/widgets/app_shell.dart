@@ -26,9 +26,11 @@ class AppShell extends StatelessWidget {
         children: [
           _buildHeader(context),
           Expanded(
-            child: Container(
-              color: AppColors.bgDark,
-              child: child,
+            child: SelectionArea(
+              child: Container(
+                color: AppColors.bgDark,
+                child: child,
+              ),
             ),
           ),
         ],
