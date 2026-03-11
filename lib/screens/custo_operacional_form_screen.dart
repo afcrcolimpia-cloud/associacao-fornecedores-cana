@@ -512,257 +512,329 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
 
   Widget _buildAbaParametros() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // INFORMAÇÕES BÁSICAS
-            _buildSectionTitle('Informações Básicas'),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _nomeCenarioController,
-              decoration: const InputDecoration(
-                labelText: 'Nome do Cenário',
-                hintText: 'Ex: Cenário Base, Pessimista, Otimista',
-                prefixIcon: Icon(Icons.label),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite um nome para o cenário';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _periodoRefController,
-              decoration: const InputDecoration(
-                labelText: 'Período de Referência',
-                hintText: 'Ex: Jan-Fev/2026',
-                prefixIcon: Icon(Icons.calendar_month),
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Digite o período';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            Row(
+      padding: const EdgeInsets.all(20),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _longevidadeController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Longevidade',
-                      suffixText: 'safras',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _doseMudaController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Dose de Muda',
-                      suffixText: 't/ha',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // PARÂMETROS TÉCNICOS
-            _buildSectionTitle('Parâmetros Técnicos'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _produtividadeController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Produtividade',
-                      suffixText: 't/ha',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obrigatorio';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Valor inválido';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _atrController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'ATR',
-                      suffixText: 'kg/t',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Obrigatorio';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Valor inválido';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // PREÇOS
-            _buildSectionTitle('Preços de Mercado'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _precoDieselController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Diesel',
-                      suffixText: 'R\$/L',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _precoAtrController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Preço ATR',
-                      suffixText: 'R\$/kg',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // CUSTOS
-            _buildSectionTitle('Custos de Operação'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _arrendamentoController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Arrendamento',
-                      suffixText: 't/ha',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _atrArrendController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'ATR Arrendamento',
-                      suffixText: 'kg/t',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _custoAdministrativoController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: const InputDecoration(
-                      labelText: 'Administrativo',
-                      suffixText: '%',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message: 'Calcular automaticamente',
-                  child: ElevatedButton.icon(
-                    onPressed: _abrirCalculadoraAdministrativa,
-                    icon: const Icon(Icons.calculate, size: 20),
-                    label: const Text('Calc'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-
-            // BOTÕES
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _salvar,
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                // INFORMAÇÕES BÁSICAS
+                _buildSectionCard(
+                  titulo: 'Informações Básicas',
+                  icone: Icons.info_outline,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: _campo(
+                            controller: _nomeCenarioController,
+                            label: 'Nome do Cenário',
+                            hint: 'Ex: Cenário Base, Pessimista',
+                            icone: Icons.label,
+                            obrigatorio: true,
+                          ),
                         ),
-                      )
-                    : const Text(
-                        'SALVAR CENÁRIO',
-                        style: TextStyle(fontSize: 16),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: _campo(
+                            controller: _periodoRefController,
+                            label: 'Período de Referência',
+                            hint: 'Ex: Jan-Fev/2026',
+                            icone: Icons.calendar_month,
+                            obrigatorio: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _campo(
+                            controller: _longevidadeController,
+                            label: 'Longevidade',
+                            sufixo: 'safras',
+                            numerico: true,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _campo(
+                            controller: _doseMudaController,
+                            label: 'Dose de Muda',
+                            sufixo: 't/ha',
+                            numerico: true,
+                            decimal: true,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _campo(
+                            controller: _produtividadeController,
+                            label: 'Produtividade',
+                            sufixo: 't/ha',
+                            numerico: true,
+                            decimal: true,
+                            obrigatorio: true,
+                            validadorExtra: (v) =>
+                                double.tryParse(v) == null ? 'Inválido' : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _campo(
+                            controller: _atrController,
+                            label: 'ATR',
+                            sufixo: 'kg/t',
+                            numerico: true,
+                            obrigatorio: true,
+                            validadorExtra: (v) =>
+                                int.tryParse(v) == null ? 'Inválido' : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // PREÇOS E CUSTOS numa única seção lado a lado
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // PREÇOS DE MERCADO
+                    Expanded(
+                      child: _buildSectionCard(
+                        titulo: 'Preços de Mercado',
+                        icone: Icons.attach_money,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _campo(
+                                  controller: _precoDieselController,
+                                  label: 'Diesel',
+                                  sufixo: 'R\$/L',
+                                  numerico: true,
+                                  decimal: true,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _campo(
+                                  controller: _precoAtrController,
+                                  label: 'Preço ATR',
+                                  sufixo: 'R\$/kg',
+                                  numerico: true,
+                                  decimal: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-              ),
+                    ),
+                    const SizedBox(width: 16),
+                    // CUSTOS DE OPERAÇÃO
+                    Expanded(
+                      child: _buildSectionCard(
+                        titulo: 'Custos de Operação',
+                        icone: Icons.account_balance_wallet,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _campo(
+                                  controller: _arrendamentoController,
+                                  label: 'Arrendamento',
+                                  sufixo: 't/ha',
+                                  numerico: true,
+                                  decimal: true,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _campo(
+                                  controller: _atrArrendController,
+                                  label: 'ATR Arrend.',
+                                  sufixo: 'kg/t',
+                                  numerico: true,
+                                  decimal: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _campo(
+                                  controller: _custoAdministrativoController,
+                                  label: 'Administrativo',
+                                  sufixo: '%',
+                                  numerico: true,
+                                  decimal: true,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Tooltip(
+                                message: 'Calcular automaticamente',
+                                child: SizedBox(
+                                  height: 44,
+                                  child: ElevatedButton.icon(
+                                    onPressed: _abrirCalculadoraAdministrativa,
+                                    icon: const Icon(Icons.calculate, size: 18),
+                                    label: const Text('Calc'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.newPrimary,
+                                      foregroundColor: AppColors.bgDark,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // BOTÃO SALVAR
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _salvar,
+                    icon: _isSaving
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.save),
+                    label: Text(
+                      _isSaving ? 'SALVANDO...' : 'SALVAR CENÁRIO',
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.newPrimary,
+                      foregroundColor: AppColors.bgDark,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// Card visual para agrupar campos de uma seção
+  Widget _buildSectionCard({
+    required String titulo,
+    required IconData icone,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderDark),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icone, size: 18, color: AppColors.newPrimary),
+              const SizedBox(width: 8),
+              Text(
+                titulo,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.newTextPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  /// Campo de texto compacto e reutilizável
+  Widget _campo({
+    required TextEditingController controller,
+    required String label,
+    String? hint,
+    String? sufixo,
+    IconData? icone,
+    bool numerico = false,
+    bool decimal = false,
+    bool obrigatorio = false,
+    String? Function(String)? validadorExtra,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: numerico
+          ? TextInputType.numberWithOptions(decimal: decimal)
+          : TextInputType.text,
+      style: const TextStyle(
+          fontSize: 13, color: AppColors.newTextPrimary),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        suffixText: sufixo,
+        prefixIcon: icone != null ? Icon(icone, size: 18) : null,
+        border: const OutlineInputBorder(),
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: AppColors.borderDark),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: AppColors.newPrimary),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        filled: true,
+        fillColor: AppColors.bgDark,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        isDense: true,
+        labelStyle:
+            const TextStyle(fontSize: 12, color: AppColors.newTextSecondary),
+        hintStyle:
+            const TextStyle(fontSize: 12, color: AppColors.newTextMuted),
+        suffixStyle:
+            const TextStyle(fontSize: 11, color: AppColors.newTextMuted),
+      ),
+      validator: obrigatorio
+          ? (value) {
+              if (value == null || value.isEmpty) return 'Obrigatório';
+              return validadorExtra?.call(value);
+            }
+          : null,
     );
   }
 
@@ -1320,17 +1392,6 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
   }
 
   double _toDouble(String valor) => double.tryParse(valor.trim()) ?? 0.0;
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: AppColors.primary,
-      ),
-    );
-  }
 
   int get _safraAtual => _inferirSafra(_periodoRefController.text);
 
