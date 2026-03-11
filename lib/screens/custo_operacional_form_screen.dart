@@ -108,8 +108,7 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
           text: DadosCustoOperacional.parametros.atrArrend.toString());
       _precoAtrController = TextEditingController(
           text: DadosCustoOperacional.parametros.precoATR.toString());
-      _custoAdministrativoController = TextEditingController(
-          text: DadosCustoOperacional.parametros.custoAdmin.toString());
+      _custoAdministrativoController = TextEditingController(text: '10');
     }
   }
 
