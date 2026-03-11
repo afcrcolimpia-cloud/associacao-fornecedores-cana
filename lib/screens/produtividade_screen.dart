@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
+import '../services/pdf_generators/pdf_produtividade.dart';
 import 'produtividade_form_screen.dart';
 
 class ProdutividadeScreen extends StatefulWidget {
@@ -26,6 +29,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
   String? _anoComparacao;
   
   bool _modoComparacao = false;
+  List<Produtividade> _produtividadesAtuais = [];
 
   @override
   void initState() {
@@ -42,12 +46,44 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
       },
       showBackButton: true,
       title: 'Produtividade',
-      child: Column(
+      child: Stack(
         children: [
-          HeaderPropriedade(contexto: widget.contexto),
-          _buildFiltros(),
-          Expanded(
-            child: _buildConteudo(),
+          Column(
+            children: [
+              HeaderPropriedade(contexto: widget.contexto),
+              _buildFiltros(),
+              Expanded(
+                child: _buildConteudo(),
+              ),
+            ],
+          ),
+          Positioned(
+            bottom: 88,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: _produtividadesAtuais.isEmpty ? null : () => _gerarPdf(),
+              backgroundColor: const Color(0xFFFFA726),
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text(
+                'Gerar PDF',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: () => _mostrarFormulario(),
+              backgroundColor: const Color(0xFF0DF28F),
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.add),
+              label: const Text(
+                'Nova Produtividade',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
         ],
       ),
@@ -129,6 +165,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
         }
 
         final produtividades = snapshot.data ?? [];
+        _produtividadesAtuais = produtividades;
 
         if (produtividades.isEmpty) {
           return const Center(
@@ -520,6 +557,27 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
           );
         }
       }
+    }
+  }
+
+  Future<void> _gerarPdf() async {
+    try {
+      final pdfBytes = await PdfProdutividade.gerar(
+        propriedade: widget.contexto.propriedade,
+        dadosProdutividade: _produtividadesAtuais,
+        anoSafra: _anoSafraSelecionado ?? DateTime.now().year.toString(),
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Produtividade_${widget.contexto.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
     }
   }
 }

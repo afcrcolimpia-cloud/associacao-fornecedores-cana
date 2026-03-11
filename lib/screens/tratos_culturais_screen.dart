@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
 import '../services/tratos_culturais_service.dart';
+import '../services/pdf_generators/pdf_tratos.dart';
 import 'tratos_culturais_form_screen.dart';
 
 class TratosCulturaisScreen extends StatefulWidget {
@@ -26,6 +29,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
 
   int _filtroAnoSafra = DateTime.now().year;
   List<Talhao> _talhoes = [];
+  List<TratosCulturais> _tratosAtuais = [];
 
   @override
   void initState() {
@@ -58,12 +62,44 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
       },
       showBackButton: true,
       title: 'Tratos Culturais',
-      child: Column(
+      child: Stack(
         children: [
-          HeaderPropriedade(contexto: widget.contexto),
-          _buildFiltros(),
-          Expanded(
-            child: _buildTabela(),
+          Column(
+            children: [
+              HeaderPropriedade(contexto: widget.contexto),
+              _buildFiltros(),
+              Expanded(
+                child: _buildTabela(),
+              ),
+            ],
+          ),
+          Positioned(
+            bottom: 88,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: _tratosAtuais.isEmpty ? null : () => _gerarPdf(),
+              backgroundColor: const Color(0xFFFFA726),
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text(
+                'Gerar PDF',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: () => _abrirFormulario(),
+              backgroundColor: AppColors.newPrimary,
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.add),
+              label: const Text(
+                'Novo Trato',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
         ],
       ),
@@ -145,6 +181,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
         debugPrint('🟢 Total de tratos antes do filtro: ${tratos.length}');
 
         tratos = tratos.where((t) => t.anoSafra == _filtroAnoSafra.toString()).toList();
+        _tratosAtuais = tratos;
         debugPrint('🟢 Total de tratos depois do filtro: ${tratos.length}');
 
         if (tratos.isEmpty) {
@@ -283,6 +320,27 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
           );
         }
       }
+    }
+  }
+
+  Future<void> _gerarPdf() async {
+    try {
+      final pdfBytes = await PdfTratosCulturais.gerar(
+        propriedade: widget.contexto.propriedade,
+        tratos: _tratosAtuais,
+        anoSafra: _filtroAnoSafra,
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Tratos_Culturais_${widget.contexto.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
     }
   }
 }

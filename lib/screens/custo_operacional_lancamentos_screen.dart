@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import '../widgets/app_shell.dart';
 import '../services/custo_operacional_repository.dart';
 import '../services/custo_operacional_service.dart';
+import '../services/pdf_generators/pdf_lancamentos_custo.dart';
 import '../constants/app_colors.dart';
 import 'custo_operacional_lancamento_screen.dart';
 
@@ -162,9 +165,11 @@ class _CustoOperacionalLancamentosScreenState
       },
       showBackButton: true,
       title: 'Custo Operacional Dinâmico',
-      child: Column(
+      child: Stack(
         children: [
-          TabBar(
+          Column(
+            children: [
+              TabBar(
             controller: _tabCtrl,
             isScrollable: true,
             indicatorColor: AppColors.primary,
@@ -189,6 +194,48 @@ class _CustoOperacionalLancamentosScreenState
                       return _buildListaTab(cat, lista, total);
                     }).toList(),
                   ),
+          ),
+        ],
+      ),
+          Positioned(
+            bottom: 88,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: _categorias.isEmpty ? null : () => _gerarPdf(),
+              backgroundColor: const Color(0xFFFFA726),
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text(
+                'Gerar PDF',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: () async {
+                final ok = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CustoOperacionalLancamentoScreen(
+                      propriedadeId: widget.propriedadeId,
+                      talhaoId: widget.talhaoId,
+                      safra: widget.safra,
+                    ),
+                  ),
+                );
+                if (ok == true) await _recalcularECarregar();
+              },
+              backgroundColor: AppColors.newPrimary,
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.add),
+              label: const Text(
+                'Novo Lançamento',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
         ],
       ),
@@ -387,5 +434,28 @@ class _CustoOperacionalLancamentosScreenState
   void dispose() {
     _tabCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _gerarPdf() async {
+    try {
+      final pdfBytes = await PdfLancamentosCusto.gerar(
+        propriedadeNome: widget.propriedadeNome,
+        safra: widget.safra,
+        categorias: _categorias,
+        lancamentos: _lancamentos,
+        totaisPorCategoria: _totaisPorCateg,
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Lancamentos_Custo_${widget.propriedadeNome}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
+    }
   }
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import '../constants/app_colors.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
+import '../services/pdf_generators/pdf_talhoes.dart';
 import 'talhao_form_screen.dart';
 
 class TalhoesScreen extends StatefulWidget {
@@ -23,6 +26,7 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
   int _selectedNavigationIndex = 0;
   String _filtro = 'todos';
   String _busca = '';
+  List<Talhao> _talhoesAtuais = [];
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,39 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
       },
       showBackButton: true,
       title: 'Talhões',
-      child: _buildConteudo(),
+      child: Stack(
+        children: [
+          _buildConteudo(),
+          Positioned(
+            bottom: 88,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: _talhoesAtuais.isEmpty ? null : () => _gerarPdf(),
+              backgroundColor: const Color(0xFFFFA726),
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text(
+                'Gerar PDF',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: () => _mostrarFormulario(),
+              backgroundColor: AppColors.newPrimary,
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.add),
+              label: const Text(
+                'Novo Talhão',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -42,6 +78,7 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
       stream: _service.getTalhoesStream(widget.contexto.propriedade.id),
       builder: (context, snapshot) {
         final todosTalhoes = snapshot.data ?? [];
+        _talhoesAtuais = todosTalhoes;
         final somaArea = _calcularSomaArea(todosTalhoes);
         final areaReforma = _calcularAreaReforma(todosTalhoes);
         final areaLiquida = somaArea - areaReforma;
@@ -329,6 +366,26 @@ class _TalhoesScreenState extends State<TalhoesScreen> {
           );
         }
       }
+    }
+  }
+
+  Future<void> _gerarPdf() async {
+    try {
+      final pdfBytes = await PdfTalhoes.gerar(
+        propriedade: widget.contexto.propriedade,
+        talhoes: _talhoesAtuais,
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Talhoes_${widget.contexto.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
     }
   }
 }
