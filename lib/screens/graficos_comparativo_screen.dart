@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/chart_card.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/custo_operacional_analise.dart';
 import '../services/custo_operacional_service.dart';
 import '../constants/app_colors.dart';
+import '../constants/chart_styles.dart';
 
 class GraficosComparativoScreen extends StatefulWidget {
   final List<CustoOperacionalCenario> cenarios;
@@ -44,7 +47,7 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
             children: [
               const Text(
                 'Comparação de Cenários',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.newTextPrimary),
               ),
               const SizedBox(height: 16),
               // Segmented buttons para seleção de gráfico
@@ -120,111 +123,73 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
     final maxValue =
         dados.isNotEmpty ? dados.reduce((a, b) => a > b ? a : b) : 1.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          titulo,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 300,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: maxValue * 1.1,
-              barTouchData: BarTouchData(
-                enabled: true,
-                touchTooltipData: BarTouchTooltipData(
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    return BarTooltipItem(
-                      '${dados[groupIndex].toStringAsFixed(2)} $unidade',
-                      const TextStyle(color: Colors.white, fontSize: 12),
-                    );
-                  },
-                ),
-              ),
-              titlesData: FlTitlesData(
-                show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index >= 0 && index < nomes.length) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            nomes[index].length > 15
-                                ? '${nomes[index].substring(0, 12)}...'
-                                : nomes[index],
-                            style: const TextStyle(fontSize: 9),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }
-                      return const Text('');
-                    },
-                    reservedSize: 40,
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value.toStringAsFixed(0),
-                        style: const TextStyle(fontSize: 9),
-                      );
-                    },
-                    reservedSize: 40,
-                  ),
-                ),
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-              ),
-              barGroups: [
-                for (int i = 0; i < dados.length; i++)
-                  BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: dados[i].toDouble(),
-                        color: _obterCorBarra(dados[i], maxValue),
-                        width: 20,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4),
-                          topRight: Radius.circular(4),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-              gridData: const FlGridData(show: true),
+    return ChartCard(
+      titulo: titulo,
+      subtitulo: '${dados.length} cenários comparados',
+      margin: EdgeInsets.zero,
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: maxValue * 1.1,
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: ChartStyles.barTooltip(
+              getLabel: (i) =>
+                  '${dados[i].toStringAsFixed(2)} $unidade',
             ),
           ),
+          titlesData: ChartStyles.titlesData(
+            left: ChartStyles.leftAxis(
+              getTitlesWidget: (value, meta) =>
+                  ChartStyles.axisLabel(value.toStringAsFixed(0)),
+            ),
+            bottom: ChartStyles.bottomAxis(
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index >= 0 && index < nomes.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      nomes[index].length > 15
+                          ? '${nomes[index].substring(0, 12)}...'
+                          : nomes[index],
+                      style: ChartStyles.axisLabelStyle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+          barGroups: [
+            for (int i = 0; i < dados.length; i++)
+              BarChartGroupData(
+                x: i,
+                barRods: [
+                  ChartStyles.barRod(
+                    toY: dados[i].toDouble(),
+                    color: _obterCorBarra(dados[i], maxValue),
+                    width: 20,
+                  ),
+                ],
+              ),
+          ],
+          borderData: ChartStyles.borderNenhum,
+          gridData: ChartStyles.gridPadrao,
         ),
-      ],
+      ),
     );
   }
 
   Color _obterCorBarra(double valor, double maxValue) {
     if (_tipoGrafico == 0) {
-      // Margem: verde se positivo, vermelho se negativo
-      return valor >= 0 ? AppColors.success : AppColors.error;
+      return valor >= 0 ? ChartStyles.positive : ChartStyles.negative;
     } else {
-      // Produtividade e Custo: gradiente
       final opacity = (valor / maxValue).clamp(0.4, 1.0);
-      return AppColors.primary.withOpacity(opacity);
+      return ChartStyles.barPrimary.withValues(alpha: opacity);
     }
   }
 
@@ -234,58 +199,46 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
     final producoes = dadosComparacao['producoes'] as List<double>;
     final custos = dadosComparacao['custos'] as List<double>;
 
-    return Card(
-      elevation: 2,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
+        border: Border.all(color: AppColors.borderDark),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            color: AppColors.bgDark,
+            decoration: const BoxDecoration(
+              color: AppColors.bgDark,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            ),
             padding: const EdgeInsets.all(12),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   flex: 25,
-                  child: Text(
-                    'Cenário',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
+                  child: Text('Cenário',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
                 Expanded(
                   flex: 25,
-                  child: Text(
-                    'Margem/t',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
+                  child: Text('Margem/t', textAlign: TextAlign.right,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
                 Expanded(
                   flex: 25,
-                  child: Text(
-                    'Prod.',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
+                  child: Text('Prod.', textAlign: TextAlign.right,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
                 Expanded(
                   flex: 25,
-                  child: Text(
-                    'Custo',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
+                  child: Text('Custo', textAlign: TextAlign.right,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
               ],
             ),
@@ -300,7 +253,7 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
                     flex: 25,
                     child: Text(
                       nomes[index],
-                      style: const TextStyle(fontSize: 10),
+                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.newTextPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -310,12 +263,12 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
                     child: Text(
                       'R\$ ${margens[index].toStringAsFixed(0)}',
                       textAlign: TextAlign.right,
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: margens[index] >= 0
-                            ? AppColors.success
-                            : AppColors.error,
+                            ? ChartStyles.positive
+                            : ChartStyles.negative,
                       ),
                     ),
                   ),
@@ -324,7 +277,7 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
                     child: Text(
                       '${producoes[index].toStringAsFixed(1)} t',
                       textAlign: TextAlign.right,
-                      style: const TextStyle(fontSize: 10),
+                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.newTextSecondary),
                     ),
                   ),
                   Expanded(
@@ -332,7 +285,7 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
                     child: Text(
                       'R\$ ${custos[index].toStringAsFixed(0)}',
                       textAlign: TextAlign.right,
-                      style: const TextStyle(fontSize: 10),
+                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.newTextSecondary),
                     ),
                   ),
                 ],

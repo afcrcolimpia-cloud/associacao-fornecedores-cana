@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/chart_card.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/custo_operacional_analise.dart';
 import '../services/custo_operacional_service.dart';
 import '../constants/app_colors.dart';
+import '../constants/chart_styles.dart';
 
 class ProjecaoFinanceiraScreen extends StatefulWidget {
   final CustoOperacionalCenario cenario;
@@ -177,174 +180,108 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
   }
 
   Widget _buildGraficoProjecao() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Evolucao Financeira',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 300,
-          child: LineChart(
-            LineChartData(
-              gridData: const FlGridData(show: true),
-              titlesData: FlTitlesData(
-                show: true,
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        'R\$ ${(value / 1000).toStringAsFixed(0)}k',
-                        style: const TextStyle(fontSize: 9),
-                      );
-                    },
-                    reservedSize: 50,
-                  ),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index > 0 && index <= projacoes.length) {
-                        return Text(
-                          '${projacoes[index - 1].periodo}m',
-                          style: const TextStyle(fontSize: 9),
-                        );
-                      }
-                      return const Text('');
-                    },
-                    reservedSize: 30,
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(show: true),
-              lineBarsData: [
-                // Linha de Receita
-                LineChartBarData(
-                  spots: [
-                    for (int i = 0; i < projacoes.length; i++)
-                      FlSpot(i + 1.0, projacoes[i].receita)
-                  ],
-                  isCurved: true,
-                  color: AppColors.success,
-                  barWidth: 2,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: AppColors.success.withOpacity(0.1),
-                  ),
-                ),
-                // Linha de Custo
-                LineChartBarData(
-                  spots: [
-                    for (int i = 0; i < projacoes.length; i++)
-                      FlSpot(i + 1.0, projacoes[i].custo)
-                  ],
-                  isCurved: true,
-                  color: AppColors.error,
-                  barWidth: 2,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: AppColors.error.withOpacity(0.1),
-                  ),
-                ),
-                // Linha de Margem
-                LineChartBarData(
-                  spots: [
-                    for (int i = 0; i < projacoes.length; i++)
-                      FlSpot(i + 1.0, projacoes[i].margem)
-                  ],
-                  isCurved: true,
-                  color: AppColors.primary,
-                  barWidth: 2,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(show: false),
-                ),
-              ],
+    return ChartCard(
+      titulo: 'Evolução Financeira',
+      subtitulo: 'Projeção de receita, custo e margem',
+      legendWidget: Wrap(
+        spacing: 16,
+        children: [
+          ChartStyles.legendItem('Receita', ChartStyles.positive),
+          ChartStyles.legendItem('Custo', ChartStyles.negative),
+          ChartStyles.legendItem('Margem', ChartStyles.barBlue),
+        ],
+      ),
+      child: LineChart(
+        LineChartData(
+          gridData: ChartStyles.gridPadrao,
+          titlesData: ChartStyles.titlesData(
+            left: ChartStyles.leftAxis(
+              reservedSize: 50,
+              getTitlesWidget: (value, meta) =>
+                  ChartStyles.axisLabel('R\$ ${(value / 1000).toStringAsFixed(0)}k'),
+            ),
+            bottom: ChartStyles.bottomAxis(
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index > 0 && index <= projacoes.length) {
+                  return ChartStyles.axisLabel('${projacoes[index - 1].periodo}m');
+                }
+                return const SizedBox.shrink();
+              },
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        // Legenda
-        Wrap(
-          spacing: 16,
-          children: [
-            _buildLegendaItem('Receita', AppColors.success),
-            _buildLegendaItem('Custo', AppColors.error),
-            _buildLegendaItem('Margem', AppColors.primary),
+          borderData: ChartStyles.borderNenhum,
+          lineBarsData: [
+            ChartStyles.lineBar(
+              spots: [
+                for (int i = 0; i < projacoes.length; i++)
+                  FlSpot(i + 1.0, projacoes[i].receita)
+              ],
+              color: ChartStyles.positive,
+              showArea: true,
+            ),
+            ChartStyles.lineBar(
+              spots: [
+                for (int i = 0; i < projacoes.length; i++)
+                  FlSpot(i + 1.0, projacoes[i].custo)
+              ],
+              color: ChartStyles.negative,
+              showArea: true,
+            ),
+            ChartStyles.lineBar(
+              spots: [
+                for (int i = 0; i < projacoes.length; i++)
+                  FlSpot(i + 1.0, projacoes[i].margem)
+              ],
+              color: ChartStyles.barBlue,
+            ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildLegendaItem(String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          color: color,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildTabelaProjecao() {
-    return Card(
-      elevation: 2,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
+        border: Border.all(color: AppColors.borderDark),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            color: AppColors.bgDark,
+            decoration: const BoxDecoration(
+              color: AppColors.bgDark,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            ),
             padding: const EdgeInsets.all(12),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   flex: 15,
-                  child: Text(
-                    'Período',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                  ),
+                  child: Text('Período',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
                 Expanded(
                   flex: 28,
-                  child: Text(
-                    'Receita',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                  ),
+                  child: Text('Receita', textAlign: TextAlign.right,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
                 Expanded(
                   flex: 28,
-                  child: Text(
-                    'Custo',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                  ),
+                  child: Text('Custo', textAlign: TextAlign.right,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
                 Expanded(
                   flex: 29,
-                  child: Text(
-                    'Margem',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-                  ),
+                  child: Text('Margem', textAlign: TextAlign.right,
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold,
+                          fontSize: 11, color: AppColors.newTextPrimary)),
                 ),
               ],
             ),
@@ -358,7 +295,7 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
                     flex: 15,
                     child: Text(
                       '${proj.periodo}m',
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.newTextPrimary),
                     ),
                   ),
                   Expanded(
@@ -366,7 +303,7 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
                     child: Text(
                       'R\$ ${(proj.receita / 1000).toStringAsFixed(1)}k',
                       textAlign: TextAlign.right,
-                      style: const TextStyle(fontSize: 10),
+                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.newTextSecondary),
                     ),
                   ),
                   Expanded(
@@ -374,7 +311,7 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
                     child: Text(
                       'R\$ ${(proj.custo / 1000).toStringAsFixed(1)}k',
                       textAlign: TextAlign.right,
-                      style: const TextStyle(fontSize: 10),
+                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.newTextSecondary),
                     ),
                   ),
                   Expanded(
@@ -382,12 +319,12 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
                     child: Text(
                       'R\$ ${(proj.margem / 1000).toStringAsFixed(1)}k',
                       textAlign: TextAlign.right,
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: proj.margem >= 0
-                            ? AppColors.success
-                            : AppColors.error,
+                            ? ChartStyles.positive
+                            : ChartStyles.negative,
                       ),
                     ),
                   ),

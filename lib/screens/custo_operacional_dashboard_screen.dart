@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/kpi_card.dart';
 import '../constants/app_colors.dart';
+import '../constants/chart_styles.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/exportacao_pdf_service.dart';
 import '../models/models.dart';
@@ -123,29 +124,17 @@ class _CustoOperacionalDashboardScreenState
       return [];
     }
 
-    final cores = [
-      AppColors.newSuccess,
-      AppColors.newWarning,
-      AppColors.newInfo,
-      AppColors.newPrimary,
-    ];
-
     int colorIndex = 0;
     return dados.entries.map((entry) {
-      final cor = cores[colorIndex % cores.length];
+      final cor = ChartStyles.seriesColors[colorIndex % ChartStyles.seriesColors.length];
       colorIndex++;
       final percentual = (entry.value / total) * 100;
 
-      return PieChartSectionData(
+      return ChartStyles.pieSection(
         value: entry.value,
         title: '${percentual.toStringAsFixed(1)}%',
         color: cor,
         radius: 80,
-        titleStyle: GoogleFonts.inter(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
       );
     }).toList();
   }

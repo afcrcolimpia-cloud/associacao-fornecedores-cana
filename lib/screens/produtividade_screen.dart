@@ -3,7 +3,9 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
+import '../widgets/chart_card.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../constants/chart_styles.dart';
 import '../models/models.dart';
 import '../services/produtividade_service.dart';
 import '../services/pdf_generators/pdf_produtividade.dart';
@@ -381,67 +383,54 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
         }
 
         final dados = snapshot.data!;
+        final maxY = dados
+                .map((e) => e['peso'] as double)
+                .reduce((a, b) => a > b ? a : b) *
+            1.2;
 
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Produção por Mês',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        return ChartCard(
+          titulo: 'Produção por Mês',
+          subtitulo: 'Safra $_anoSafraSelecionado',
+          height: 250,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxY,
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: ChartStyles.barTooltip(
+                  getLabel: (i) =>
+                      '${(dados[i]['peso'] as double).toStringAsFixed(1)} t',
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 200,
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: dados.map((e) => e['peso'] as double).reduce(
-                            (a, b) => a > b ? a : b,
-                          ) * 1.2,
-                      barGroups: dados.asMap().entries.map((entry) {
-                        return BarChartGroupData(
-                          x: entry.key,
-                          barRods: [
-                            BarChartRodData(
-                              toY: entry.value['peso'] as double,
-                              color: Colors.green,
-                              width: 20,
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                      titlesData: FlTitlesData(
-                        leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: true),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              if (value.toInt() >= dados.length) {
-                                return const Text('');
-                              }
-                              return Text(dados[value.toInt()]['mes']);
-                            },
-                          ),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      gridData: const FlGridData(show: true),
+              ),
+              barGroups: dados.asMap().entries.map((entry) {
+                return BarChartGroupData(
+                  x: entry.key,
+                  barRods: [
+                    ChartStyles.barRod(
+                      toY: entry.value['peso'] as double,
+                      color: ChartStyles.barPrimary,
                     ),
-                  ),
+                  ],
+                );
+              }).toList(),
+              titlesData: ChartStyles.titlesData(
+                left: ChartStyles.leftAxis(
+                  getTitlesWidget: (value, meta) =>
+                      ChartStyles.axisLabel('${value.toInt()}'),
                 ),
-              ],
+                bottom: ChartStyles.bottomAxis(
+                  getTitlesWidget: (value, meta) {
+                    if (value.toInt() >= dados.length) {
+                      return const SizedBox.shrink();
+                    }
+                    return ChartStyles.axisLabel(
+                        dados[value.toInt()]['mes'] as String);
+                  },
+                ),
+              ),
+              borderData: ChartStyles.borderNenhum,
+              gridData: ChartStyles.gridPadrao,
             ),
           ),
         );

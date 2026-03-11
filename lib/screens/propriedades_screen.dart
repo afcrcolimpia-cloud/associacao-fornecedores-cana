@@ -39,11 +39,29 @@ class _PropriedadesPorProprietarioScreenState
         setState(() => _selectedNavigationIndex = index);
       },
       title: 'Propriedades de ${widget.proprietarioNome}',
-      child: Column(
+      child: Stack(
         children: [
-          _buildFiltros(),
-          Expanded(
-            child: _buildPropriedades(),
+          Column(
+            children: [
+              _buildFiltros(),
+              Expanded(
+                child: _buildPropriedades(),
+              ),
+            ],
+          ),
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: () => _mostrarFormulario(),
+              backgroundColor: AppColors.newPrimary,
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.add_business),
+              label: const Text(
+                'Nova Propriedade',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
         ],
       ),

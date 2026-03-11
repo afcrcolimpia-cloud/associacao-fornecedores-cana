@@ -36,7 +36,9 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
       onNavigationSelect: (index) {
         setState(() => _selectedNavigationIndex = index);
       },
-      child: Column(
+      child: Stack(
+        children: [
+          Column(
         children: [
           // SEARCH BAR
           Container(
@@ -228,6 +230,30 @@ class _ProprietariosScreenState extends State<ProprietariosScreen> {
                   ),
                 );
               },
+            ),
+          ),
+        ],
+      ),
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProprietarioFormScreen(),
+                  ),
+                );
+                if (result == true && mounted) setState(() {});
+              },
+              backgroundColor: AppColors.newPrimary,
+              foregroundColor: Colors.black,
+              icon: const Icon(Icons.person_add),
+              label: Text(
+                'Novo Proprietário',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],

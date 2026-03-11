@@ -165,6 +165,14 @@ lib/
 - SQL fica em `lib/sql/` — nomear: `[numero]_[descricao].pgsql`
 - Ex: `002_tabela_pragas.pgsql`
 - **Nunca** alterar tabelas direto no Dashboard em produção
+- **SQL SEMPRE seguro e idempotente** — toda migration DEVE poder ser executada mais de uma vez sem erro:
+  - `ADD COLUMN IF NOT EXISTS` — nunca `ADD COLUMN` direto
+  - `DROP COLUMN IF EXISTS` — nunca `DROP COLUMN` direto
+  - `DROP POLICY IF EXISTS` antes de `CREATE POLICY`
+  - `INSERT ... ON CONFLICT DO UPDATE` — nunca `DELETE + INSERT` para seed data
+  - Verificar existência de colunas via `information_schema.columns` antes de referenciar colunas que podem não existir (ex: migração de dados entre colunas)
+  - Criar constraints (`UNIQUE`, `FK`) dentro de `DO $$ ... IF NOT EXISTS ... $$` para evitar erro de duplicata
+  - Comentar no topo do arquivo: `-- NOTA: Operações idempotentes. Pode executar mais de uma vez sem risco.`
 
 ### Storage (Anexos)
 - Usar sempre `AnexoService` para uploads
@@ -358,6 +366,8 @@ Implementar botões "Gerar PDF" e "Salvar" nas telas abaixo, seguindo EXATAMENTE
 5. Reportar em português o que foi feito em cada tela
 
 ---
+
+### /dashboard
 Analisar o código atual da `gestao_agricola_dashboard_screen.dart` e corrigir o layout para seguir estas regras obrigatórias:
 - Manter o layout/design moderno que foi criado
 - Mostrar APENAS dados que vêm do Supabase via services existentes

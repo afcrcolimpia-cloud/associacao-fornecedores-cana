@@ -1,40 +1,64 @@
 -- 003_variedades_cana.pgsql
 -- Migration: Atualizar tabela variedades com novos campos e seed de 54 variedades
 -- Fonte: Tabela de Variedades 2024 — AFCRC Catanduva
+-- NOTA: Todas as operações são seguras (idempotentes). Pode executar mais de uma vez sem risco.
 
 -- =============================================
 -- 1. Atualizar estrutura da tabela variedades
 -- =============================================
 
--- Adicionar coluna instituicao
+-- Adicionar colunas novas (IF NOT EXISTS = seguro para re-execução)
 ALTER TABLE variedades ADD COLUMN IF NOT EXISTS instituicao text DEFAULT '';
-
--- Adicionar coluna destaque (substituindo caracteristicas)
 ALTER TABLE variedades ADD COLUMN IF NOT EXISTS destaque text DEFAULT '';
-
--- Adicionar coluna epoca_colheita (substituindo meses_colheita)
 ALTER TABLE variedades ADD COLUMN IF NOT EXISTS epoca_colheita text DEFAULT '';
 
--- Migrar dados de caracteristicas para destaque (se existirem)
-UPDATE variedades SET destaque = caracteristicas WHERE caracteristicas IS NOT NULL AND destaque = '';
+-- Migrar dados da coluna antiga 'caracteristicas' para 'destaque' (se existir)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'variedades' AND column_name = 'caracteristicas'
+  ) THEN
+    UPDATE variedades SET destaque = caracteristicas
+    WHERE caracteristicas IS NOT NULL AND (destaque IS NULL OR destaque = '');
+  END IF;
+END $$;
 
--- Remover colunas antigas (se existirem)
+-- Remover colunas antigas (IF EXISTS = seguro)
 ALTER TABLE variedades DROP COLUMN IF EXISTS caracteristicas;
 ALTER TABLE variedades DROP COLUMN IF EXISTS meses_colheita;
 
+-- Remover CHECK constraints que restringem ambiente_producao a valor único
+-- (constraint pode ter sido criada manualmente com typos no nome)
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT conname
+    FROM pg_constraint
+    WHERE conrelid = 'variedades'::regclass
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) ILIKE '%ambiente_produc%'
+  LOOP
+    EXECUTE format('ALTER TABLE variedades DROP CONSTRAINT IF EXISTS %I', r.conname);
+  END LOOP;
+END $$;
+
 -- =============================================
 -- 2. Seed: 54 variedades oficiais AFCRC 2024
+-- Usa INSERT ... ON CONFLICT para não duplicar
 -- =============================================
 
--- Limpar dados antigos de seed (se houver)
-DELETE FROM variedades WHERE codigo IN (
-  'SP80-1842','SP87-365','SP83-5073',
-  'CTC2','CTC4','CTC20','CTC9001','CTC9002','CTC9003','CTC9005HP','CTC9006','CTC9007','CTC9008','CTC9009','CTC3445',
-  'CT02-2994','CT96-1007',
-  'IACCTC07-2361','IACSP95-5094','IACSP04-6007','IACSP015503','IACSP974039','IACCTC07-7207','IACCT078008','IACCT07-8044',
-  'RB92-579','RB00-5014','RB97-5033','RB06-5084','RB03-5151','RB85-5156','RB01-5177','RB97-5201','RB97-5242','RB07-5253','RB01-5279','RB07-5322','RB97-5375','RB85-5453','RB98-5476','RB85-5536','RB04-5836','RB96-5902','RB01-5935','RB97-5952','RB03-6152','RB96-6928','RB86-7515','RB12-7825','RB92-8064','RB98-8082',
-  'CV7870','CV6654','CV0618'
-);
+-- Criar constraint única no codigo (se não existir) para ON CONFLICT funcionar
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'variedades_codigo_unique'
+  ) THEN
+    ALTER TABLE variedades ADD CONSTRAINT variedades_codigo_unique UNIQUE (codigo);
+  END IF;
+END $$;
 
 INSERT INTO variedades (codigo, nome, instituicao, destaque, ambiente_producao, epoca_colheita, ativa)
 VALUES
@@ -91,7 +115,14 @@ VALUES
   ('RB98-8082', 'RB98-8082', 'RB', 'Alta produtividade', 'A B C', 'Jul Ago Set', true),
   ('CV7870', 'CV7870', 'CV', 'Produtividade', 'B C D', 'Jun Jul Ago', true),
   ('CV6654', 'CV6654', 'CV', 'Perfilhamento', 'B C D', 'Abr Mai Jun Jul Ago', true),
-  ('CV0618', 'CV0618', 'CV', 'Produtividade e rusticidade', 'B C D', 'Mai Jun Jul Ago', true);
+  ('CV0618', 'CV0618', 'CV', 'Produtividade e rusticidade', 'B C D', 'Mai Jun Jul Ago', true)
+ON CONFLICT (codigo) DO UPDATE SET
+  nome = EXCLUDED.nome,
+  instituicao = EXCLUDED.instituicao,
+  destaque = EXCLUDED.destaque,
+  ambiente_producao = EXCLUDED.ambiente_producao,
+  epoca_colheita = EXCLUDED.epoca_colheita,
+  ativa = EXCLUDED.ativa;
 
 -- =============================================
 -- 3. RLS (Row Level Security)

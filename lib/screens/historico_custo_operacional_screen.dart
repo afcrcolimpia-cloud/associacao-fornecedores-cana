@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/chart_card.dart';
 import '../constants/app_colors.dart';
+import '../constants/chart_styles.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/exportacao_pdf_service.dart';
 import '../models/models.dart';
@@ -348,16 +350,9 @@ class _HistoricoCustoOperacionalScreenState
             const SizedBox(height: 24),
 
             // Gráfico de Evolução
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceDark,
-                border: Border.all(
-                  color: AppColors.borderDark,
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
+            ChartCard(
+              titulo: 'Evolução de Custos por Safra',
+              margin: EdgeInsets.zero,
               child: _loadingCenarios
                   ? const Center(child: CircularProgressIndicator())
                   : _cenarios.isEmpty
@@ -370,69 +365,32 @@ class _HistoricoCustoOperacionalScreenState
                             ),
                           ),
                         )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Evolução de Custos por Safra',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.newTextPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              height: 300,
-                              child: BarChart(
+                      : BarChart(
                                 BarChartData(
                                   barGroups: _buildBarChartGroups(),
-                                  titlesData: FlTitlesData(
-                                    bottomTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        getTitlesWidget: (double value,
+                                  titlesData: ChartStyles.titlesData(
+                                    left: ChartStyles.leftAxis(
+                                      getTitlesWidget: (value, meta) =>
+                                          ChartStyles.axisLabel('${value.toInt()}%'),
+                                    ),
+                                    bottom: ChartStyles.bottomAxis(
+                                      getTitlesWidget: (double value,
                                             TitleMeta meta) {
                                           final safras =
                                               _getCustosPorSafra().keys.toList();
                                           if (value.toInt() < safras.length) {
-                                            return Text(
+                                            return ChartStyles.axisLabel(
                                               safras[value.toInt()],
-                                              style: GoogleFonts.inter(
-                                                fontSize: 12,
-                                                color: AppColors
-                                                    .newTextSecondary,
-                                              ),
                                             );
                                           }
-                                          return const SizedBox();
+                                          return const SizedBox.shrink();
                                         },
-                                      ),
-                                    ),
-                                    leftTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        getTitlesWidget: (double value,
-                                            TitleMeta meta) {
-                                          return Text(
-                                            '${value.toInt()}%',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 10,
-                                              color: AppColors
-                                                  .newTextSecondary,
-                                            ),
-                                          );
-                                        },
-                                      ),
                                     ),
                                   ),
-                                  borderData: FlBorderData(show: false),
-                                  gridData: const FlGridData(show: false),
+                                  borderData: ChartStyles.borderNenhum,
+                                  gridData: ChartStyles.gridPadrao,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
             ),
 
             const SizedBox(height: 32),

@@ -107,11 +107,29 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             });
           }
 
-          return Column(
+          return Stack(
             children: [
-              HeaderPropriedade(contexto: widget.contexto),
-              Expanded(
-                child: _buildContenudoCenarios(cenarioSelecionado, cenarios),
+              Column(
+                children: [
+                  HeaderPropriedade(contexto: widget.contexto),
+                  Expanded(
+                    child: _buildContenudoCenarios(cenarioSelecionado, cenarios),
+                  ),
+                ],
+              ),
+              Positioned(
+                bottom: 24,
+                right: 24,
+                child: FloatingActionButton.extended(
+                  onPressed: _criarNovoCenario,
+                  backgroundColor: AppColors.newPrimary,
+                  foregroundColor: Colors.black,
+                  icon: const Icon(Icons.add),
+                  label: const Text(
+                    'Novo Cenário',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
               ),
             ],
           );

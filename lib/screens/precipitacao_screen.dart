@@ -3,8 +3,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:gestao_cana_app/constants/app_colors.dart';
+import 'package:gestao_cana_app/constants/chart_styles.dart';
 import 'package:gestao_cana_app/widgets/app_shell.dart';
 import 'package:gestao_cana_app/widgets/header_propriedade.dart';
+import 'package:gestao_cana_app/widgets/chart_card.dart';
 import 'package:gestao_cana_app/models/models.dart';
 import 'package:gestao_cana_app/services/precipitacao_service.dart';
 import 'package:gestao_cana_app/services/pdf_generators/pdf_precipitacao.dart';
@@ -250,66 +252,46 @@ class _PrecipitacaoScreenState extends State<PrecipitacaoScreen> {
             const SizedBox(height: 20),
 
             // BarChart - Precipitação Mensal
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                height: 300,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceDark,
-                  border: Border.all(color: AppColors.borderDark),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: BarChart(
-                  BarChartData(
-                    barGroups: List.generate(
-                      12,
-                      (index) => BarChartGroupData(
-                        x: index,
-                        barRods: [
-                          BarChartRodData(
-                            toY: _monthlyData[index],
-                            color: AppColors.newSuccess,
-                            width: 14,
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    gridData: FlGridData(
-                      show: true,
-                      drawVerticalLine: false,
-                      horizontalInterval: 50,
-                      getDrawingHorizontalLine: (value) => const FlLine(
-                        color: AppColors.borderDark,
-                        strokeWidth: 0.5,
-                      ),
-                    ),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          getTitlesWidget: (value, meta) => Text(
-                            '${value.toInt()}',
-                            style: const TextStyle(color: AppColors.newTextSecondary, fontSize: 10),
-                          ),
+            ChartCard(
+              titulo: 'Precipitação Mensal',
+              subtitulo: _selectedMunicipio != null
+                  ? 'Município: $_selectedMunicipio — Ano: $_selectedSafra'
+                  : 'Ano: $_selectedSafra',
+              height: 250,
+              observacao: 'Total acumulado: ${_monthlyData.reduce((a, b) => a + b).toStringAsFixed(1)} mm',
+              child: BarChart(
+                BarChartData(
+                  barGroups: List.generate(
+                    12,
+                    (index) => BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        ChartStyles.barRod(
+                          toY: _monthlyData[index],
+                          color: ChartStyles.barBlue,
                         ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) => Text(
-                            _months[value.toInt()],
-                            style: const TextStyle(color: AppColors.newTextSecondary, fontSize: 10),
-                          ),
-                        ),
-                      ),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      ],
                     ),
-                    borderData: FlBorderData(show: false),
                   ),
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: ChartStyles.barTooltip(
+                      getLabel: (i) =>
+                          '${_monthlyData[i].toStringAsFixed(1)} mm',
+                    ),
+                  ),
+                  gridData: ChartStyles.gridPadrao,
+                  titlesData: ChartStyles.titlesData(
+                    left: ChartStyles.leftAxis(
+                      getTitlesWidget: (value, meta) =>
+                          ChartStyles.axisLabel('${value.toInt()}'),
+                    ),
+                    bottom: ChartStyles.bottomAxis(
+                      getTitlesWidget: (value, meta) =>
+                          ChartStyles.axisLabel(_months[value.toInt()]),
+                    ),
+                  ),
+                  borderData: ChartStyles.borderNenhum,
                 ),
               ),
             ),

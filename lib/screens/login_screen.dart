@@ -84,7 +84,17 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(
               flex: 2,
               child: Container(
-                color: AppColors.newPrimary,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF0DF28F), // newPrimary
+                      Color(0xFF0AC47A), // verde médio
+                      Color(0xFF089660), // verde escuro
+                    ],
+                  ),
+                ),
                 child: Center(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(40),

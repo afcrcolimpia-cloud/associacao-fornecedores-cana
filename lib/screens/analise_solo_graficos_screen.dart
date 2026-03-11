@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../constants/app_colors.dart';
+import '../constants/chart_styles.dart';
 import '../models/models.dart';
 
 class AnaliseSoloGraficosScreen extends StatefulWidget {
@@ -84,12 +86,11 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Macronutrientes e Acidez',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
-                  color: AppColors.newTextPrimary)),
+          Text('Macronutrientes e Acidez',
+              style: ChartStyles.titleStyle),
           const SizedBox(height: 4),
-          const Text('Valor atual vs. limite ideal',
-              style: TextStyle(fontSize: 12, color: AppColors.newTextSecondary)),
+          Text('Valor atual vs. limite ideal',
+              style: ChartStyles.subtitleStyle),
           const SizedBox(height: 16),
           ...widget.resultado.macronutrientes.map(_buildBarraHorizontal),
         ],
@@ -103,9 +104,9 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
 
   Widget _buildMicroTab() {
     if (widget.resultado.micronutrientes.isEmpty) {
-      return const Center(
+      return Center(
         child: Text('Nenhum micronutriente informado',
-            style: TextStyle(color: AppColors.newTextSecondary)),
+            style: ChartStyles.subtitleStyle),
       );
     }
     return SingleChildScrollView(
@@ -113,12 +114,11 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Micronutrientes',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
-                  color: AppColors.newTextPrimary)),
+          Text('Micronutrientes',
+              style: ChartStyles.titleStyle),
           const SizedBox(height: 4),
-          const Text('Valor atual vs. limite ideal',
-              style: TextStyle(fontSize: 12, color: AppColors.newTextSecondary)),
+          Text('Valor atual vs. limite ideal',
+              style: ChartStyles.subtitleStyle),
           const SizedBox(height: 16),
           ...widget.resultado.micronutrientes.map(_buildBarraHorizontal),
         ],
@@ -137,9 +137,8 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Resumo Geral',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
-                  color: AppColors.newTextPrimary)),
+          Text('Resumo Geral',
+              style: ChartStyles.titleStyle),
           const SizedBox(height: 16),
           _buildCardResumo('V% (Saturação por Bases)',
               r.saturacaoBases, 60, '%', r.semaforoCalagem),
@@ -181,10 +180,10 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
                   decoration: BoxDecoration(color: corBarra, shape: BoxShape.circle)),
               const SizedBox(width: 6),
               Expanded(child: Text(item.nome,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500,
                       color: AppColors.newTextPrimary))),
               Text('${item.valor.toStringAsFixed(item.unidade.isEmpty ? 1 : 2)} ${item.unidade}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold,
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold,
                       color: AppColors.newTextPrimary)),
             ],
           ),
@@ -229,7 +228,7 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
             Align(
               alignment: Alignment.centerRight,
               child: Text('Ideal: ${item.limiteIdeal!.toStringAsFixed(1)} ${item.unidade}',
-                  style: const TextStyle(fontSize: 10, color: AppColors.newTextMuted)),
+                  style: ChartStyles.observacaoStyle),
             ),
         ],
       ),
@@ -252,10 +251,10 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
               Container(width: 10, height: 10,
                   decoration: BoxDecoration(color: cor, shape: BoxShape.circle)),
               const SizedBox(width: 8),
-              Expanded(child: Text(titulo, style: const TextStyle(
+              Expanded(child: Text(titulo, style: GoogleFonts.inter(
                   fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.newTextPrimary))),
               Text('${valor.toStringAsFixed(1)}$unidade',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cor)),
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: cor)),
             ]),
             const SizedBox(height: 8),
             ClipRRect(
@@ -269,7 +268,7 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
             ),
             const SizedBox(height: 4),
             Text('Ideal: ${ideal.toStringAsFixed(0)}$unidade',
-                style: const TextStyle(fontSize: 10, color: AppColors.newTextMuted)),
+                style: ChartStyles.observacaoStyle),
           ],
         ),
       ),
@@ -299,7 +298,7 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
                 ),
                 child: Text(r.calagemFinal > 0
                     ? '${r.calagemFinal.toStringAsFixed(2)} t/ha' : 'Não necessária',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: cor)),
+                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: cor)),
               ),
             ]),
             const SizedBox(height: 8),
@@ -338,7 +337,7 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(texto,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: cor)),
+                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: cor)),
           ),
         ]),
       ),
@@ -390,13 +389,13 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
             Container(width: 10, height: 10,
                 decoration: BoxDecoration(color: cor, shape: BoxShape.circle)),
             const SizedBox(width: 6),
-            Text(nome, style: const TextStyle(fontSize: 12,
+            Text(nome, style: GoogleFonts.inter(fontSize: 12,
                 fontWeight: FontWeight.w500, color: AppColors.newTextPrimary)),
             const Spacer(),
             Text(valor.toStringAsFixed(1),
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cor)),
+                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: cor)),
             Text('  (${min.toStringAsFixed(1)} - ${max.toStringAsFixed(1)})',
-                style: const TextStyle(fontSize: 10, color: AppColors.newTextMuted)),
+                style: ChartStyles.observacaoStyle),
           ]),
           const SizedBox(height: 6),
           SizedBox(
@@ -440,9 +439,9 @@ class _AnaliseSoloGraficosScreenState extends State<AnaliseSoloGraficosScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(children: [
-        Expanded(child: Text(label, style: const TextStyle(
+        Expanded(child: Text(label, style: GoogleFonts.inter(
             fontSize: 11, color: AppColors.newTextSecondary))),
-        Text(valor, style: const TextStyle(
+        Text(valor, style: GoogleFonts.inter(
             fontSize: 11, color: AppColors.newTextPrimary)),
       ]),
     );
