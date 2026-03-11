@@ -10,14 +10,14 @@
 2. [Como Acessar o Sistema](#2-como-acessar-o-sistema)
 3. [Passo 1 — Selecionar a Cultura](#3-passo-1--selecionar-a-cultura)
 4. [Quadro 3 — Parâmetros Automáticos por Cultura](#4-quadro-3--parâmetros-automáticos-por-cultura)
-5. [Passo 2 — Preenchendo os Macronutrientes](#5-passo-2--preenchendo-os-macronutrientes)
+5. [Passo 2 — Dados Gerais e Macronutrientes](#5-passo-2--dados-gerais-e-macronutrientes)
 6. [Passo 3 — Dados Físicos, Micronutrientes e Calcário](#6-passo-3--dados-físicos-micronutrientes-e-calcário)
 7. [Como Ler os Resultados — Sistema Semáforo](#7-como-ler-os-resultados--sistema-semáforo)
 8. [Entendendo a Calagem](#8-entendendo-a-calagem)
 9. [Gessagem e Relações Iônicas](#9-gessagem-e-relações-iônicas)
 10. [Usando a Tela de Gráficos](#10-usando-a-tela-de-gráficos)
 11. [Tabela Resumo — Todos os Elementos](#11-tabela-resumo--todos-os-elementos-e-faixas-ideais)
-12. [Salvando e Consultando o Histórico](#12-salvando-e-consultando-o-histórico)
+12. [Salvando, Editando e Consultando o Histórico](#12-salvando-editando-e-consultando-o-histórico)
 13. [Boas Práticas e Erros Comuns](#13-boas-práticas-e-erros-comuns)
 14. [Resumo Rápido em 6 Passos](#14-resumo-rápido-em-6-passos)
 
@@ -121,7 +121,25 @@ Porcentagem de "bases boas" (K, Ca, Mg) na CTC que a cultura exige para crescer 
 
 ---
 
-## 5. Passo 2 — Preenchendo os Macronutrientes
+## 5. Passo 2 — Dados Gerais e Macronutrientes
+
+### 🏷️ Dados Gerais e Identificação
+
+Antes de preencher os valores do laudo, informe os **dados de identificação** da amostra:
+
+| Campo | O que digitar | Obrigatório? |
+|---|---|---|
+| **Talhão** | Selecione o talhão específico ou deixe "Geral" (análise da propriedade inteira) | Opcional |
+| **Laboratório** | Nome do laboratório que realizou a análise | Opcional |
+| **Nº Amostra** | Código de identificação da amostra no laudo | Opcional |
+| **Data de Coleta** | Data em que a amostra foi coletada no campo | Recomendado |
+| **Data do Resultado** | Data de emissão do laudo pelo laboratório | Recomendado |
+
+> 💡 **Dica:** Preencher o **Talhão** permite rastrear a evolução do solo talhão a talhão ao longo das safras.
+
+---
+
+### 🧪 Macronutrientes
 
 > 📋 Digite os valores **exatamente** como aparecem no laudo do laboratório. Atenção à unidade de cada campo.
 
@@ -134,7 +152,7 @@ Porcentagem de "bases boas" (K, Ca, Mg) na CTC que a cultura exige para crescer 
 | **Ca²⁺** | mmolc/dm³ | Cálcio (Ca) | ≥ 3,0 |
 | **Mg²⁺** | mmolc/dm³ | Magnésio (Mg) | ≥ 4,0 |
 | **Al³⁺** | mmolc/dm³ | Alumínio (Al) | ≤ 0,2 ⚠️ |
-| **H+Al** | mmolc/dm³ | Acidez Potencial (H+Al) | ≤ 2,5 ⚠️ |
+| **H+Al** | mmolc/dm³ | Acidez Potencial (H+Al) | < 25 ⚠️ |
 | **S (Enxofre)** | mg/dm³ | Enxofre (S) | ≥ 5,0 |
 
 > ⚠️ **Al³⁺ e H+Al têm lógica inversa:** quanto **menor** o valor, **melhor** para o solo.
@@ -189,6 +207,16 @@ Porcentagem de "bases boas" (K, Ca, Mg) na CTC que a cultura exige para crescer 
 
 ---
 
+### 📝 Observações
+
+| Campo | O que digitar |
+|---|---|
+| **Observações** | Anotações livres sobre a amostra: condições do solo, histórico de calagem, informações relevantes para o técnico |
+
+> 💡 Use esse campo para registrar contexto importante — por exemplo: "Área com calagem recente (ago/2025)" ou "Solo em pousio há 2 anos".
+
+---
+
 ## 7. Como Ler os Resultados — Sistema Semáforo
 
 Após clicar em **"Calcular Interpretação"**, cada elemento recebe uma cor:
@@ -215,6 +243,27 @@ Elemento deficiente ou tóxico. **Ação corretiva urgente!** Consulte o técnic
 ---
 
 > ⚠️ **Atenção especial para Al³⁺ e H+Al:** a lógica é **invertida** — verde = próximo de zero (bom), vermelho = valor alto (ruim).
+
+---
+
+### 📊 Valores Calculados Automaticamente
+
+Além do semáforo de cada elemento, o sistema **calcula automaticamente** 4 valores derivados a partir dos dados informados:
+
+| Valor | Fórmula | O que significa |
+|---|---|---|
+| **SB** (Soma de Bases) | K + Ca + Mg | Total de "bases boas" disponíveis no solo (mmolc/dm³) |
+| **CTC** (Capacidade de Troca Catiônica) | SB + H+Al | Capacidade total do solo de reter e trocar nutrientes (mmolc/dm³) |
+| **V%** (Saturação por Bases) | (SB ÷ CTC) × 100 | % da CTC ocupada por bases boas. Quanto maior, menos ácido |
+| **mt%** (Saturação por Alumínio) | [Al ÷ (Al + SB)] × 100 | % de alumínio tóxico em relação às bases. Quanto menor, melhor |
+
+> 💡 Esses valores aparecem no **card "Valores Calculados"** na aba RESULTADO. Você não precisa digitá-los — o sistema faz a conta automaticamente com base nos macronutrientes informados.
+
+**Como ler:**
+- **V% alto** (ex: 70%+) → solo bem corrigido, bases adequadas
+- **V% baixo** (ex: < 40%) → solo ácido, provável necessidade de calagem
+- **mt% alto** (ex: > 30%) → excesso de alumínio tóxico, risco para as raízes
+- **mt% baixo** (ex: < 5%) → alumínio sob controle
 
 ---
 
@@ -349,15 +398,16 @@ Mostra 5 barras para: Cu, Fe, Mn, Zn e B. Mesma lógica da aba Macro.
 | Elemento | Unidade | 🔴 Muito Baixo / Tóxico | 🟡 Médio | 🟢 Bom / Alto |
 |---|---|---|---|---|
 | pH CaCl₂ | — | < 4,5 | 4,5 a 6,0 | > 6,0 |
-| M.O. | g/dm³ | < 1,7 | 1,7 a 2,5 | ≥ 2,5 |
+| M.O. | g/dm³ | < 16 | 16 a 25 | ≥ 25 |
 | P (arenoso) | mg/dm³ | < 10 | 10 a 30 | ≥ 30 |
 | P (tex. média) | mg/dm³ | < 7 | 7 a 20 | ≥ 20 |
 | P (argiloso) | mg/dm³ | < 4 | 4 a 12 | ≥ 12 |
+| P (muito argiloso) | mg/dm³ | < 4 | 4 a 8 | ≥ 8 |
 | K⁺ | mmolc/dm³ | < 0,8 | 0,8 a 3,0 | ≥ 3,0 |
 | Ca²⁺ | mmolc/dm³ | < 3,0 | 3,0 a 7,0 | ≥ 7,0 |
 | Mg²⁺ | mmolc/dm³ | < 4,0 | 4,0 a 8,0 | ≥ 8,0 |
 | Al³⁺ ¹ | mmolc/dm³ | > 1,0 *(ruim)* | 0,2 a 1,0 | < 0,2 *(bom)* |
-| H+Al ¹ | mmolc/dm³ | > 5,0 *(ruim)* | 2,5 a 5,0 | < 2,5 *(bom)* |
+| H+Al ¹ | mmolc/dm³ | > 50 *(ruim)* | 25 a 50 | < 25 *(bom)* |
 | S (Enxofre) | mg/dm³ | < 5 | 5 a 10 | ≥ 10 |
 | Cu | mg/dm³ | < 0,3 | 0,3 a 0,8 | ≥ 0,8 |
 | Fe | mg/dm³ | < 5 | 5 a 12 | ≥ 12 |
@@ -370,23 +420,52 @@ Mostra 5 barras para: Cu, Fe, Mn, Zn e B. Mesma lógica da aba Macro.
 
 ---
 
-## 12. Salvando e Consultando o Histórico
+## 12. Salvando, Editando e Consultando o Histórico
 
 ### Como salvar uma análise
 
 1. **Calcule** — Preencha todos os campos e clique em "Calcular Interpretação"
 2. **Revise** — Confira os resultados na Aba RESULTADO com os semáforos
-3. **Salve** — Clique no ícone 💾 na barra superior
+3. **Salve** — Clique no botão **SALVAR ANÁLISE** na aba RESULTADO
 4. **Confirme** — Uma mensagem verde confirmará que os dados foram salvos no sistema
 
 ### Consultando o Histórico
 
 | Ação | Como fazer |
 |---|---|
-| 📋 Acessar | Toque na **Aba HISTÓRICO** na tela de Análise de Solo |
+| 📋 Acessar | Clique na **Aba HISTÓRICO** na tela de Análise de Solo |
 | 🔍 Ver análises | As análises aparecem da mais recente para a mais antiga |
-| 🚦 Semáforo | Cada registro mostra o ícone de semáforo da calagem |
-| 🗑️ Excluir | Toque no ícone de lixeira para remover uma análise |
+| 🚦 Semáforo | Cada registro mostra o ícone de semáforo da calagem (verde/amarelo/vermelho) |
+| 📄 Detalhes | Cada registro exibe: nome do talhão, cultura, data de coleta e laboratório |
+
+### Editando uma análise existente
+
+1. Acesse a **Aba HISTÓRICO**
+2. Localize a análise desejada na lista
+3. Clique no ícone **👁 (visualizar/carregar)** à direita do registro
+4. O sistema carregará todos os dados nos campos da **Aba DADOS** e recalculará automaticamente
+5. O botão mudará de "SALVAR" para **"ATUALIZAR ANÁLISE"**
+6. Faça as correções necessárias e clique em **CALCULAR** novamente
+7. Confira na Aba RESULTADO e clique em **ATUALIZAR ANÁLISE** para salvar as alterações
+
+> 💡 **Dica:** Ao carregar uma análise do histórico, todos os campos são preenchidos — inclusive cultura, talhão, datas e observações.
+
+### Criando uma nova análise
+
+Se você carregou uma análise do histórico e quer começar do zero:
+
+1. Clique no botão **"Nova Análise"** na Aba HISTÓRICO
+2. Todos os campos serão **limpos** automaticamente
+3. O sistema volta para a **Aba DADOS** pronta para novo preenchimento
+
+### Excluindo uma análise
+
+1. Na **Aba HISTÓRICO**, localize o registro
+2. Clique no ícone **🗑️ (lixeira)**
+3. Confirme a exclusão no diálogo que aparece
+4. A análise será **removida permanentemente** do sistema
+
+> ⚠️ **Atenção:** A exclusão é irreversível. Confirme com cuidado.
 
 ---
 
