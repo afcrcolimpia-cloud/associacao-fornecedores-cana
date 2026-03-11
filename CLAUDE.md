@@ -144,6 +144,20 @@ lib/
 - `const` sempre que possível, `final` por padrão
 - Imports: dart → flutter → packages externos → arquivos locais
 
+### Campos numéricos (TextFormField / TextField)
+- Campos que aceitam valores decimais (R$/ha, t/ha, kg/t, %, etc.) DEVEM usar `TextInputType.numberWithOptions(decimal: true)` — **nunca** `TextInputType.number` sozinho
+- `TextInputType.number` (sem decimal) SOMENTE para campos inteiros puros: ano da safra, longevidade (safras), CPF/CNPJ, telefone
+- `FilteringTextInputFormatter.digitsOnly` SOMENTE para campos inteiros puros — nunca em campos que aceitam decimal
+- Para campos decimais com filtro, usar `FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))`
+- Exemplos de campos que DEVEM ter decimal: Produtividade, ATR, Dose de Muda, Preço do Diesel, Custo Administrativo, Arrendamento, Área (ha), profundidade (cm)
+
+### Seleção e cópia de texto
+- `SelectionArea` está implementado no `AppShell` — envolve o conteúdo de TODAS as telas automaticamente
+- NUNCA usar `enableInteractiveSelection: false` em campos de texto
+- NUNCA remover o `SelectionArea` do `AppShell`
+- Toda nova tela que usar `AppShell` já herda a seleção de texto — não precisa de configuração extra
+- Se criar uma tela SEM `AppShell`, envolver o conteúdo em `SelectionArea` manualmente
+
 ---
 
 ## 🔐 Supabase — Regras Obrigatórias
