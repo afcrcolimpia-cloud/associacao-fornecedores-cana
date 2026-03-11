@@ -449,7 +449,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: AppColors.borderDark),
           borderRadius: BorderRadius.circular(8),
           color: destaque ? color.withOpacity(0.05) : null,
         ),
@@ -468,7 +468,7 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
                     style: TextStyle(
                       fontSize: destaque ? 15 : 14,
                       fontWeight: destaque ? FontWeight.bold : FontWeight.w500,
-                      color: data != null ? Colors.black87 : Colors.grey[400],
+                      color: data != null ? AppColors.newTextPrimary : AppColors.newTextMuted,
                     ),
                   ),
                 ],
@@ -494,15 +494,11 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
   Widget _buildBotaoSalvar(bool isEdicao) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceDark,
+        border: Border(
+          top: BorderSide(color: AppColors.borderDark),
+        ),
       ),
       child: SafeArea(
         child: ElevatedButton(

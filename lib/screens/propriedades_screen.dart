@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/propriedade_service.dart';
@@ -92,8 +93,8 @@ class _PropriedadesPorProprietarioScreenState
       onSelected: (_) {
         setState(() => _filtro = value);
       },
-      backgroundColor: Colors.grey[200],
-      selectedColor: Colors.green[300],
+      backgroundColor: AppColors.surfaceDark,
+      selectedColor: AppColors.newPrimary.withOpacity(0.3),
     );
   }
 

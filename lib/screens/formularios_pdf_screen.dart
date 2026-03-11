@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../widgets/app_shell.dart';
 import 'package:printing/printing.dart';
 import '../services/pdf_generators/pdf_sphenophorus.dart';
@@ -28,7 +28,7 @@ class FormulariosPdfScreen extends StatefulWidget {
 }
 
 class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
-  int _tipoFormulario = -1; // -1: Seleção, 0: Sphenophorus, 1: Broca, 2: Broca+Cigarrinha
+  int _tipoFormulario = -1; // -1: Sele��o, 0: Sphenophorus, 1: Broca, 2: Broca+Cigarrinha
   
   late Propriedade _propriedade;
   late List<Talhao> _talhoes = [];
@@ -54,7 +54,7 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
             .getTalhoesByPropriedadeStream(_propriedade.id)
             .first;
       } else {
-        // Caso contrário, carregar manualmente
+        // Caso contr�rio, carregar manualmente
         final propriedadeService = PropriedadeService();
         final talhaoService = TalhaoService();
         final proprietarioService = ProprietarioService();
@@ -63,12 +63,12 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
         _propriedade = widget.propriedade ??
             (await propriedadeService.getPropriedadeById(widget.propriedadeId!))!;
 
-        // Buscar talhões
+        // Buscar talh�es
         _talhoes = await talhaoService
             .getTalhoesByPropriedadeStream(_propriedade.id)
             .first;
 
-        // Buscar proprietário
+        // Buscar propriet�rio
         _proprietario =
             await proprietarioService.getProprietario(_propriedade.proprietarioId);
       }
@@ -107,7 +107,7 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Text(
-              'Relatórios de Pragas',
+              'Relat�rios de Pragas',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
@@ -124,7 +124,7 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Selecione o Tipo de Relatório',
+            'Selecione o Tipo de Relat�rio',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 24),
@@ -258,7 +258,7 @@ class _FormulariosPdfScreenState extends State<FormulariosPdfScreen> {
             ],
           ),
         ),
-        // Botão voltar no topo
+        // Bot�o voltar no topo
         Positioned(
           top: 16,
           right: 16,
@@ -307,7 +307,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
     _tecnicoCtrl = TextEditingController();
     _observacaoCtrl = TextEditingController();
     
-    // Criar 16 controladores para possibilitar até 16 linhas de talhões
+    // Criar 16 controladores para possibilitar at� 16 linhas de talh�es
     _pontosCtrl = List.generate(16, (_) => TextEditingController());
     _larvaCtrl = List.generate(16, (_) => TextEditingController());
     _pupaCtrl = List.generate(16, (_) => TextEditingController());
@@ -341,9 +341,9 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Cabeçalho
+        // Cabe�alho
         Text(
-          'Relatório de Sphenophorus (Bicudo da Cana)',
+          'Relat�rio de Sphenophorus (Bicudo da Cana)',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.brown,
@@ -351,22 +351,22 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
         ),
         const SizedBox(height: 24),
         
-        // Seção de identificação
+        // Se��o de identifica��o
         _buildCardSection(
-          title: 'Identificação',
+          title: 'Identifica��o',
           child: Column(
             children: [
               _buildTextField('F.A. (Ficha de Acompanhamento) *', _faCtrl),
               const SizedBox(height: 12),
               _buildTextField('Fornecedor', _fornecedorCtrl),
               const SizedBox(height: 12),
-              _buildTextField('ID (Número ID)', _idCtrl),
+              _buildTextField('ID (N�mero ID)', _idCtrl),
               const SizedBox(height: 12),
               _buildTextField('Propriedade', _propriedadeCtrl),
               const SizedBox(height: 12),
               _buildTextField('Data (dd/mm/aaaa)', _dataCtrl),
               const SizedBox(height: 12),
-              _buildTextField('Técnico(s)', _tecnicoCtrl),
+              _buildTextField('T�cnico(s)', _tecnicoCtrl),
             ],
           ),
         ),
@@ -375,13 +375,13 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
         
         // Tabela de dados
         _buildCardSection(
-          title: 'Dados de Avaliação (Talhão - Até 16 linhas)',
+          title: 'Dados de Avalia��o (Talh�o - At� 16 linhas)',
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
               columnSpacing: 8,
               columns: [
-                DataColumn(label: Text('TALHÃO', style: _tableHeaderStyle())),
+                DataColumn(label: Text('TALH�O', style: _tableHeaderStyle())),
                 DataColumn(label: Text('PONTOS', style: _tableHeaderStyle()), numeric: true),
                 DataColumn(label: Text('LARVA', style: _tableHeaderStyle()), numeric: true),
                 DataColumn(label: Text('PUPA', style: _tableHeaderStyle()), numeric: true),
@@ -395,7 +395,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
                     DataCell(
                       SizedBox(
                         width: 80,
-                        child: _buildSmallTextField(_pontosCtrl[index], hint: 'Talhão ${index + 1}'),
+                        child: _buildSmallTextField(_pontosCtrl[index], hint: 'Talh�o ${index + 1}'),
                       ),
                     ),
                     DataCell(
@@ -443,15 +443,15 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
         
         const SizedBox(height: 20),
         
-        // Observação
+        // Observa��o
         _buildCardSection(
-          title: 'Observação',
-          child: _buildTextField('OBSERVAÇÃO', _observacaoCtrl, maxLines: 3),
+          title: 'Observa��o',
+          child: _buildTextField('OBSERVA��O', _observacaoCtrl, maxLines: 3),
         ),
         
         const SizedBox(height: 24),
         
-        // Botões de ação
+        // Bot�es de a��o
         Row(
           children: [
             Expanded(
@@ -486,7 +486,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
   Future<SphenophorusData?> _coletarDadosSphenophorus() async {
     if (_faCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('F.A. é obrigatório'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('F.A. � obrigat�rio'), backgroundColor: Colors.red),
       );
       return null;
     }
@@ -508,7 +508,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
 
     if (linhas.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha pelo menos um talhão'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Preencha pelo menos um talh�o'), backgroundColor: Colors.orange),
       );
       return null;
     }
@@ -542,7 +542,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
     try {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Salvando relatério...'), duration: Duration(seconds: 2)),
+          const SnackBar(content: Text('Salvando relat�rio...'), duration: Duration(seconds: 2)),
         );
       }
 
@@ -559,7 +559,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Relatório salvo com sucesso!'),
+            content: Text('Relat�rio salvo com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -624,7 +624,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
         labelText: label,
         hintText: hint,
         filled: true,
-        fillColor: AppColors.lightBackground,
+        fillColor: AppColors.bgDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -639,7 +639,7 @@ class _SphenophorusFormState extends State<SphenophorusForm> {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surfaceDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
         ),
@@ -690,7 +690,7 @@ class _BrocaFormState extends State<BrocaForm> {
     _blocoCtrl = TextEditingController();
     _tecnicoCtrl = TextEditingController();
     
-    // Criar 20 controladores para possibilitar até 20 linhas de cana
+    // Criar 20 controladores para possibilitar at� 20 linhas de cana
     _canaCtrl = List.generate(20, (_) => TextEditingController());
     _totalCtrl = List.generate(20, (_) => TextEditingController());
     _brocadosCtrl = List.generate(20, (_) => TextEditingController());
@@ -721,9 +721,9 @@ class _BrocaFormState extends State<BrocaForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Cabeçalho
+        // Cabe�alho
         Text(
-          'Índice de Intensidade de Infestação - Broca',
+          '�ndice de Intensidade de Infesta��o - Broca',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.orange[700],
@@ -731,9 +731,9 @@ class _BrocaFormState extends State<BrocaForm> {
         ),
         const SizedBox(height: 24),
         
-        // Seção de identificação
+        // Se��o de identifica��o
         _buildCardSection(
-          title: 'Identificação da Avaliação',
+          title: 'Identifica��o da Avalia��o',
           child: Column(
             children: [
               Row(
@@ -752,15 +752,15 @@ class _BrocaFormState extends State<BrocaForm> {
                 children: [
                   Expanded(child: _buildTextField('F.A.', _faCtrl)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildTextField('Nº de Corte (ex: 3º)', _nCorteCtrl)),
+                  Expanded(child: _buildTextField('N� de Corte (ex: 3�)', _nCorteCtrl)),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _buildTextField('Talhão', _talhaoCtrl)),
+                  Expanded(child: _buildTextField('Talh�o', _talhaoCtrl)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildTextField('Nº Avaliação', _nAvaliacaoCtrl)),
+                  Expanded(child: _buildTextField('N� Avalia��o', _nAvaliacaoCtrl)),
                 ],
               ),
               const SizedBox(height: 12),
@@ -768,7 +768,7 @@ class _BrocaFormState extends State<BrocaForm> {
                 children: [
                   Expanded(child: _buildTextField('Bloco', _blocoCtrl)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildTextField('Técnico(s)', _tecnicoCtrl)),
+                  Expanded(child: _buildTextField('T�cnico(s)', _tecnicoCtrl)),
                 ],
               ),
               const SizedBox(height: 12),
@@ -776,7 +776,7 @@ class _BrocaFormState extends State<BrocaForm> {
                 children: [
                   Expanded(
                     child: CheckboxListTile(
-                      title: const Text('Avaliação Final'),
+                      title: const Text('Avalia��o Final'),
                       value: _avaliacaoFinal,
                       onChanged: (v) => setState(() => _avaliacaoFinal = v ?? true),
                       contentPadding: EdgeInsets.zero,
@@ -784,7 +784,7 @@ class _BrocaFormState extends State<BrocaForm> {
                   ),
                   Expanded(
                     child: CheckboxListTile(
-                      title: const Text('Avaliação Parcial'),
+                      title: const Text('Avalia��o Parcial'),
                       value: !_avaliacaoFinal,
                       onChanged: (v) => setState(() => _avaliacaoFinal = !(v ?? false)),
                       contentPadding: EdgeInsets.zero,
@@ -798,17 +798,17 @@ class _BrocaFormState extends State<BrocaForm> {
         
         const SizedBox(height: 20),
         
-        // Tabela de análise
+        // Tabela de an�lise
         _buildCardSection(
-          title: 'Análise por Cana (Até 20 linhas)',
+          title: 'An�lise por Cana (At� 20 linhas)',
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
               columnSpacing: 12,
               columns: [
                 DataColumn(label: Text('CANA', style: _tableHeaderStyle())),
-                DataColumn(label: Text('ENTRENÓS TOTAIS', style: _tableHeaderStyle()), numeric: true),
-                DataColumn(label: Text('ENTRENÓS BROCADOS', style: _tableHeaderStyle()), numeric: true),
+                DataColumn(label: Text('ENTREN�S TOTAIS', style: _tableHeaderStyle()), numeric: true),
+                DataColumn(label: Text('ENTREN�S BROCADOS', style: _tableHeaderStyle()), numeric: true),
               ],
               rows: List.generate(20, (index) {
                 return DataRow(
@@ -840,9 +840,9 @@ class _BrocaFormState extends State<BrocaForm> {
         
         const SizedBox(height: 20),
         
-        // Nível de infestação calculado
+        // N�vel de infesta��o calculado
         _buildCardSection(
-          title: 'Nível de Infestação Calculado',
+          title: 'N�vel de Infesta��o Calculado',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -861,7 +861,7 @@ class _BrocaFormState extends State<BrocaForm> {
         
         const SizedBox(height: 24),
         
-        // Botões de ação
+        // Bot�es de a��o
         Row(
           children: [
             Expanded(
@@ -909,7 +909,7 @@ class _BrocaFormState extends State<BrocaForm> {
     }
     
     final percentual = (totalBrocados / totalEntrenoses) * 100;
-    return 'NÍVEL DE INFESTAÇÃO: ${percentual.toStringAsFixed(2)}%';
+    return 'N�VEL DE INFESTA��O: ${percentual.toStringAsFixed(2)}%';
   }
 
   Color _obterCorNivel() {
@@ -931,23 +931,23 @@ class _BrocaFormState extends State<BrocaForm> {
     if (percentual <= 3.0) return Colors.yellow[700]!;
     if (percentual <= 6.0) return Colors.orange;
     if (percentual <= 9.0) return Colors.red;
-    return Colors.black;
+    return const Color(0xFF4A0E0E);
   }
 
   Widget _buildLegendaNiveis() {
     final niveis = [
-      ('ACEITÁVEL', '= 1,0%', Colors.green),
-      ('BAIXO', '1,1% até 3%', Colors.yellow[700]!),
-      ('MÉDIO', '3,1% até 6%', Colors.orange),
-      ('ALTO', '6,1% até 9%', Colors.red),
-      ('INACEITÁVEL', '> 9%', Colors.black),
+      ('ACEIT�VEL', '= 1,0%', Colors.green),
+      ('BAIXO', '1,1% at� 3%', Colors.yellow[700]!),
+      ('M�DIO', '3,1% at� 6%', Colors.orange),
+      ('ALTO', '6,1% at� 9%', Colors.red),
+      ('INACEIT�VEL', '> 9%', const Color(0xFF4A0E0E)),
     ];
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Legenda de Níveis:',
+          'Legenda de N�veis:',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -1024,7 +1024,7 @@ class _BrocaFormState extends State<BrocaForm> {
         labelText: label,
         hintText: hint,
         filled: true,
-        fillColor: AppColors.lightBackground,
+        fillColor: AppColors.bgDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -1039,7 +1039,7 @@ class _BrocaFormState extends State<BrocaForm> {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surfaceDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
         ),
@@ -1054,7 +1054,7 @@ class _BrocaFormState extends State<BrocaForm> {
   Future<BrocaData?> _coletarDadosBroca() async {
     if (_faCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('F.A. é obrigatório'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('F.A. � obrigat�rio'), backgroundColor: Colors.red),
       );
       return null;
     }
@@ -1092,7 +1092,7 @@ class _BrocaFormState extends State<BrocaForm> {
     try {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Salvando relatério...'), duration: Duration(seconds: 2)),
+          const SnackBar(content: Text('Salvando relat�rio...'), duration: Duration(seconds: 2)),
         );
       }
 
@@ -1109,7 +1109,7 @@ class _BrocaFormState extends State<BrocaForm> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Relatório salvo com sucesso!'),
+            content: Text('Relat�rio salvo com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -1161,7 +1161,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
     _avaliacoesCtrl = TextEditingController();
     _tecnicoCtrl = TextEditingController();
     
-    // Criar 12 controladores para possibilitar até 12 linhas de talhões
+    // Criar 12 controladores para possibilitar at� 12 linhas de talh�es
     _talhaoCtrl = List.generate(12, (_) => TextEditingController());
     _pontosCigarrinhaCtrl = List.generate(12, (_) => TextEditingController());
     _espumaCtrl = List.generate(12, (_) => TextEditingController());
@@ -1205,9 +1205,9 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Cabeçalho
+        // Cabe�alho
         Text(
-          'Relatório de Broca e Cigarrinha',
+          'Relat�rio de Broca e Cigarrinha',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.green[700],
@@ -1215,9 +1215,9 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
         ),
         const SizedBox(height: 24),
         
-        // Seção de identificação
+        // Se��o de identifica��o
         _buildCardSection(
-          title: 'Identificação da Avaliação',
+          title: 'Identifica��o da Avalia��o',
           child: Column(
             children: [
               Row(
@@ -1232,9 +1232,9 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
               const SizedBox(height: 12),
               _buildTextField('Propriedade', _propriedadeCtrl),
               const SizedBox(height: 12),
-              _buildTextField('Técnico(s)', _tecnicoCtrl),
+              _buildTextField('T�cnico(s)', _tecnicoCtrl),
               const SizedBox(height: 12),
-              _buildTextField('Avaliações', _avaliacoesCtrl),
+              _buildTextField('Avalia��es', _avaliacoesCtrl),
             ],
           ),
         ),
@@ -1243,14 +1243,14 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
         
         // Tabela combinada
         _buildCardSection(
-          title: 'Avaliação de Broca e Cigarrinha (Até 12 pontos)',
+          title: 'Avalia��o de Broca e Cigarrinha (At� 12 pontos)',
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
               columnSpacing: 8,
               dataRowHeight: 50,
               columns: [
-                DataColumn(label: Text('Talhão', style: _tableHeaderStyle())),
+                DataColumn(label: Text('Talh�o', style: _tableHeaderStyle())),
                 // Grupo Cigarrinha
                 DataColumn(label: Text('Pts', style: _tableHeaderStyle()), numeric: true),
                 DataColumn(label: Text('Espuma', style: _tableHeaderStyle()), numeric: true),
@@ -1258,12 +1258,12 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
                 DataColumn(label: Text('n/m', style: _tableHeaderStyle()), numeric: true),
                 // Grupo Broca
                 DataColumn(label: Text('Pts', style: _tableHeaderStyle()), numeric: true),
-                DataColumn(label: Text('Entrenós', style: _tableHeaderStyle()), numeric: true),
+                DataColumn(label: Text('Entren�s', style: _tableHeaderStyle()), numeric: true),
                 DataColumn(label: Text('Dano', style: _tableHeaderStyle()), numeric: true),
                 DataColumn(label: Text('L. Fora', style: _tableHeaderStyle()), numeric: true),
                 DataColumn(label: Text('L. Dentro', style: _tableHeaderStyle()), numeric: true),
-                // Observações
-                DataColumn(label: Text('Observações (ID)', style: _tableHeaderStyle())),
+                // Observa��es
+                DataColumn(label: Text('Observa��es (ID)', style: _tableHeaderStyle())),
               ],
               rows: List.generate(12, (index) {
                 return DataRow(
@@ -1345,9 +1345,9 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
         
         const SizedBox(height: 20),
         
-        // Informação de controle
+        // Informa��o de controle
         _buildCardSection(
-          title: 'Nível de Controle',
+          title: 'N�vel de Controle',
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -1356,7 +1356,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
               border: Border.all(color: Colors.orange[700]!, width: 2),
             ),
             child: Text(
-              'NÍVEL DE CONTROLE - 2 NINFAS POR METRO (n/m)',
+              'N�VEL DE CONTROLE - 2 NINFAS POR METRO (n/m)',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.orange[900],
@@ -1367,7 +1367,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
         
         const SizedBox(height: 24),
         
-        // Botões de ação
+        // Bot�es de a��o
         Row(
           children: [
             Expanded(
@@ -1447,7 +1447,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
         labelText: label,
         hintText: hint,
         filled: true,
-        fillColor: AppColors.lightBackground,
+        fillColor: AppColors.bgDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -1462,7 +1462,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surfaceDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
         ),
@@ -1477,7 +1477,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
   Future<BrocaCigarrinhaData?> _coletarDadosBrocaCigarrinha() async {
     if (_faCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('F.A. é obrigatório'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('F.A. � obrigat�rio'), backgroundColor: Colors.red),
       );
       return null;
     }
@@ -1486,7 +1486,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
       nome: _nomeCtrl.text.isEmpty ? 'N/A' : _nomeCtrl.text,
       propriedade: _propriedadeCtrl.text.isEmpty ? 'N/A' : _propriedadeCtrl.text,
       fa: _faCtrl.text,
-      id: '', // Será preenchido automaticamente
+      id: '', // Ser� preenchido automaticamente
       data: _dataCtrl.text,
       tecnico: _tecnicoCtrl.text.isEmpty ? 'N/A' : _tecnicoCtrl.text,
       linhas: [],
@@ -1510,7 +1510,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
     try {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Salvando relatério...'), duration: Duration(seconds: 2)),
+          const SnackBar(content: Text('Salvando relat�rio...'), duration: Duration(seconds: 2)),
         );
       }
 
@@ -1527,7 +1527,7 @@ class _BrocaCigarrinhaFormState extends State<BrocaCigarrinhaForm> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Relatório salvo com sucesso!'),
+            content: Text('Relat�rio salvo com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );

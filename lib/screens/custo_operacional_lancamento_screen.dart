@@ -595,7 +595,7 @@ class _CustoOperacionalLancamentoScreenState
   Widget _cardResumo() => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.lightBackground,
+          color: AppColors.bgDark,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.primary, width: 2),
         ),

@@ -27,29 +27,35 @@ class MyApp extends StatelessWidget {
       title: 'AFCRC - Catanduva',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
+        brightness: Brightness.dark,
+        colorScheme: const ColorScheme.dark(
+          primary: AppColors.newPrimary,
+          secondary: AppColors.newPrimary,
+          surface: AppColors.surfaceDark,
+          error: AppColors.newDanger,
+          onPrimary: AppColors.bgDark,
+          onSecondary: AppColors.bgDark,
+          onSurface: AppColors.newTextPrimary,
+          onError: Colors.white,
         ),
         useMaterial3: true,
-        scaffoldBackgroundColor: Colors.grey[50],
+        scaffoldBackgroundColor: AppColors.bgDark,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: AppColors.textPrimary,
+          backgroundColor: AppColors.surfaceDark,
+          foregroundColor: AppColors.newTextPrimary,
           elevation: 0,
           scrolledUnderElevation: 1,
           centerTitle: true,
           surfaceTintColor: Colors.transparent,
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.newPrimary,
+          foregroundColor: AppColors.bgDark,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.newPrimary,
+            foregroundColor: AppColors.bgDark,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -58,18 +64,133 @@ class MyApp extends StatelessWidget {
         ),
         cardTheme: CardThemeData(
           elevation: 0,
-          color: Colors.white,
+          color: AppColors.surfaceDark,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Color(0xFFE0E0E0)),
+            side: const BorderSide(color: AppColors.borderDark),
+          ),
+        ),
+        dividerColor: AppColors.borderDark,
+        dividerTheme: const DividerThemeData(
+          color: AppColors.borderDark,
+          thickness: 1,
+        ),
+        chipTheme: const ChipThemeData(
+          backgroundColor: AppColors.surfaceDark,
+          selectedColor: AppColors.newPrimary,
+          labelStyle: TextStyle(color: AppColors.newTextPrimary),
+          secondaryLabelStyle: TextStyle(color: AppColors.bgDark),
+          side: BorderSide(color: AppColors.borderDark),
+        ),
+        dialogTheme: const DialogThemeData(
+          backgroundColor: AppColors.surfaceDark,
+          titleTextStyle: TextStyle(
+            color: AppColors.newTextPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          contentTextStyle: TextStyle(
+            color: AppColors.newTextSecondary,
+            fontSize: 14,
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.borderDark),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.borderDark),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
           ),
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: AppColors.bgDark,
+          labelStyle: const TextStyle(color: AppColors.newTextSecondary),
+          hintStyle: const TextStyle(color: AppColors.newTextMuted),
+        ),
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(color: AppColors.newTextPrimary),
+          displayMedium: TextStyle(color: AppColors.newTextPrimary),
+          displaySmall: TextStyle(color: AppColors.newTextPrimary),
+          headlineLarge: TextStyle(color: AppColors.newTextPrimary),
+          headlineMedium: TextStyle(color: AppColors.newTextPrimary),
+          headlineSmall: TextStyle(color: AppColors.newTextPrimary),
+          titleLarge: TextStyle(color: AppColors.newTextPrimary),
+          titleMedium: TextStyle(color: AppColors.newTextPrimary),
+          titleSmall: TextStyle(color: AppColors.newTextPrimary),
+          bodyLarge: TextStyle(color: AppColors.newTextPrimary),
+          bodyMedium: TextStyle(color: AppColors.newTextPrimary),
+          bodySmall: TextStyle(color: AppColors.newTextSecondary),
+          labelLarge: TextStyle(color: AppColors.newTextPrimary),
+          labelMedium: TextStyle(color: AppColors.newTextSecondary),
+          labelSmall: TextStyle(color: AppColors.newTextMuted),
+        ),
+        iconTheme: const IconThemeData(color: AppColors.newTextSecondary),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.newPrimary;
+            }
+            return AppColors.newTextMuted;
+          }),
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.newPrimary.withValues(alpha: 0.4);
+            }
+            return AppColors.borderDark;
+          }),
+        ),
+        checkboxTheme: CheckboxThemeData(
+          fillColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.newPrimary;
+            }
+            return Colors.transparent;
+          }),
+          checkColor: WidgetStateProperty.all(AppColors.bgDark),
+          side: const BorderSide(color: AppColors.newTextMuted),
+        ),
+        dropdownMenuTheme: const DropdownMenuThemeData(
+          inputDecorationTheme: InputDecorationTheme(
+            fillColor: AppColors.surfaceDark,
+            filled: true,
+          ),
+        ),
+        dataTableTheme: DataTableThemeData(
+          headingRowColor: WidgetStateProperty.all(AppColors.bgDark),
+          dataRowColor: WidgetStateProperty.all(AppColors.surfaceDark),
+          headingTextStyle: const TextStyle(
+            color: AppColors.newTextPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+          dataTextStyle: const TextStyle(color: AppColors.newTextPrimary),
+          dividerThickness: 1,
+        ),
+        popupMenuTheme: const PopupMenuThemeData(
+          color: AppColors.surfaceDark,
+          textStyle: TextStyle(color: AppColors.newTextPrimary),
+        ),
+        listTileTheme: const ListTileThemeData(
+          textColor: AppColors.newTextPrimary,
+          iconColor: AppColors.newTextSecondary,
+        ),
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: AppColors.surfaceDark,
+          contentTextStyle: TextStyle(color: AppColors.newTextPrimary),
+        ),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: AppColors.newPrimary,
+        ),
+        tooltipTheme: const TooltipThemeData(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceDark,
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+          ),
+          textStyle: TextStyle(color: AppColors.newTextPrimary),
         ),
       ),
       localizationsDelegates: const [

@@ -668,7 +668,7 @@ class _PropriedadeFormScreenState extends State<PropriedadeFormScreen> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: AppColors.bgDark,
               ),
             ),
           ),

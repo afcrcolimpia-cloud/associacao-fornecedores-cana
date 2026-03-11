@@ -240,7 +240,7 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            color: AppColors.lightBackground,
+            color: AppColors.bgDark,
             padding: const EdgeInsets.all(12),
             child: const Row(
               children: [

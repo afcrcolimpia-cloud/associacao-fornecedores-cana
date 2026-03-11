@@ -106,7 +106,7 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
 
               // Legenda
               Card(
-                color: AppColors.lightBackground,
+                color: AppColors.bgDark,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
@@ -301,7 +301,7 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
     }
 
     return Card(
-      color: AppColors.lightBackground,
+      color: AppColors.surfaceDark,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(

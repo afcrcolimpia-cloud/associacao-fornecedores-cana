@@ -221,16 +221,6 @@ class CustoOperacionalService {
     );
     final arrendamentoHa = arrendamento * atrArrend * precoAtr;
 
-    final totalRHa = _calcularTotalOperacional(
-      conservacaoHa: conservacaoHa,
-      preparoHa: preparoHa,
-      plantioHa: plantioHa,
-      manutencaoHa: manutencaoHa,
-      colheitaHa: colheitaHa,
-      administrativoHa: administrativoHa,
-      arrendamentoHa: arrendamentoHa,
-    );
-
     // Custo anualizado R$/ha = (Formação / longevidade) + restante
     final formacaoHa = conservacaoHa + preparoHa + plantioHa;
     final custoAnualizadoRHa = (formacaoHa / longevidade) +
@@ -241,14 +231,17 @@ class CustoOperacionalService {
       required double rHa,
       required bool amortizar,
     }) {
-      final rTBase = produtividade > 0 ? rHa / produtividade : 0.0;
-      final rT = amortizar ? rTBase / longevidade : rTBase;
+      // Formação (Conservação, Preparo, Plantio) → R$/ha amortizado por longevidade
+      final rHaAnualizado = amortizar ? rHa / longevidade : rHa;
+      final rT = produtividade > 0 ? rHaAnualizado / produtividade : 0.0;
       final rKgAtr = atr > 0 ? rT / atr : 0.0;
-      final participacao = totalRHa > 0 ? (rHa / totalRHa) * 100 : 0.0;
+      final participacao = custoAnualizadoRHa > 0
+          ? (rHaAnualizado / custoAnualizadoRHa) * 100
+          : 0.0;
 
       return ResumoEstagio(
         estagio: estagio,
-        rHa: rHa,
+        rHa: rHaAnualizado,
         rT: rT,
         rKgATR: rKgAtr,
         pct: '${participacao.toStringAsFixed(1)}%',
@@ -771,40 +764,6 @@ class CustoOperacionalService {
       return int.parse(matches.last.group(1)!);
     }
     return DateTime.now().year;
-  }
-
-  double _calcularTotalOperacional({
-    required double conservacaoHa,
-    required double preparoHa,
-    required double plantioHa,
-    required double manutencaoHa,
-    required double colheitaHa,
-    required double administrativoHa,
-    required double arrendamentoHa,
-  }) {
-
-    // Busca os valores de cada categoria (R$/ha das tabelas operacionais)
-    // Se o produtor não tiver lançamentos, usa os dados de referência AFCRC 2026
-    return conservacaoHa +
-        preparoHa +
-        plantioHa +
-        manutencaoHa +
-        colheitaHa +
-
-    // Formação do canavial = Conservação + Preparo + Plantio
-    // (custos que ocorrem apenas 1 vez no ciclo de vida)
-        administrativoHa +
-
-    // Custo Administrativo: percentual (%) sobre subtotal operacional
-    // Padrão AFCRC 2026: 10% do subtotal (Conservação + Preparo + Plantio + Manutenção + Colheita)
-        arrendamentoHa;
-
-    // Arrendamento = arrendamento (t/ha) × ATR arrend. (kg/t) × Preço ATR (R$/kg)
-
-    // ── TOTAL R$/ha ──────────────────────────────────────────────────────────
-    // = Formação + Manutenção + Colheita + Administrativo + Arrendamento
-    // ATENÇÃO: NÃO somar Conservação/Preparo/Plantio individualmente —
-    // eles já estão dentro de Formação (dupla contagem).
   }
 
   double _calcularAdministrativoHa({

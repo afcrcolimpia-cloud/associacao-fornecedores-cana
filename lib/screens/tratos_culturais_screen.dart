@@ -172,7 +172,7 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
             scrollDirection: Axis.horizontal,
             child: SingleChildScrollView(
               child: DataTable(
-                headingRowColor: MaterialStateProperty.all(Colors.grey[200]),
+                headingRowColor: WidgetStateProperty.all(AppColors.surfaceDark),
                 columns: const [
                   DataColumn(label: Text('Talhão', style: TextStyle(fontWeight: FontWeight.bold))),
                   DataColumn(label: Text('Ano Safra', style: TextStyle(fontWeight: FontWeight.bold))),

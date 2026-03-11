@@ -386,7 +386,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: color ?? Colors.black87,
+              color: color ?? AppColors.newTextPrimary,
             ),
           ),
         ],

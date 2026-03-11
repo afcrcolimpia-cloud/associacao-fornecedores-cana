@@ -87,7 +87,7 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                   ),
                   // Abas de visualização
                   Container(
-                    color: Colors.grey[100],
+                    color: AppColors.surfaceDark,
                     child: Row(
                       children: [
                         Expanded(
@@ -352,7 +352,7 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                       height: 30,
                       color: volume > 0
                           ? AppColors.primary.withOpacity(0.3)
-                          : Colors.grey[200],
+                          : AppColors.surfaceDark,
                       child: volume > 0
                           ? FractionallySizedBox(
                               heightFactor: volume / (maxVolume > 0 ? maxVolume : 1),
@@ -578,7 +578,7 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.grey[100],
+                                color: AppColors.surfaceDark,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(

@@ -143,11 +143,11 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
                         setState(() => _indiceAbaAtiva = index);
                       },
                       backgroundColor:
-                          _indiceAbaAtiva == index ? AppColors.primary : null,
+                          _indiceAbaAtiva == index ? AppColors.newPrimary : AppColors.surfaceDark,
                       labelStyle: TextStyle(
                         color: _indiceAbaAtiva == index
-                            ? Colors.white
-                            : Colors.black87,
+                            ? AppColors.bgDark
+                            : AppColors.newTextPrimary,
                       ),
                     ),
                   ),
@@ -304,8 +304,9 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.lightBackground,
+                    color: AppColors.bgDark,
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.borderDark),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -422,8 +423,9 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.lightBackground,
+                        color: AppColors.bgDark,
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.borderDark),
                       ),
                       child: Text(
                         'AFCRC – ${params.periodoRef}',
@@ -541,10 +543,10 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.lightBackground,
+        color: AppColors.bgDark,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.borderDark,
         ),
       ),
       child: Column(
@@ -752,14 +754,14 @@ class _OperacoesDetalhesScreenState extends State<OperacoesDetalhesScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: AppColors.bgDark,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     estagio.obs,
                     style: const TextStyle(
                       fontSize: 11,
-                      color: Colors.grey,
+                      color: AppColors.newTextMuted,
                       fontStyle: FontStyle.italic,
                     ),
                   ),

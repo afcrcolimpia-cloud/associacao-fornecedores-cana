@@ -205,7 +205,7 @@ class _CustoOperacionalLancamentosScreenState
         // Total da categoria
         Container(
           width: double.infinity,
-          color: AppColors.lightBackground,
+          color: AppColors.bgDark,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
