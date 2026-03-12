@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/talhao_service.dart';
@@ -9,6 +11,44 @@ import '../services/propriedade_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/kpi_card.dart';
 
+// Funções auxiliares para buscar todos os registros do sistema
+Future<List<Produtividade>> getTodasProdutividades() async {
+  try {
+    final supabase = Supabase.instance.client;
+    final data = await supabase
+        .from('produtividade')
+        .select('id, propriedade_id, talhao_id, ano_safra, variedade, estagio, mes_colheita, peso_liquido_toneladas, media_atr, observacoes, created_at, updated_at');
+    return (data as List).map((json) => Produtividade.fromJson(json)).toList();
+  } catch (e) {
+    return [];
+  }
+}
+
+Future<List<Anexo>> getTodosAnexosPragas() async {
+  try {
+    final supabase = Supabase.instance.client;
+    final data = await supabase
+        .from('anexos')
+        .select('id, propriedade_id, tipo_anexo, nome_arquivo, url_arquivo, caminho_storage, tamanho_bytes, tipo_mime, criado_em, atualizado_em')
+        .eq('tipo_anexo', 'Praga');
+    return (data as List).map((json) => Anexo.fromJson(json)).toList();
+  } catch (e) {
+    return [];
+  }
+}
+
+Future<List> getTodasAnalisesSolo() async {
+  try {
+    final supabase = Supabase.instance.client;
+    final data = await supabase
+        .from('analises_solo')
+        .select('id, propriedade_id, talhao_id, laboratorio, numero_amostra, data_coleta, data_resultado, profundidade_cm, ph, materia_organica, fosforo, potassio, calcio, magnesio, enxofre, acidez_potencial, aluminio, somas_bases, ctc, saturacao_bases, boro, cobre, ferro, manganes, zinco, argila, silte, areia, observacoes, cultura, prnt, produtividade_esperada, criado_em, atualizado_em');
+    return (data as List).map((json) => AnaliseSolo.fromJson(json)).toList();
+  } catch (e) {
+    return [];
+  }
+}
+
 class GestaoAgricolaDashboardScreen extends StatefulWidget {
   const GestaoAgricolaDashboardScreen({super.key});
 
@@ -17,8 +57,9 @@ class GestaoAgricolaDashboardScreen extends StatefulWidget {
       _GestaoAgricolaDashboardScreenState();
 }
 
-class _GestaoAgricolaDashboardScreenState
-    extends State<GestaoAgricolaDashboardScreen> {
+
+
+class _GestaoAgricolaDashboardScreenState extends State<GestaoAgricolaDashboardScreen> {
   final _talhaoService = TalhaoService();
   final _variedadeService = VariedadeService();
   final _proprietarioService = ProprietarioService();
@@ -28,8 +69,13 @@ class _GestaoAgricolaDashboardScreenState
   List<Variedade> _variedades = [];
   List<Proprietario> _proprietarios = [];
   List<Propriedade> _propriedades = [];
+  List<Produtividade> _produtividades = [];
+  List<Anexo> _anexosPragas = [];
+  List analisesSolo = [];
 
   bool _loading = true;
+  bool _loadingExtras = true;
+
 
   @override
   void initState() {
@@ -54,9 +100,26 @@ class _GestaoAgricolaDashboardScreenState
           _loading = false;
         });
       }
+      // Carregar extras (produtividade, anexos pragas, análises solo)
+      final extras = await Future.wait([
+        getTodasProdutividades(),
+        getTodosAnexosPragas(),
+        getTodasAnalisesSolo(),
+      ]);
+      if (mounted) {
+        setState(() {
+          _produtividades = extras[0] as List<Produtividade>;
+          _anexosPragas = extras[1] as List<Anexo>;
+          analisesSolo = extras[2];
+          _loadingExtras = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
-        setState(() => _loading = false);
+        setState(() {
+          _loading = false;
+          _loadingExtras = false;
+        });
       }
     }
   }
@@ -126,7 +189,9 @@ class _GestaoAgricolaDashboardScreenState
 
   Widget _buildKPIGrid() {
     final totalArea = _getTotalArea();
-
+    if (_loadingExtras) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Wrap(
       spacing: 16,
       runSpacing: 16,
@@ -178,6 +243,36 @@ class _GestaoAgricolaDashboardScreenState
             iconColor: Colors.teal,
           ),
         ),
+        if (_produtividades.isNotEmpty)
+          SizedBox(
+            width: 220,
+            child: KpiCard(
+              label: 'Produtividade',
+              value: '${_produtividades.length}',
+              icon: Icons.trending_up,
+              iconColor: Colors.deepPurple,
+            ),
+          ),
+        if (_anexosPragas.isNotEmpty)
+          SizedBox(
+            width: 220,
+            child: KpiCard(
+              label: 'Relatórios de Pragas',
+              value: '${_anexosPragas.length}',
+              icon: Icons.bug_report_outlined,
+              iconColor: Colors.redAccent,
+            ),
+          ),
+        if (analisesSolo.isNotEmpty)
+          SizedBox(
+            width: 220,
+            child: KpiCard(
+              label: 'Análises de Solo',
+              value: '${analisesSolo.length}',
+              icon: Icons.science_outlined,
+              iconColor: Colors.orange,
+            ),
+          ),
       ],
     );
   }
