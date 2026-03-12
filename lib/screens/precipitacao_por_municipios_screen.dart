@@ -6,15 +6,22 @@ import '../constants/app_colors.dart';
 import '../models/precipitacao.dart';
 import '../services/precipitacao_agregada_service.dart';
 import '../utils/formatters.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import '../services/pdf_generators/pdf_precipitacao.dart';
+import '../models/propriedade.dart';
 
 class PrecipitacaoPorMunicipiosScreen extends StatefulWidget {
   const PrecipitacaoPorMunicipiosScreen({super.key});
 
   @override
-  State<PrecipitacaoPorMunicipiosScreen> createState() => _PrecipitacaoPorMunicipiosScreenState();
+  State<PrecipitacaoPorMunicipiosScreen> createState() =>
+      _PrecipitacaoPorMunicipiosScreenState();
 }
 
-class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicipiosScreen> {
+class _PrecipitacaoPorMunicipiosScreenState
+    extends State<PrecipitacaoPorMunicipiosScreen> {
   final PrecipitacaoAgregadaService _service = PrecipitacaoAgregadaService();
   String? _municipioSelecionado;
   final _searchController = TextEditingController();
@@ -23,6 +30,73 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
   bool _carregando = true;
   String _tipoVisualizacao = 'todos'; // 'todos' ou 'selecionado'
   int _selectedNavigationIndex = 0;
+
+  // Adicionado: Função para gerar PDF consolidado de todos os municípios
+  Future<void> _gerarPdfTodosMunicipios() async {
+    try {
+      // Busca todos os dados de precipitação agrupados por município
+      final grupos = await _service.agruparPorMunicipio();
+      if (grupos.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    'Nenhum dado de precipitação disponível para exportar.')),
+          );
+        }
+        return;
+      }
+
+      final pdf = pw.Document();
+      final anoAtual = DateTime.now().year;
+
+      for (final municipio in grupos.keys) {
+        final dados = grupos[municipio]!;
+        if (dados.isEmpty) continue;
+        // Cria uma propriedade fake só para o cabeçalho (não há contexto de propriedade aqui)
+        final prop = Propriedade(
+          id: '',
+          proprietarioId: '',
+          nomePropriedade: 'Todas as propriedades',
+          numeroFA: '',
+          cidade: municipio,
+          estado: '',
+          endereco: '',
+          cep: '',
+          areaHa: null,
+          areaAlqueires: null,
+          ativa: true,
+          criadoEm: DateTime.now(),
+          atualizadoEm: DateTime.now(),
+        );
+        // Gera o widget PDF para este município e adiciona como página
+        final pdfWidget = await PdfPrecipitacao.gerarWidget(
+          propriedade: prop,
+          dadosPrecipitacao: dados,
+          ano: anoAtual,
+        );
+        pdf.addPage(
+          pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            build: (context) => pdfWidget,
+          ),
+        );
+      }
+
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdf.save(),
+        name: 'Precipitacao_Todos_Municipios.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao gerar PDF: $e')),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -55,9 +129,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
   void _filtrarMunicipios() {
     final termo = _searchController.text.toLowerCase();
     setState(() {
-      _municipiosFiltrados = _municipios
-          .where((m) => m.toLowerCase().contains(termo))
-          .toList();
+      _municipiosFiltrados =
+          _municipios.where((m) => m.toLowerCase().contains(termo)).toList();
     });
   }
 
@@ -71,18 +144,41 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
   Widget build(BuildContext context) {
     return AppShell(
       selectedIndex: _selectedNavigationIndex,
-      onNavigationSelect: (index) => setState(() => _selectedNavigationIndex = index),
+      onNavigationSelect: (index) =>
+          setState(() => _selectedNavigationIndex = index),
       showBackButton: true,
       child: _carregando
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Text(
-                      'Precipitação por Municípios',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  // Botão Gerar PDF
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Precipitação por Municípios',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: _gerarPdfTodosMunicipios,
+                          icon: const Icon(Icons.picture_as_pdf),
+                          label: const Text('Gerar PDF'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 18, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   // Abas de visualização
@@ -92,7 +188,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => setState(() => _tipoVisualizacao = 'todos'),
+                            onTap: () =>
+                                setState(() => _tipoVisualizacao = 'todos'),
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
@@ -123,7 +220,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                         ),
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => setState(() => _tipoVisualizacao = 'selecionado'),
+                            onTap: () => setState(
+                                () => _tipoVisualizacao = 'selecionado'),
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
@@ -140,9 +238,10 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                                 child: Text(
                                   'Detalhes',
                                   style: TextStyle(
-                                    fontWeight: _tipoVisualizacao == 'selecionado'
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                    fontWeight:
+                                        _tipoVisualizacao == 'selecionado'
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
                                     color: _tipoVisualizacao == 'selecionado'
                                         ? AppColors.primary
                                         : Colors.grey,
@@ -251,7 +350,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(municipio, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(municipio,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Text('Erro: ${snapshot.error}'),
                 ],
@@ -355,7 +455,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                           : AppColors.surfaceDark,
                       child: volume > 0
                           ? FractionallySizedBox(
-                              heightFactor: volume / (maxVolume > 0 ? maxVolume : 1),
+                              heightFactor:
+                                  volume / (maxVolume > 0 ? maxVolume : 1),
                               alignment: Alignment.bottomCenter,
                               child: Container(
                                 color: AppColors.primary,
@@ -416,7 +517,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
         // Agrupar por mês
         final porMes = <String, List<Precipitacao>>{};
         for (var p in precipitacoes) {
-          final mesAno = '${p.data.year}-${p.data.month.toString().padLeft(2, '0')}';
+          final mesAno =
+              '${p.data.year}-${p.data.month.toString().padLeft(2, '0')}';
           porMes.putIfAbsent(mesAno, () => []);
           porMes[mesAno]!.add(p);
         }
@@ -475,7 +577,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                 padding: const EdgeInsets.all(32),
                 child: Column(
                   children: [
-                    Icon(Icons.water_drop_outlined, size: 64, color: Colors.grey[300]),
+                    Icon(Icons.water_drop_outlined,
+                        size: 64, color: Colors.grey[300]),
                     const SizedBox(height: 16),
                     const Text('Sem dados de precipitação para este município'),
                   ],
@@ -492,7 +595,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                   final total = dados.fold(0.0, (sum, p) => sum + p.milimetros);
 
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Card(
                       child: ExpansionTile(
                         title: Row(
@@ -500,7 +604,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                           children: [
                             Text(
                               _formatarMes(mes),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -535,10 +640,12 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                                   vertical: 8,
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Data: ${Formatters.formatDate(p.data)}',
@@ -548,7 +655,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                                         ),
                                         if (p.observacoes != null)
                                           Padding(
-                                            padding: const EdgeInsets.only(top: 4),
+                                            padding:
+                                                const EdgeInsets.only(top: 4),
                                             child: Text(
                                               p.observacoes!,
                                               style: TextStyle(
@@ -582,7 +690,8 @@ class _PrecipitacaoPorMunicipiosScreenState extends State<PrecipitacaoPorMunicip
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Total do mês (${dados.length} registros)',

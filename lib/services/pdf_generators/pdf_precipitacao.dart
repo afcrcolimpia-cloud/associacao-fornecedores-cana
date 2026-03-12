@@ -4,6 +4,27 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../models/models.dart';
 
 class PdfPrecipitacao {
+  static Future<pw.Widget> gerarWidget({
+    required Propriedade propriedade,
+    required List<Precipitacao> dadosPrecipitacao,
+    required int ano,
+  }) async {
+    final font = pw.Font.courier();
+    final fontBold = pw.Font.courierBold();
+    final logoBytes = await rootBundle.load('assets/logo/logo.png');
+    final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _cabecalho(propriedade, font, fontBold, logoImage, ano),
+        pw.SizedBox(height: 14),
+        _tabela(dadosPrecipitacao, font, fontBold),
+        pw.SizedBox(height: 10),
+        _resumo(dadosPrecipitacao, font, fontBold),
+      ],
+    );
+  }
+
   static const _verde = PdfColor.fromInt(0xFF2E7D32);
 
   static Future<Uint8List> gerar({
@@ -39,8 +60,8 @@ class PdfPrecipitacao {
     return pdf.save();
   }
 
-  static pw.Widget _cabecalho(
-      Propriedade prop, pw.Font font, pw.Font bold, pw.MemoryImage logo, int ano) {
+  static pw.Widget _cabecalho(Propriedade prop, pw.Font font, pw.Font bold,
+      pw.MemoryImage logo, int ano) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
@@ -103,7 +124,8 @@ class PdfPrecipitacao {
         child: pw.Text(text, style: pw.TextStyle(font: font, fontSize: 8)),
       );
 
-  static pw.Widget _tabela(List<Precipitacao> dados, pw.Font font, pw.Font bold) {
+  static pw.Widget _tabela(
+      List<Precipitacao> dados, pw.Font font, pw.Font bold) {
     const maxLinhas = 15;
     final todasLinhas = List<Precipitacao?>.from(dados);
     while (todasLinhas.length < maxLinhas) {
@@ -131,9 +153,11 @@ class PdfPrecipitacao {
         ...todasLinhas.map(
           (p) => pw.TableRow(
             children: [
-              _td(p?.data != null ? p!.data.toString().substring(0, 10) : '', font),
+              _td(p?.data != null ? p!.data.toString().substring(0, 10) : '',
+                  font),
               _td(p?.mes.toString() ?? '', font),
-              _td(p?.milimetros != null ? p!.milimetros.toStringAsFixed(1) : '', font),
+              _td(p?.milimetros != null ? p!.milimetros.toStringAsFixed(1) : '',
+                  font),
               _td(p?.observacoes ?? '', font),
             ],
           ),
@@ -156,7 +180,8 @@ class PdfPrecipitacao {
             style: pw.TextStyle(font: font, fontSize: 9)),
       );
 
-  static pw.Widget _resumo(List<Precipitacao> dados, pw.Font font, pw.Font bold) {
+  static pw.Widget _resumo(
+      List<Precipitacao> dados, pw.Font font, pw.Font bold) {
     final totalMM = dados.fold<double>(0, (sum, p) => sum + p.milimetros);
     final media = dados.isEmpty ? 0.0 : totalMM / dados.length;
 
@@ -172,7 +197,8 @@ class PdfPrecipitacao {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('TOTAL (mm)', style: pw.TextStyle(font: bold, fontSize: 9)),
+              pw.Text('TOTAL (mm)',
+                  style: pw.TextStyle(font: bold, fontSize: 9)),
               pw.Text(totalMM.toStringAsFixed(1),
                   style: pw.TextStyle(font: bold, fontSize: 14, color: _verde)),
             ],
@@ -180,7 +206,8 @@ class PdfPrecipitacao {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('MÉDIA (mm)', style: pw.TextStyle(font: bold, fontSize: 9)),
+              pw.Text('MÉDIA (mm)',
+                  style: pw.TextStyle(font: bold, fontSize: 9)),
               pw.Text(media.toStringAsFixed(1),
                   style: pw.TextStyle(font: bold, fontSize: 14, color: _verde)),
             ],
@@ -188,7 +215,8 @@ class PdfPrecipitacao {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('REGISTROS', style: pw.TextStyle(font: bold, fontSize: 9)),
+              pw.Text('REGISTROS',
+                  style: pw.TextStyle(font: bold, fontSize: 9)),
               pw.Text(dados.length.toString(),
                   style: pw.TextStyle(font: bold, fontSize: 14, color: _verde)),
             ],

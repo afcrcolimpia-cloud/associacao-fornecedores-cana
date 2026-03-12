@@ -5,6 +5,8 @@ import '../models/models.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/dados_custo_operacional.dart';
 import '../services/exportacao_pdf_service.dart';
+import '../services/pdf_generators/pdf_custo.dart';
+import '../services/anexo_service.dart';
 import '../constants/app_colors.dart';
 import 'custo_operacional_form_screen.dart';
 import 'historico_custo_operacional_screen.dart';
@@ -26,6 +28,42 @@ class CustoOperacionalScreen extends StatefulWidget {
 }
 
 class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
+    // Função para salvar PDF no Supabase
+    Future<void> _salvarPDF(CustoOperacionalCenario cenario) async {
+      try {
+        final propriedade = widget.contexto.propriedade;
+        final pdfBytes = await PdfCustoOperacional.gerar(
+          propriedade: propriedade,
+          cenario: cenario,
+        );
+        final dataStr = DateTime.now().toIso8601String().substring(0,10);
+        final nomeArquivo = 'CustoOperacional_${propriedade.nomePropriedade}_${cenario.nomeCenario}_$dataStr.pdf'
+          .replaceAll(' ', '_');
+        final anexoService = AnexoService();
+        await anexoService.uploadAnexo(
+          propriedadeId: propriedade.id,
+          nomeArquivo: nomeArquivo,
+          bytes: pdfBytes,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Relatório salvo com sucesso!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao salvar PDF: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
   final _service = CustoOperacionalService();
   String? _cenarioSelecionadoId;
   int _selectedNavigationIndex = 0;
@@ -458,13 +496,33 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
               ),
               SizedBox(
                 width: (MediaQuery.of(context).size.width - 48) / 2,
-                child: ElevatedButton.icon(
-                  onPressed: () => _exportarPDF(cenario),
-                  icon: const Icon(Icons.file_download),
-                  label: const Text(
-                    'Exportar PDF',
-                    style: TextStyle(fontSize: 11),
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _exportarPDF(cenario),
+                        icon: const Icon(Icons.file_download),
+                        label: const Text(
+                          'Exportar PDF',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _salvarPDF(cenario),
+                        icon: const Icon(Icons.save_alt),
+                        label: const Text(
+                          'Salvar',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

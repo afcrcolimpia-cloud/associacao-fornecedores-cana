@@ -276,6 +276,30 @@ enum ClasseTextural {
   muitoArgiloso, // ≥ 60%
 }
 
+/// Tipo de cana para adubação diferenciada (Boletim 100)
+enum TipoCana { planta, soca }
+
+/// Recomendação de adubação NPK baseada no Boletim 100
+class RecomendacaoAdubacao {
+  final double nKgHa;
+  final double p2o5KgHa;
+  final double k2oKgHa;
+  final String tipoLabel;
+  final String obsN;
+  final String obsP;
+  final String obsK;
+
+  const RecomendacaoAdubacao({
+    required this.nKgHa,
+    required this.p2o5KgHa,
+    required this.k2oKgHa,
+    required this.tipoLabel,
+    this.obsN = '',
+    this.obsP = '',
+    this.obsK = '',
+  });
+}
+
 /// Cultura do Quadro 3 — Boletim 100 (IAC, 5ª Aproximação)
 class CulturaBoletim100 {
   final String nome;
@@ -363,6 +387,9 @@ class ResultadoInterpretacao {
   final SemaforoSolo? semaforoCaMg;
   final SemaforoSolo? semaforoCaK;
   final SemaforoSolo? semaforoMgK;
+  final RecomendacaoAdubacao? recomendacaoAdubacao;
+  final String? profundidadeFaixa;
+  final String? notaCamada;
 
   const ResultadoInterpretacao({
     required this.somasBases,
@@ -388,6 +415,9 @@ class ResultadoInterpretacao {
     this.semaforoCaMg,
     this.semaforoCaK,
     this.semaforoMgK,
+    this.recomendacaoAdubacao,
+    this.profundidadeFaixa,
+    this.notaCamada,
   });
 }
 
@@ -649,6 +679,82 @@ class InterpretacaoBoletim100 {
     }
   }
 
+  // ═══ Adubação NPK — Boletim 100 (Cana-de-açúcar) ═══
+
+  /// N para Cana Planta: 30 kg/ha (fixo, no sulco de plantio)
+  static double nCanaPlanta() => 30;
+
+  /// N para Cana Soca: baseado na produtividade esperada (t/ha)
+  static double nCanaSoca(double? produtividadeEsperada) {
+    final prod = produtividadeEsperada ?? 0;
+    if (prod < 60) return 60;
+    if (prod < 80) return 80;
+    if (prod <= 100) return 100;
+    return 120;
+  }
+
+  /// P₂O₅ para Cana Planta: baseado no P resina (mg/dm³)
+  static double p2o5CanaPlanta(double pResina) {
+    if (pResina <= 6) return 180;
+    if (pResina <= 15) return 150;
+    if (pResina <= 40) return 100;
+    return 60;
+  }
+
+  /// P₂O₅ para Cana Soca: geralmente não se aplica (solos muito deficientes: 30)
+  static double p2o5CanaSoca(double pResina) {
+    if (pResina <= 6) return 30;
+    return 0;
+  }
+
+  /// K₂O para Cana Planta: baseado no K trocável (mmolc/dm³)
+  static double k2oCanaPlanta(double kTrocavel) {
+    if (kTrocavel <= 0.7) return 150;
+    if (kTrocavel <= 1.5) return 120;
+    if (kTrocavel <= 3.0) return 80;
+    return 40;
+  }
+
+  /// K₂O para Cana Soca: baseado no K trocável (mmolc/dm³)
+  static double k2oCanaSoca(double kTrocavel) {
+    if (kTrocavel <= 0.7) return 150;
+    if (kTrocavel <= 1.5) return 130;
+    if (kTrocavel <= 3.0) return 100;
+    return 50;
+  }
+
+  /// Gerar recomendação completa de adubação NPK para cana
+  static RecomendacaoAdubacao? recomendarAdubacaoCana({
+    required TipoCana tipo,
+    required double pResina,
+    required double kTrocavel,
+    double? produtividadeEsperada,
+  }) {
+    if (tipo == TipoCana.planta) {
+      return RecomendacaoAdubacao(
+        nKgHa: nCanaPlanta(),
+        p2o5KgHa: p2o5CanaPlanta(pResina),
+        k2oKgHa: k2oCanaPlanta(kTrocavel),
+        tipoLabel: 'Cana Planta',
+        obsN: 'Aplicar no sulco de plantio',
+        obsP: 'P resina: ${pResina.toStringAsFixed(1)} mg/dm³',
+        obsK: 'K trocável: ${kTrocavel.toStringAsFixed(2)} mmolc/dm³',
+      );
+    } else {
+      return RecomendacaoAdubacao(
+        nKgHa: nCanaSoca(produtividadeEsperada),
+        p2o5KgHa: p2o5CanaSoca(pResina),
+        k2oKgHa: k2oCanaSoca(kTrocavel),
+        tipoLabel: 'Cana Soca',
+        obsN: 'Prod. esperada: ${produtividadeEsperada?.toStringAsFixed(0) ?? "-"} t/ha',
+        obsP: pResina <= 6
+            ? 'Solo muito deficiente (P ≤ 6 mg/dm³) — dose reduzida'
+            : 'Não se recomenda P₂O₅ em soqueira',
+        obsK: 'K trocável: ${kTrocavel.toStringAsFixed(2)} mmolc/dm³',
+      );
+    }
+  }
+
   // ═══ Cálculo completo ═══
 
   static ResultadoInterpretacao calcularCompleto({
@@ -669,6 +775,9 @@ class InterpretacaoBoletim100 {
     double? argilaPercent,
     required double prnt,
     required CulturaBoletim100 cultura,
+    TipoCana? tipoCana,
+    double? produtividadeEsperada,
+    String? profundidadeFaixa,
   }) {
     // Valores calculados
     final sb = calcularSB(k, ca, mg);
@@ -788,15 +897,32 @@ class InterpretacaoBoletim100 {
         ),
     ];
 
-    // Calagem
-    final nc1 = calagemMetodo1(
+    // Determinar tipo de camada para notas e ajustes
+    final bool camadaAravel = profundidadeFaixa == null ||
+        profundidadeFaixa == '0-20' || profundidadeFaixa == '0-25';
+    final bool camadaSubsuperficie = profundidadeFaixa == '20-40' ||
+        profundidadeFaixa == '25-50';
+
+    String? notaCamada;
+    if (camadaSubsuperficie) {
+      notaCamada = 'Camada de subsuperfície ($profundidadeFaixa cm) — '
+          'Calagem não se aplica nesta camada. '
+          'Avaliação indicada para gessagem (B-100).';
+    } else if (profundidadeFaixa == '80-100') {
+      notaCamada = 'Camada profunda (80-100 cm) — '
+          'Diagnóstico de restrições em profundidade. '
+          'Calagem e gessagem não se aplicam diretamente.';
+    }
+
+    // Calagem — só faz sentido na camada arável
+    final nc1 = camadaAravel ? calagemMetodo1(
       ve: cultura.vePercent, vAtual: vPercent, ctc: ctc, prnt: prnt,
-    );
-    final nc2 = calagemMetodo2(
+    ) : 0.0;
+    final nc2 = camadaAravel ? calagemMetodo2(
       mtDecimal: cultura.mtMaxPercent / 100,
       al: al, hAl: hAl, xCmolc: cultura.xCmolc,
       ca: ca, mg: mg, prnt: prnt,
-    );
+    ) : 0.0;
     var ncFinal = nc1 > nc2 ? nc1 : nc2;
 
     // B-100 2022 (Cana): dose mínima 1,5 t/ha (PRNT=100%)
@@ -810,7 +936,9 @@ class InterpretacaoBoletim100 {
     }
 
     // Gessagem — B-100 2022: V% < 40% OU m% > 30%
-    final gessNec = gessagemNecessaria(vPercent, mtPercent);
+    // Gessagem se aplica na camada arável ou subsuperfície
+    final bool avaliarGessagem = camadaAravel || camadaSubsuperficie;
+    final gessNec = avaliarGessagem ? gessagemNecessaria(vPercent, mtPercent) : false;
     final gessDose = gessNec ? gessagemDose(argilaPercent) : 0.0;
 
     // Fonte de S — B-100 2022: se S < 15 mg/dm³ e gessagem não necessária → 1 t/ha
@@ -846,6 +974,16 @@ class InterpretacaoBoletim100 {
       semaforoCaMg: mg > 0 ? InterpretacaoBoletim100.semaforoCaMg(ca, mg) : null,
       semaforoCaK: k > 0 ? InterpretacaoBoletim100.semaforoCaK(ca, k) : null,
       semaforoMgK: k > 0 ? InterpretacaoBoletim100.semaforoMgK(mg, k) : null,
+      recomendacaoAdubacao: (cultura.nome == 'CANA-DE-AÇÚCAR' && tipoCana != null)
+          ? recomendarAdubacaoCana(
+              tipo: tipoCana,
+              pResina: p,
+              kTrocavel: k,
+              produtividadeEsperada: produtividadeEsperada,
+            )
+          : null,
+      profundidadeFaixa: profundidadeFaixa,
+      notaCamada: notaCamada,
     );
   }
 }

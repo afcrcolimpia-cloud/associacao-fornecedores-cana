@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
+import '../services/anexo_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
 import '../constants/app_colors.dart';
@@ -76,15 +77,31 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
           Positioned(
             bottom: 88,
             right: 24,
-            child: FloatingActionButton.extended(
-              onPressed: _tratosAtuais.isEmpty ? null : () => _gerarPdf(),
-              backgroundColor: const Color(0xFFFFA726),
-              foregroundColor: Colors.black,
-              icon: const Icon(Icons.picture_as_pdf),
-              label: const Text(
-                'Gerar PDF',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.extended(
+                  onPressed: _tratosAtuais.isEmpty ? null : () => _gerarPdf(),
+                  backgroundColor: const Color(0xFFFFA726),
+                  foregroundColor: Colors.black,
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text(
+                    'Gerar PDF',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FloatingActionButton.extended(
+                  onPressed: _tratosAtuais.isEmpty ? null : () => _salvarPdf(),
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  icon: const Icon(Icons.cloud_upload),
+                  label: const Text(
+                    'Salvar',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(
@@ -391,4 +408,31 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
       );
     }
   }
+
+  Future<void> _salvarPdf() async {
+    try {
+      final pdfBytes = await PdfTratosCulturais.gerar(
+        propriedade: widget.contexto.propriedade,
+        tratos: _tratosAtuais,
+        anoSafra: _filtroAnoSafra,
+      );
+      final nomeArquivo = 'Tratos_Culturais_${widget.contexto.nomePropriedade}_$_filtroAnoSafra.pdf';
+      final anexoService = AnexoService();
+      await anexoService.uploadAnexo(
+        propriedadeId: widget.contexto.propriedade.id,
+        nomeArquivo: nomeArquivo,
+        bytes: pdfBytes,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PDF salvo no Supabase com sucesso!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar PDF: $e')),
+      );
+    }
+  }
+
 }

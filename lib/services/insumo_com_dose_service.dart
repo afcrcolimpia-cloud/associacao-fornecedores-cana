@@ -125,4 +125,48 @@ class InsumoComDoseService {
       throw Exception('Erro ao buscar produtos: $e');
     }
   }
+
+  Future<InsumoComDose?> buscarPorId(String id) async {
+    try {
+      final response = await _supabase
+          .from(tableName)
+          .select(_columns)
+          .eq('id', id)
+          .maybeSingle();
+
+      return response != null ? InsumoComDose.fromJson(response) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> salvarInsumo(InsumoComDose insumo) async {
+    try {
+      final dados = insumo.toJson();
+      dados.remove('id');
+      dados.remove('data_criacao');
+      await _supabase.from(tableName).insert(dados);
+    } catch (e) {
+      throw Exception('Erro ao salvar insumo: $e');
+    }
+  }
+
+  Future<void> atualizarInsumo(InsumoComDose insumo) async {
+    try {
+      final dados = insumo.toJson();
+      dados.remove('id');
+      dados.remove('data_criacao');
+      await _supabase.from(tableName).update(dados).eq('id', insumo.id);
+    } catch (e) {
+      throw Exception('Erro ao atualizar insumo: $e');
+    }
+  }
+
+  Future<void> deletarInsumo(String id) async {
+    try {
+      await _supabase.from(tableName).delete().eq('id', id);
+    } catch (e) {
+      throw Exception('Erro ao excluir insumo: $e');
+    }
+  }
 }

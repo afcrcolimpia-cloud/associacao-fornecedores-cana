@@ -16,6 +16,9 @@ import 'analise_solo_screen.dart';
 import 'censo_varietal_screen.dart';
 import 'central_relatorios_screen.dart';
 import 'dashboard_analitico_screen.dart';
+import 'safras_screen.dart';
+import 'insumos_screen.dart';
+import 'monitoramento_pragas_screen.dart';
 
 /// Tela central (Hub) de uma propriedade
 /// Agrupa todos os módulos operacionais e dados da propriedade
@@ -103,10 +106,22 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildModuleItem(
+                      icon: Icons.date_range,
+                      title: 'Safras',
+                      subtitle: 'Gerenciar safras por ciclo (ex: 2025/26)',
+                      onTap: () => _navegarParaSafras(),
+                    ),
+                    _buildModuleItem(
                       icon: Icons.agriculture,
                       title: 'Talhões',
                       subtitle: 'Gerenciar talhões da propriedade',
                       onTap: () => _navegarParaTalhoes(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.inventory_2,
+                      title: 'Catálogo de Insumos',
+                      subtitle: 'Herbicidas, inseticidas, fertilizantes e mais',
+                      onTap: () => _navegarParaInsumos(),
                     ),
                     _buildModuleItem(
                       icon: Icons.spa,
@@ -169,6 +184,12 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
                       onTap: () => _navegarParaAnalisesSolo(),
                     ),
                     _buildModuleItem(
+                      icon: Icons.pest_control,
+                      title: 'Monitoramento de Pragas',
+                      subtitle: 'Registrar e acompanhar pragas nos talhões',
+                      onTap: () => _navegarParaMonitoramentoPragas(),
+                    ),
+                    _buildModuleItem(
                       icon: Icons.bug_report,
                       title: 'Relatórios de Pragas',
                       subtitle: 'Formulários de levantamento de pragas',
@@ -213,6 +234,17 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
     );
   }
 
+  void _navegarParaSafras() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SafrasScreen(
+          contexto: widget.contexto,
+        ),
+      ),
+    );
+  }
+
   void _navegarParaTalhoes() async {
     await Navigator.push(
       context,
@@ -223,6 +255,15 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
       ),
     );
     _carregarEstatisticas();
+  }
+
+  void _navegarParaInsumos() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const InsumosScreen(),
+      ),
+    );
   }
 
   void _navegarParaTratos() {
@@ -329,6 +370,17 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => AnaliseSoloScreen(
+          contexto: widget.contexto,
+        ),
+      ),
+    );
+  }
+
+  void _navegarParaMonitoramentoPragas() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MonitoramentoPragasScreen(
           contexto: widget.contexto,
         ),
       ),

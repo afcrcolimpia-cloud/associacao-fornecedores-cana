@@ -5,6 +5,7 @@ import '../widgets/app_shell.dart';
 import '../services/custo_operacional_repository.dart';
 import '../services/custo_operacional_service.dart';
 import '../services/pdf_generators/pdf_lancamentos_custo.dart';
+import '../services/anexo_service.dart';
 import '../constants/app_colors.dart';
 import 'custo_operacional_lancamento_screen.dart';
 
@@ -33,9 +34,45 @@ class CustoOperacionalLancamentosScreen extends StatefulWidget {
       _CustoOperacionalLancamentosScreenState();
 }
 
-class _CustoOperacionalLancamentosScreenState
-    extends State<CustoOperacionalLancamentosScreen>
-    with SingleTickerProviderStateMixin {
+class _CustoOperacionalLancamentosScreenState extends State<CustoOperacionalLancamentosScreen> with SingleTickerProviderStateMixin {
+      // Função para salvar PDF no Supabase
+      Future<void> _salvarPdf() async {
+        try {
+          final pdfBytes = await PdfLancamentosCusto.gerar(
+            propriedadeNome: widget.propriedadeNome,
+            safra: widget.safra,
+            categorias: _categorias,
+            lancamentos: _lancamentos,
+            totaisPorCategoria: _totaisPorCateg,
+          );
+          final dataStr = DateTime.now().toIso8601String().substring(0,10);
+          final nomeArquivo = 'Lancamentos_Custo_${widget.propriedadeNome}_${widget.safra}_$dataStr.pdf'
+            .replaceAll(' ', '_');
+          final anexoService = AnexoService();
+          await anexoService.uploadAnexo(
+            propriedadeId: widget.propriedadeId,
+            nomeArquivo: nomeArquivo,
+            bytes: pdfBytes,
+          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Relatório salvo com sucesso!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erro ao salvar PDF: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
   final _repo = CustoOperacionalRepository();
   final _service = CustoOperacionalService();
   late TabController _tabCtrl;
@@ -200,15 +237,31 @@ class _CustoOperacionalLancamentosScreenState
           Positioned(
             bottom: 88,
             right: 24,
-            child: FloatingActionButton.extended(
-              onPressed: _categorias.isEmpty ? null : () => _gerarPdf(),
-              backgroundColor: const Color(0xFFFFA726),
-              foregroundColor: Colors.black,
-              icon: const Icon(Icons.picture_as_pdf),
-              label: const Text(
-                'Gerar PDF',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.extended(
+                  onPressed: _categorias.isEmpty ? null : () => _gerarPdf(),
+                  backgroundColor: const Color(0xFFFFA726),
+                  foregroundColor: Colors.black,
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text(
+                    'Gerar PDF',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FloatingActionButton.extended(
+                  onPressed: _categorias.isEmpty ? null : () => _salvarPdf(),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  icon: const Icon(Icons.save_alt),
+                  label: const Text(
+                    'Salvar',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(
