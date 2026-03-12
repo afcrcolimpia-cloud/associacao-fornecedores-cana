@@ -3,6 +3,7 @@ import '../widgets/app_shell.dart';
 import '../widgets/chart_card.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/operacao_custos.dart';
 import '../services/custo_operacional_analise.dart';
 import '../services/custo_operacional_service.dart';
 import '../constants/app_colors.dart';
@@ -23,22 +24,18 @@ class ProjecaoFinanceiraScreen extends StatefulWidget {
 
 class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
   late List<ProjecaoFinanceira> projacoes;
+  late ResumoCustoOperacionalCalculado _resumo;
   int _periodos = 12;
   int _selectedNavigationIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    projacoes =
-        CustoOperacionalAnalise.gerarProjecaoFinanceira(widget.cenario, _periodos);
-  }
-
-  double _custoAnualizado() {
-    // Usa o service centralizado para calcular — nunca duplicar lógica
-    final resumo = CustoOperacionalService().calcularResumoComTotais(
+    _resumo = CustoOperacionalService().calcularResumoComTotais(
       cenario: widget.cenario,
     );
-    return resumo.totalOperacional.rHa;
+    projacoes =
+        CustoOperacionalAnalise.gerarProjecaoFinanceira(widget.cenario, _periodos);
   }
 
   void _atualizarProjecao(int novosPeriodos) {
@@ -87,20 +84,20 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildInfoCircle(
+                          _buildInfoItem(
                             'Receita Anual',
-                            'R\$ ${(widget.cenario.produtividade * widget.cenario.atr.toDouble() * (widget.cenario.precoAtr ?? 0)).toStringAsFixed(0)}',
+                            'R\$ ${_resumo.precoRecebido.rHa.toStringAsFixed(0)}/ha',
                             AppColors.success,
                           ),
-                          _buildInfoCircle(
+                          _buildInfoItem(
                             'Custo Anual',
-                            'R\$ ${_custoAnualizado().toStringAsFixed(0)}',
+                            'R\$ ${_resumo.totalOperacional.rHa.toStringAsFixed(0)}/ha',
                             AppColors.error,
                           ),
-                          _buildInfoCircle(
+                          _buildInfoItem(
                             'Margem',
-                            'R\$ ${(widget.cenario.margemLucroPorTonelada ?? 0).toStringAsFixed(0)}/t',
-                            AppColors.primary,
+                            'R\$ ${_resumo.margemLucro.rT.toStringAsFixed(2)}/t (${_resumo.margemPercentual.toStringAsFixed(1)}%)',
+                            _resumo.margemLucro.rT >= 0 ? AppColors.success : AppColors.error,
                           ),
                         ],
                       ),
@@ -145,36 +142,35 @@ class _ProjecaoFinanceiraScreenState extends State<ProjecaoFinanceiraScreen> {
     );
   }
 
-  Widget _buildInfoCircle(String label, String value, Color color) {
+  Widget _buildInfoItem(String label, String value, Color color) {
     return Expanded(
-      child: Column(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500),
             ),
-            child: Center(
-              child: Text(
-                value.split(' ')[0],
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                ),
-                textAlign: TextAlign.center,
+            const SizedBox(height: 4),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 9, color: Colors.grey),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

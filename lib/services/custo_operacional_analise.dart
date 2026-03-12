@@ -8,9 +8,10 @@ import 'dados_custo_operacional.dart';
 /// Classe para análise e relatórios de cenários de custo operacional
 class CustoOperacionalAnalise {
   static double _calcularReceitaPorHectare(CustoOperacionalCenario cenario) {
+    final precoAtr = cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR;
     return cenario.produtividade *
         cenario.atr.toDouble() *
-        (cenario.precoAtr ?? 0.0);
+        precoAtr;
   }
 
   /// Calcula o custo anualizado R$/ha considerando amortização da formação.
@@ -21,7 +22,7 @@ class CustoOperacionalAnalise {
   static double _custoAnualizadoRHa(CustoOperacionalCenario cenario) {
     if (cenario.margemLucroPorTonelada != null) {
       // Cálculo reverso a partir da margem salva
-      final precoRT = cenario.atr.toDouble() * (cenario.precoAtr ?? 0.0);
+      final precoRT = cenario.atr.toDouble() * (cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR);
       final margemRT = cenario.margemLucroPorTonelada!;
       final custoRT = precoRT - margemRT;
       return custoRT * cenario.produtividade;
@@ -48,7 +49,7 @@ class CustoOperacionalAnalise {
     CustoOperacionalCenario cenario,
   ) {
     final custoAnualizado = _custoAnualizadoRHa(cenario);
-    final precoAtrBase = cenario.precoAtr ?? 0.0;
+    final precoAtrBase = cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR;
     final produtividadeBase = cenario.produtividade;
     final atr = cenario.atr.toDouble();
 
@@ -91,9 +92,10 @@ class CustoOperacionalAnalise {
   ) {
     final projecoes = <ProjecaoFinanceira>[];
     final custoAnualizado = _custoAnualizadoRHa(cenario);
+    final precoAtr = cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR;
     final receita = cenario.produtividade *
         cenario.atr.toDouble() *
-        (cenario.precoAtr ?? 0.0);
+        precoAtr;
 
     for (int i = 1; i <= periodos; i++) {
       final receitaAcumulada = receita * i;
@@ -145,7 +147,7 @@ class CustoOperacionalAnalise {
   ) {
     final margemPorTonelada = _calcularMargemPorTonelada(cenario);
     final custoAnualizado = _custoAnualizadoRHa(cenario);
-    final precoAtr = cenario.precoAtr ?? 0.0;
+    final precoAtr = cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR;
     final atr = cenario.atr.toDouble();
 
     final produtividadeMinima = custoAnualizado / (atr * precoAtr);
@@ -226,7 +228,7 @@ class CustoOperacionalAnalise {
               _buildPdfTableRow('ATR', '${cenario.atr} kg/t'),
               _buildPdfTableRow(
                 'Preço ATR',
-                'R\$ ${(cenario.precoAtr ?? 0).toStringAsFixed(4)}/kg',
+                'R\$ ${(cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR).toStringAsFixed(4)}/kg',
               ),
               _buildPdfTableRow(
                 'Custo Anualizado',
