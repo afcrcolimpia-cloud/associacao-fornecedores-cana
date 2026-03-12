@@ -703,7 +703,7 @@ class _AnaliseSoloScreenState extends State<AnaliseSoloScreen>
                 child: ElevatedButton.icon(
                   onPressed: _gerarPdfAnalises,
                   icon: const Icon(Icons.picture_as_pdf, size: 18),
-                  label: const Text('Gerar PDF'),
+                  label: const Text('PDF Todas'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.newPrimary,
                     foregroundColor: AppColors.bgDark,
@@ -787,6 +787,11 @@ class _AnaliseSoloScreenState extends State<AnaliseSoloScreen>
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf, size: 20, color: AppColors.newPrimary),
+              tooltip: 'Gerar PDF desta análise',
+              onPressed: () => _gerarPdfAnaliseIndividual(a),
+            ),
             IconButton(
               icon: const Icon(Icons.visibility, size: 20, color: AppColors.newInfo),
               tooltip: 'Carregar',
@@ -1082,6 +1087,27 @@ class _AnaliseSoloScreenState extends State<AnaliseSoloScreen>
       await Printing.layoutPdf(
         onLayout: (_) => pdfBytes,
         name: 'Analise_Solo_${widget.contexto.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
+    }
+  }
+
+  Future<void> _gerarPdfAnaliseIndividual(AnaliseSolo analise) async {
+    try {
+      final pdfBytes = await PdfAnaliseSolo.gerar(
+        propriedade: widget.contexto.propriedade,
+        analises: [analise],
+        talhoes: _talhoes,
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Analise_Solo_${analise.numeroAmostra ?? "individual"}.pdf',
         format: PdfPageFormat.a4,
       );
     } catch (e) {
