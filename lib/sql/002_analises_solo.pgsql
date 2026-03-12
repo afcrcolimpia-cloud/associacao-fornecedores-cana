@@ -65,23 +65,18 @@ CREATE INDEX IF NOT EXISTS idx_analises_solo_data_coleta ON analises_solo(data_c
 -- RLS: somente usuários autenticados
 ALTER TABLE analises_solo ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Usuários autenticados podem ler análises de solo"
-    ON analises_solo FOR SELECT
-    TO authenticated
-    USING (true);
-
-CREATE POLICY "Usuários autenticados podem inserir análises de solo"
-    ON analises_solo FOR INSERT
-    TO authenticated
-    WITH CHECK (true);
-
-CREATE POLICY "Usuários autenticados podem atualizar análises de solo"
-    ON analises_solo FOR UPDATE
-    TO authenticated
-    USING (true)
-    WITH CHECK (true);
-
-CREATE POLICY "Usuários autenticados podem deletar análises de solo"
-    ON analises_solo FOR DELETE
-    TO authenticated
-    USING (true);
+-- Policies: padrão idempotente
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Usuários autenticados podem ler análises de solo' AND tablename = 'analises_solo') THEN
+        EXECUTE 'CREATE POLICY "Usuários autenticados podem ler análises de solo" ON analises_solo FOR SELECT TO authenticated USING (true)';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Usuários autenticados podem inserir análises de solo' AND tablename = 'analises_solo') THEN
+        EXECUTE 'CREATE POLICY "Usuários autenticados podem inserir análises de solo" ON analises_solo FOR INSERT TO authenticated WITH CHECK (true)';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Usuários autenticados podem atualizar análises de solo' AND tablename = 'analises_solo') THEN
+        EXECUTE 'CREATE POLICY "Usuários autenticados podem atualizar análises de solo" ON analises_solo FOR UPDATE TO authenticated USING (true) WITH CHECK (true)';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Usuários autenticados podem deletar análises de solo' AND tablename = 'analises_solo') THEN
+        EXECUTE 'CREATE POLICY "Usuários autenticados podem deletar análises de solo" ON analises_solo FOR DELETE TO authenticated USING (true)';
+    END IF;
+END $$;

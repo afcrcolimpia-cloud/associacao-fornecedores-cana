@@ -138,7 +138,8 @@ class Talhao {
   }
 
   @override
+  @override
   String toString() {
-    return 'Talhao(id: $id, numero: $numeroTalhao, area: ${areaHa}ha)';
+    return 'Talhão $numeroTalhao — ${areaHa != null ? areaHa!.toStringAsFixed(1) : "?"} ha';
   }
 }

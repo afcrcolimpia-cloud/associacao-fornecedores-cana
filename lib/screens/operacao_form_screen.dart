@@ -261,22 +261,18 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
             ),
             const SizedBox(height: 12),
             DropdownSearch<Talhao>(
-              selectedItem: _talhaoSelecionado != null
+                selectedItem: _talhaoSelecionado != null
                   ? _talhoes.where((t) => t.id == _talhaoSelecionado).firstOrNull
                   : null,
-              items: (filtro, _) {
+                items: (filtro, _) {
                 final f = filtro.toLowerCase();
                 if (f.isEmpty) return _talhoes;
                 return _talhoes.where((t) =>
-                    t.numeroTalhao.toLowerCase().contains(f) ||
-                    _nomeVariedade(t.variedade).toLowerCase().contains(f) ||
-                    (t.cultura ?? '').toLowerCase().contains(f)).toList();
-              },
-              enabled: !isEdicao,
-              itemAsString: (talhao) =>
-                  '${talhao.numeroTalhao}'
-                  '${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}'
-                  '${talhao.cultura != null ? ' (${talhao.cultura})' : ''}',
+                  t.nome.toLowerCase().contains(f) ||
+                  t.numeroTalhao.toLowerCase().contains(f)).toList();
+                },
+                enabled: !isEdicao,
+                itemAsString: (talhao) => '${talhao.nome} — ${talhao.areaHa?.toStringAsFixed(1) ?? "?"} ha',
               compareFn: (a, b) => a.id == b.id,
               decoratorProps: const DropDownDecoratorProps(
                 decoration: InputDecoration(

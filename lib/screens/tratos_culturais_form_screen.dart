@@ -295,11 +295,9 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
                       if (f.isEmpty) return widget.talhoes;
                       return widget.talhoes.where((t) =>
                           t.nome.toLowerCase().contains(f) ||
-                          (t.variedade ?? '').toLowerCase().contains(f) ||
                           t.numeroTalhao.toLowerCase().contains(f)).toList();
                     },
-                    itemAsString: (t) =>
-                        '${t.nome} — ${t.variedade ?? "sem variedade"} — ${t.areaHa?.toStringAsFixed(1) ?? "?"} ha',
+                    itemAsString: (t) => '${t.nome} — ${t.areaHa?.toStringAsFixed(1) ?? "?"} ha',
                     compareFn: (a, b) => a.id == b.id,
                     decoratorProps: const DropDownDecoratorProps(
                       decoration: InputDecoration(

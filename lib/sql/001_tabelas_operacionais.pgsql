@@ -328,38 +328,43 @@ ALTER TABLE custo_operacional_historico ENABLE ROW LEVEL SECURITY;
 -- Políticas: usuário autenticado tem acesso total
 -- (em produção, filtrar por user_id ou org_id)
 
-CREATE POLICY IF NOT EXISTS "Autenticados: proprietarios" ON proprietarios
-  FOR ALL USING (auth.role() = 'authenticated');
 
-CREATE POLICY IF NOT EXISTS "Autenticados: propriedades" ON propriedades
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: talhoes" ON talhoes
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: variedades" ON variedades
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: produtividade" ON produtividade
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: precipitacoes" ON precipitacoes
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: operacoes_cultivo" ON operacoes_cultivo
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: tratos_culturais" ON tratos_culturais
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: anexos" ON anexos
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: cenarios" ON custo_operacional_cenarios
-  FOR ALL USING (auth.role() = 'authenticated');
-
-CREATE POLICY IF NOT EXISTS "Autenticados: historico" ON custo_operacional_historico
-  FOR ALL USING (auth.role() = 'authenticated');
+-- Policies: padrão idempotente
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: proprietarios' AND tablename = 'proprietarios') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: proprietarios" ON proprietarios FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: propriedades' AND tablename = 'propriedades') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: propriedades" ON propriedades FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: talhoes' AND tablename = 'talhoes') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: talhoes" ON talhoes FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: variedades' AND tablename = 'variedades') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: variedades" ON variedades FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: produtividade' AND tablename = 'produtividade') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: produtividade" ON produtividade FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: precipitacoes' AND tablename = 'precipitacoes') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: precipitacoes" ON precipitacoes FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: operacoes_cultivo' AND tablename = 'operacoes_cultivo') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: operacoes_cultivo" ON operacoes_cultivo FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: tratos_culturais' AND tablename = 'tratos_culturais') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: tratos_culturais" ON tratos_culturais FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: anexos' AND tablename = 'anexos') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: anexos" ON anexos FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: cenarios' AND tablename = 'custo_operacional_cenarios') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: cenarios" ON custo_operacional_cenarios FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Autenticados: historico' AND tablename = 'custo_operacional_historico') THEN
+    EXECUTE 'CREATE POLICY "Autenticados: historico" ON custo_operacional_historico FOR ALL USING (auth.role() = ''authenticated'')';
+  END IF;
+END $$;
 
 -- ============================================================
 -- STORAGE: Bucket para anexos

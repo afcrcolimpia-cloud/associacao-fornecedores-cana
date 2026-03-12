@@ -210,11 +210,9 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
         if (f.isEmpty) return _talhoes;
         return _talhoes.where((t) =>
             t.nome.toLowerCase().contains(f) ||
-            (t.variedade ?? '').toLowerCase().contains(f)).toList();
+            t.numeroTalhao.toLowerCase().contains(f)).toList();
       },
-      itemAsString: (talhao) {
-        return '${talhao.nome}${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}';
-      },
+      itemAsString: (talhao) => '${talhao.nome} — ${talhao.areaHa?.toStringAsFixed(1) ?? "?"} ha',
       compareFn: (a, b) => a.id == b.id,
       decoratorProps: const DropDownDecoratorProps(
         decoration: InputDecoration(
