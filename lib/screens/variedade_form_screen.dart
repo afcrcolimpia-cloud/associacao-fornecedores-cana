@@ -217,8 +217,8 @@ class _VariedadeFormScreenState extends State<VariedadeFormScreen> {
         return FilterChip(
           label: Text(ambiente),
           selected: selecionado,
-          selectedColor: const Color(0xFF0DF28F).withValues(alpha: 0.3),
-          checkmarkColor: const Color(0xFF0DF28F),
+          selectedColor: const Color(0xFF16A34A).withValues(alpha: 0.3),
+          checkmarkColor: const Color(0xFF16A34A),
           onSelected: (value) {
             setState(() {
               if (value) {

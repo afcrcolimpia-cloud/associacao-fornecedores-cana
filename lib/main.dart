@@ -27,14 +27,14 @@ class MyApp extends StatelessWidget {
       title: 'AFCRC - Catanduva',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: const ColorScheme.dark(
+        brightness: Brightness.light,
+        colorScheme: const ColorScheme.light(
           primary: AppColors.newPrimary,
           secondary: AppColors.newPrimary,
           surface: AppColors.surfaceDark,
           error: AppColors.newDanger,
-          onPrimary: AppColors.bgDark,
-          onSecondary: AppColors.bgDark,
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
           onSurface: AppColors.newTextPrimary,
           onError: Colors.white,
         ),
@@ -50,12 +50,12 @@ class MyApp extends StatelessWidget {
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: AppColors.newPrimary,
-          foregroundColor: AppColors.bgDark,
+          foregroundColor: Colors.white,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.newPrimary,
-            foregroundColor: AppColors.bgDark,
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -108,7 +108,7 @@ class MyApp extends StatelessWidget {
             borderSide: const BorderSide(color: AppColors.newPrimary, width: 2),
           ),
           filled: true,
-          fillColor: AppColors.bgDark,
+          fillColor: AppColors.surfaceDark,
           labelStyle: const TextStyle(color: AppColors.newTextSecondary),
           hintStyle: const TextStyle(color: AppColors.newTextMuted),
         ),
@@ -151,7 +151,7 @@ class MyApp extends StatelessWidget {
             }
             return Colors.transparent;
           }),
-          checkColor: WidgetStateProperty.all(AppColors.bgDark),
+          checkColor: WidgetStateProperty.all(Colors.white),
           side: const BorderSide(color: AppColors.newTextMuted),
         ),
         dropdownMenuTheme: const DropdownMenuThemeData(
@@ -179,18 +179,18 @@ class MyApp extends StatelessWidget {
           iconColor: AppColors.newTextSecondary,
         ),
         snackBarTheme: const SnackBarThemeData(
-          backgroundColor: AppColors.surfaceDark,
-          contentTextStyle: TextStyle(color: AppColors.newTextPrimary),
+          backgroundColor: Color(0xFF1E293B),
+          contentTextStyle: TextStyle(color: Colors.white),
         ),
         progressIndicatorTheme: const ProgressIndicatorThemeData(
           color: AppColors.newPrimary,
         ),
         tooltipTheme: const TooltipThemeData(
           decoration: BoxDecoration(
-            color: AppColors.surfaceDark,
+            color: Color(0xFF1E293B),
             borderRadius: BorderRadius.all(Radius.circular(4)),
           ),
-          textStyle: TextStyle(color: AppColors.newTextPrimary),
+          textStyle: TextStyle(color: Colors.white),
         ),
       ),
       localizationsDelegates: const [

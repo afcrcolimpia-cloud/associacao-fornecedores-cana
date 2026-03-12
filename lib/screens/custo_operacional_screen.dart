@@ -196,10 +196,10 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
+                colors: [Color(0xFF16A34A), Color(0xFF22C55E)],
               ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF4CAF50).withAlpha(80)),
+              border: Border.all(color: const Color(0xFF16A34A).withAlpha(60)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -295,12 +295,12 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                      colors: [Color(0xFF16A34A), Color(0xFF15803D)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF4CAF50).withAlpha(80)),
+                    border: Border.all(color: const Color(0xFF16A34A).withAlpha(60)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,7 +536,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: const Color(0xFF111827),
+            color: const Color(0xFF15803D),
             child: const Row(
               children: [
                 Expanded(
@@ -583,7 +583,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             receitaRT,
             100.0,
             isHeader: true,
-            bgColor: const Color(0xFF172554),
+            bgColor: const Color(0xFFDBEAFE),
           ),
           // (-) Formação Amortizada
           ...linhasFormacao.map((r) => _dreRow(
@@ -605,14 +605,14 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             resumo.totalOperacional.rT,
             receitaRT > 0 ? (resumo.totalOperacional.rT / receitaRT) * 100 : 0,
             isHeader: true,
-            bgColor: const Color(0xFF2A3347),
+            bgColor: const Color(0xFFF1F5F9),
           ),
           // MARGEM FINAL
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: margemRT >= 0 ? const Color(0xFF0D3320) : const Color(0xFF3B1111),
+              color: margemRT >= 0 ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
               border: Border(
                 top: BorderSide(
                   color: margemRT >= 0 ? AppColors.newPrimary : AppColors.newDanger,
@@ -678,7 +678,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        border: const Border(bottom: BorderSide(color: Color(0xFF2A3347), width: 0.5)),
+        border: const Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 0.5)),
       ),
       child: Row(
         children: [
@@ -702,7 +702,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
               style: TextStyle(
                 fontSize: isHeader ? 12 : 11,
                 fontWeight: isHeader ? FontWeight.w700 : FontWeight.normal,
-                color: isNegative ? const Color(0xFFEF5350) : AppColors.newTextPrimary,
+                color: isNegative ? const Color(0xFFDC2626) : AppColors.newTextPrimary,
               ),
             ),
           ),

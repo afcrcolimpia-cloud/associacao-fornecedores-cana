@@ -89,9 +89,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFF0DF28F), // newPrimary
-                      Color(0xFF0AC47A), // verde médio
-                      Color(0xFF089660), // verde escuro
+                      Color(0xFF16A34A), // newPrimary
+                      Color(0xFF15803D), // verde médio
+                      Color(0xFF166534), // verde escuro
                     ],
                   ),
                 ),
@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 32,
                             fontWeight: FontWeight.w700,
-                            color: Colors.black,
+                            color: Colors.white,
                             height: 1.2,
                           ),
                         ),
@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.black.withOpacity(0.8),
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
                         const SizedBox(height: 40),

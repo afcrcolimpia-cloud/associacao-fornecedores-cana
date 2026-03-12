@@ -57,9 +57,9 @@ class AppShell extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0DF28F), // newPrimary
-            Color(0xFF0AC47A), // verde médio
-            Color(0xFF089660), // verde escuro
+            Color(0xFF16A34A), // newPrimary
+            Color(0xFF15803D), // verde médio
+            Color(0xFF166534), // verde escuro
           ],
         ),
       ),
@@ -79,7 +79,7 @@ class AppShell extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: Colors.black,
+              color: Colors.white,
             ),
           ),
           Text(
@@ -87,7 +87,7 @@ class AppShell extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Colors.black.withValues(alpha: 0.7),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 32),
@@ -113,7 +113,7 @@ class AppShell extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: Colors.black.withValues(alpha: 0.5),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -132,25 +132,25 @@ class AppShell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: Material(
         color: selected
-            ? Colors.black.withValues(alpha: 0.15)
+            ? Colors.white.withValues(alpha: 0.2)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(8),
-          splashColor: Colors.black.withValues(alpha: 0.1),
+          splashColor: Colors.white.withValues(alpha: 0.15),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: Colors.black.withValues(alpha: selected ? 1 : 0.7)),
+                Icon(icon, size: 20, color: Colors.white.withValues(alpha: selected ? 1 : 0.8)),
                 const SizedBox(width: 12),
                 Text(
                   label,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: Colors.black.withValues(alpha: selected ? 1 : 0.7),
+                    color: Colors.white.withValues(alpha: selected ? 1 : 0.8),
                   ),
                 ),
               ],

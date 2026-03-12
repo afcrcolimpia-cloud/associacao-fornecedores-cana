@@ -20,14 +20,14 @@ class ChartStyles {
 
   /// Cores para séries múltiplas (PieChart, comparativos)
   static const List<Color> seriesColors = [
-    Color(0xFF0DF28F), // verde vibrante
-    Color(0xFF3B82F6), // azul
-    Color(0xFFF59E0B), // amarelo
-    Color(0xFFEF4444), // vermelho
-    Color(0xFF8B5CF6), // roxo
-    Color(0xFF06B6D4), // ciano
-    Color(0xFFF97316), // laranja
-    Color(0xFFEC4899), // pink
+    Color(0xFF16A34A), // verde
+    Color(0xFF2563EB), // azul
+    Color(0xFFD97706), // amarelo
+    Color(0xFFDC2626), // vermelho
+    Color(0xFF7C3AED), // roxo
+    Color(0xFF0891B2), // ciano
+    Color(0xFFEA580C), // laranja
+    Color(0xFFDB2777), // pink
   ];
 
   /// Valor positivo / negativo

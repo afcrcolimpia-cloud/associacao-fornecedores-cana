@@ -90,7 +90,7 @@ class _ProdutividadeScreenState extends State<ProdutividadeScreen> {
             right: 24,
             child: FloatingActionButton.extended(
               onPressed: () => _mostrarFormulario(),
-              backgroundColor: const Color(0xFF0DF28F),
+              backgroundColor: const Color(0xFF16A34A),
               foregroundColor: Colors.black,
               icon: const Icon(Icons.add),
               label: const Text(

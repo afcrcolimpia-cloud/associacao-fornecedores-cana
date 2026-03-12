@@ -3,28 +3,28 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // ═══════════════════════════════════════════════════════════════
-  // NOVO DESIGN SYSTEM — Dark Theme (Redesign 2026)
+  // NOVO DESIGN SYSTEM — Light Theme (Redesign 2026)
   // ═══════════════════════════════════════════════════════════════
   
-  // Dark Theme - Backgrounds
-  static const Color bgDark = Color(0xFF0F1117);        // Background escuro
-  static const Color surfaceDark = Color(0xFF1C2333);   // Surface escuro
-  static const Color borderDark = Color(0xFF2A3347);    // Border escuro
+  // Light Theme - Backgrounds
+  static const Color bgDark = Color(0xFFF8FAFC);        // Background claro (slate-50)
+  static const Color surfaceDark = Color(0xFFFFFFFF);   // Surface branco
+  static const Color borderDark = Color(0xFFE2E8F0);    // Border claro (slate-200)
   
   // Primary & Accents - Novo Design System
-  static const Color newPrimary = Color(0xFF0DF28F);    // Verde vibrante (#0DF28F)
-  static const Color primaryMutedValue = Color(0x330DF28F); // 20% opacity (const-compatible)
+  static const Color newPrimary = Color(0xFF16A34A);    // Verde escuro (#16A34A — green-600)
+  static const Color primaryMutedValue = Color(0x3316A34A); // 20% opacity (const-compatible)
   
   // Status Colors - New System
-  static const Color newSuccess = Color(0xFF0DF28F);    // Verde sucesso (igual primary)
-  static const Color newWarning = Color(0xFFF59E0B);    // Amarelo/Laranja aviso
-  static const Color newDanger = Color(0xFFEF4444);     // Vermelho perigo
-  static const Color newInfo = Color(0xFF3B82F6);       // Azul informação
+  static const Color newSuccess = Color(0xFF16A34A);    // Verde sucesso (igual primary)
+  static const Color newWarning = Color(0xFFD97706);    // Amarelo/Laranja aviso (amber-600)
+  static const Color newDanger = Color(0xFFDC2626);     // Vermelho perigo (red-600)
+  static const Color newInfo = Color(0xFF2563EB);       // Azul informação (blue-600)
   
-  // Text Colors - Dark Theme
-  static const Color newTextPrimary = Color(0xFFE2E8F0);   // Texto principal (claro)
-  static const Color newTextSecondary = Color(0xFF94A3B8); // Texto secundário
-  static const Color newTextMuted = Color(0xFF64748B);     // Texto desativado/leve
+  // Text Colors - Light Theme
+  static const Color newTextPrimary = Color(0xFF1E293B);   // Texto principal (slate-800)
+  static const Color newTextSecondary = Color(0xFF64748B); // Texto secundário (slate-500)
+  static const Color newTextMuted = Color(0xFF94A3B8);     // Texto desativado/leve (slate-400)
   
   // ═══════════════════════════════════════════════════════════════
   // PALETA LEGADA (Compatibilidade com código existente)
