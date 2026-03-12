@@ -49,6 +49,18 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
   bool _usandoFallbackAfcrc = false;
   int _selectedNavigationIndex = 0;
 
+  /// Normaliza texto numérico: troca vírgula por ponto para parsing
+  double? _parseDouble(String text) {
+    final normalizado = text.trim().replaceAll(',', '.');
+    return double.tryParse(normalizado);
+  }
+
+  int? _parseInt(String text) {
+    final normalizado = text.trim().replaceAll(',', '.');
+    final d = double.tryParse(normalizado);
+    return d?.toInt();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -355,15 +367,15 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
     setState(() => _isSaving = true);
 
     try {
-      final produtividade = double.parse(_produtividadeController.text);
-      final atr = int.parse(_atrController.text);
-      final longevidade = int.tryParse(_longevidadeController.text);
-      final doseMuda = double.tryParse(_doseMudaController.text);
-      final precoDiesel = double.tryParse(_precoDieselController.text);
-      final arrendamento = double.tryParse(_arrendamentoController.text);
-      final atrArrend = double.tryParse(_atrArrendController.text);
-      final precoAtr = double.tryParse(_precoAtrController.text);
-      final custoAdmin = double.tryParse(_custoAdministrativoController.text);
+      final produtividade = _parseDouble(_produtividadeController.text) ?? 0;
+      final atr = _parseInt(_atrController.text) ?? 138;
+      final longevidade = _parseInt(_longevidadeController.text);
+      final doseMuda = _parseDouble(_doseMudaController.text);
+      final precoDiesel = _parseDouble(_precoDieselController.text);
+      final arrendamento = _parseDouble(_arrendamentoController.text);
+      final atrArrend = _parseDouble(_atrArrendController.text);
+      final precoAtr = _parseDouble(_precoAtrController.text);
+      final custoAdmin = _parseDouble(_custoAdministrativoController.text);
       final cenarioBase = CustoOperacionalCenario(
         id: widget.cenarioEditando?.id,
         propriedadeId: widget.propriedade.id,
@@ -582,7 +594,7 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
                             decimal: true,
                             obrigatorio: true,
                             validadorExtra: (v) =>
-                                double.tryParse(v) == null ? 'Inválido' : null,
+                                _parseDouble(v) == null ? 'Valor inválido' : null,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -594,7 +606,7 @@ class _CustoOperacionalFormScreenState extends State<CustoOperacionalFormScreen>
                             numerico: true,
                             obrigatorio: true,
                             validadorExtra: (v) =>
-                                int.tryParse(v) == null ? 'Inválido' : null,
+                                _parseInt(v) == null ? 'Valor inválido' : null,
                           ),
                         ),
                       ],
