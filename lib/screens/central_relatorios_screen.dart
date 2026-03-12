@@ -332,14 +332,21 @@ class _CentralRelatoriosScreenState extends State<CentralRelatoriosScreen> {
       _mensagemVazia = 'Nenhuma análise de solo registrada';
       return;
     }
-    _itensDisponiveis = analises
-        .map((a) => _ItemRelatorio(
-              id: a.id,
-              descricao:
-                  '${a.laboratorio ?? "Análise"} — ${a.dataColeta != null ? '${a.dataColeta!.day.toString().padLeft(2, '0')}/${a.dataColeta!.month.toString().padLeft(2, '0')}/${a.dataColeta!.year}' : 'Sem data'}${a.numeroAmostra != null ? ' (Amostra ${a.numeroAmostra})' : ''}',
-              dados: a,
-            ))
-        .toList();
+    _itensDisponiveis = [
+      // Opção para gerar PDF com TODAS as análises
+      _ItemRelatorio(
+        id: 'todas',
+        descricao: 'Todas as análises (${analises.length})',
+        dados: analises,
+      ),
+      // Opções individuais
+      ...analises.map((a) => _ItemRelatorio(
+            id: a.id,
+            descricao:
+                '${a.laboratorio ?? "Análise"} — ${a.dataColeta != null ? '${a.dataColeta!.day.toString().padLeft(2, '0')}/${a.dataColeta!.month.toString().padLeft(2, '0')}/${a.dataColeta!.year}' : 'Sem data'}${a.numeroAmostra != null ? ' (Amostra ${a.numeroAmostra})' : ''}',
+            dados: a,
+          )),
+    ];
   }
 
   // ─── Gerar PDF ─────────────────────────────────────────────────────────
@@ -432,11 +439,16 @@ class _CentralRelatoriosScreenState extends State<CentralRelatoriosScreen> {
           break;
 
         case _Categoria.analiseSolo:
-          final analise = _itemSelecionado!.dados as AnaliseSolo;
           final talhoesSolo = await _talhaoService.getTalhoesPorPropriedade(_propId);
+          final List<AnaliseSolo> analisesParaPdf;
+          if (_itemSelecionado!.id == 'todas') {
+            analisesParaPdf = _itemSelecionado!.dados as List<AnaliseSolo>;
+          } else {
+            analisesParaPdf = [_itemSelecionado!.dados as AnaliseSolo];
+          }
           final bytes = await PdfAnaliseSolo.gerar(
             propriedade: propriedade,
-            analises: [analise],
+            analises: analisesParaPdf,
             talhoes: talhoesSolo,
           );
           await _exibirPdf(bytes, 'Analise_Solo');
