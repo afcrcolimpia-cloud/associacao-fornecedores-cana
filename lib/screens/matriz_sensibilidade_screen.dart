@@ -104,7 +104,7 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Legenda
+              // Legenda — 3 níveis
               Card(
                 color: AppColors.bgDark,
                 child: Padding(
@@ -123,30 +123,42 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
                       Row(
                         children: [
                           Container(
-                            width: 20,
-                            height: 20,
-                            color: AppColors.success,
+                            width: 20, height: 20,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32).withAlpha(50),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Positiva (Viável)',
-                            style: TextStyle(fontSize: 11),
-                          ),
+                          const Text('Lucrativo (> R\$ 15/t)', style: TextStyle(fontSize: 11)),
                         ],
                       ),
                       const SizedBox(height: 6),
                       Row(
                         children: [
                           Container(
-                            width: 20,
-                            height: 20,
-                            color: AppColors.error,
+                            width: 20, height: 20,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9A825).withAlpha(50),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Negativa (Inviável)',
-                            style: TextStyle(fontSize: 11),
+                          const Text('Atenção (R\$ 0 a R\$ 15/t)', style: TextStyle(fontSize: 11)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            width: 20, height: 20,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFC62828).withAlpha(50),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
+                          const SizedBox(width: 8),
+                          const Text('Prejuízo (< R\$ 0/t)', style: TextStyle(fontSize: 11)),
                         ],
                       ),
                     ],
@@ -238,13 +250,18 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
                         ),
                       ),
                       ...matriz.matriz[i].map((margem) {
-                        final ehPositiva = margem >= 0;
-                        final cor = ehPositiva
-                            ? AppColors.success.withOpacity(0.2)
-                            : AppColors.error.withOpacity(0.2);
-                        final textColor = ehPositiva
-                            ? AppColors.success
-                            : AppColors.error;
+                        final Color cor;
+                        final Color textColor;
+                        if (margem > 15) {
+                          cor = const Color(0xFF2E7D32).withAlpha(50);
+                          textColor = const Color(0xFF2E7D32);
+                        } else if (margem >= 0) {
+                          cor = const Color(0xFFF9A825).withAlpha(50);
+                          textColor = const Color(0xFFF57F17);
+                        } else {
+                          cor = const Color(0xFFC62828).withAlpha(50);
+                          textColor = const Color(0xFFC62828);
+                        }
 
                         return Container(
                           color: cor,
@@ -286,16 +303,19 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
       }
     }
 
-    // Contar viáveis e inviáveis
-    int viavel = 0;
-    int inviavel = 0;
+    // Contar lucrativo, atenção e prejuízo
+    int lucrativo = 0;
+    int atencao = 0;
+    int prejuizo = 0;
 
     for (var linha in matriz.matriz) {
       for (var valor in linha) {
-        if (valor >= 0) {
-          viavel++;
+        if (valor > 15) {
+          lucrativo++;
+        } else if (valor >= 0) {
+          atencao++;
         } else {
-          inviavel++;
+          prejuizo++;
         }
       }
     }
@@ -316,15 +336,21 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
             ),
             const SizedBox(height: 8),
             _buildInfoRow(
-              'Cenários Viáveis',
-              '$viavel de 81',
-              viavel > 40 ? AppColors.success : AppColors.warning,
+              'Lucrativo (> R\$ 15/t)',
+              '$lucrativo de 81',
+              const Color(0xFF2E7D32),
             ),
             const SizedBox(height: 6),
             _buildInfoRow(
-              'Cenários Inviáveis',
-              '$inviavel de 81',
-              inviavel < 40 ? AppColors.success : AppColors.error,
+              'Atenção (R\$ 0–15/t)',
+              '$atencao de 81',
+              const Color(0xFFF57F17),
+            ),
+            const SizedBox(height: 6),
+            _buildInfoRow(
+              'Prejuízo (< R\$ 0/t)',
+              '$prejuizo de 81',
+              const Color(0xFFC62828),
             ),
             const SizedBox(height: 6),
             _buildInfoRow(

@@ -174,76 +174,214 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
   }
 
   Widget _buildCenarioDetalhes(CustoOperacionalCenario cenario) {
+    final resumo = _service.calcularResumoComTotais(cenario: cenario);
+    final longevidade = cenario.longevidade ?? DadosCustoOperacional.parametros.longevidade;
+    final precoAtr = cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR;
+    final receitaRT = resumo.precoRecebido.rT;
+    final margemRT = resumo.margemLucro.rT;
+    final margemPct = resumo.margemPercentual;
+
+    // Cálculo do Ponto de Equilíbrio
+    final custoHa = resumo.totalOperacional.rHa;
+    final breakEven = receitaRT > 0 ? custoHa / receitaRT : 0.0;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // PARÂMETROS
-          _buildCard(
-            title: 'Parâmetros Tecnicas',
-            children: [
-              _buildParametroRow(
-                  'Produtividade', '${cenario.produtividade} t/ha'),
-              _buildParametroRow('ATR', '${cenario.atr} kg/t'),
-              _buildParametroRow(
-                'Longevidade',
-                '${cenario.longevidade ?? '-'} safras',
+          // ══════ HEADER KPI — Margem Projetada ══════
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
               ),
-              _buildParametroRow(
-                'Dose de Muda',
-                '${cenario.doseMuda?.toStringAsFixed(2) ?? '-'} t/ha',
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      cenario.nomeCenario.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Período: ${cenario.periodoRef}',
+                      style: const TextStyle(color: Colors.white54, fontSize: 11),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'MARGEM LÍQUIDA PROJETADA',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'R\$ ${margemRT.toStringAsFixed(2)}/t',
+                      style: TextStyle(
+                        color: margemRT >= 0 ? const Color(0xFFFDD835) : Colors.redAccent,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ══════ KPIs ROW ══════
+          Row(
+            children: [
+              Expanded(
+                child: _buildKpiCard(
+                  'Custo R\$/t',
+                  'R\$ ${resumo.totalOperacional.rT.toStringAsFixed(2)}',
+                  Icons.attach_money,
+                  Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildKpiCard(
+                  'Receita R\$/t',
+                  'R\$ ${receitaRT.toStringAsFixed(2)}',
+                  Icons.trending_up,
+                  Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildKpiCard(
+                  'Margem %',
+                  '${margemPct.toStringAsFixed(1)}%',
+                  Icons.pie_chart,
+                  margemPct >= 0 ? Colors.green : Colors.red,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // PREÇOS
-          _buildCard(
-            title: 'Precos de Mercado',
+          // ══════ PONTO DE EQUILÍBRIO + PREMISSAS ══════
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildParametroRow(
-                'Diesel',
-                'R\$ ${cenario.precoDiesel?.toStringAsFixed(3) ?? '-'}/L',
+              // Ponto de Equilíbrio
+              Expanded(
+                flex: 1,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1B5E20),
+                    borderRadius: BorderRadius.circular(12),
+                    border: const Border(
+                      left: BorderSide(color: Color(0xFFFDD835), width: 4),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'PONTO DE EQUILÍBRIO',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            breakEven > 0 && breakEven < 300
+                                ? breakEven.toStringAsFixed(1)
+                                : '---',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            't/ha',
+                            style: TextStyle(color: Colors.white70, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Produtividade mínima para cobrir custos + arrendamento.',
+                        style: TextStyle(color: Colors.white54, fontSize: 9),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              _buildParametroRow(
-                'Preco ATR',
-                'R\$ ${cenario.precoAtr?.toStringAsFixed(4) ?? '-'}/kg',
+              const SizedBox(width: 12),
+              // Premissas resumidas
+              Expanded(
+                flex: 1,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'PREMISSAS',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildPremissaItem('Produtividade', '${cenario.produtividade} t/ha'),
+                        _buildPremissaItem('ATR Médio', '${cenario.atr} kg/t'),
+                        _buildPremissaItem('Preço ATR', 'R\$ ${precoAtr.toStringAsFixed(4)}/kg'),
+                        _buildPremissaItem('Longevidade', '$longevidade safras'),
+                        _buildPremissaItem('Diesel', 'R\$ ${cenario.precoDiesel?.toStringAsFixed(3) ?? '-'}/L'),
+                        _buildPremissaItem('Arrendamento', '${cenario.arrendamento?.toStringAsFixed(1) ?? '-'} t/ha'),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // CUSTOS
-          _buildCard(
-            title: 'Custos de Operacao',
-            children: [
-              _buildParametroRow(
-                'Arrendamento',
-                '${cenario.arrendamento?.toStringAsFixed(2) ?? '-'} t/ha',
-              ),
-              _buildParametroRow(
-                'ATR Arrendamento',
-                '${cenario.atrArrend ?? '-'} kg/t',
-              ),
-              _buildParametroRow(
-                'Administrativo',
-                '${cenario.custoAdministrativo?.toStringAsFixed(2) ?? '10,00'}%',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // COMPOSIÇÃO DO CUSTO OPERACIONAL
-          _buildComposicaoCusto(cenario),
-          const SizedBox(height: 16),
-
-          // RESULTADOS ECONÔMICOS
-          if (cenario.totalOperacional != null && cenario.margemLucro != null)
-            _buildResultadosEconomicos(cenario),
+          // ══════ DRE — DEMONSTRATIVO DE RESULTADOS ══════
+          _buildDRE(cenario, resumo, longevidade),
           const SizedBox(height: 24),
 
-          // BOTÕES DE AÇÃO
+          // ══════ BOTÕES DE AÇÃO ══════
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -266,7 +404,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
           ),
           const SizedBox(height: 16),
 
-          // BOTÕES DE ANÁLISE
+          // ══════ BOTÕES DE ANÁLISE ══════
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -333,6 +471,253 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
     );
   }
 
+  Widget _buildKpiCard(String label, String valor, IconData icon, Color color) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 6),
+            Text(
+              valor,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPremissaItem(String label, String valor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          Text(valor, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDRE(
+    CustoOperacionalCenario cenario,
+    ResumoCustoOperacionalCalculado resumo,
+    int longevidade,
+  ) {
+    final receitaRT = resumo.precoRecebido.rT;
+    final linhasFormacao = resumo.linhasResumo.where((r) => r.ehFormacao).toList();
+    final linhasRecorrentes = resumo.linhasResumo.where((r) => !r.ehFormacao).toList();
+    final precoAtr = cenario.precoAtr ?? DadosCustoOperacional.parametros.precoATR;
+    final atr = cenario.atr > 0 ? cenario.atr.toDouble() : 138.0;
+    final margemRT = resumo.margemLucro.rT;
+    final margemPct = resumo.margemPercentual;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Cabeçalho DRE
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: const Color(0xFF111827),
+            child: const Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Text(
+                    'Estrutura Analítica de Custos (DRE)',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    'R\$/t',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    '% Receita',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // (+) Receita Bruta
+          _dreRow(
+            '(+) Receita Bruta (ATR: ${atr.toStringAsFixed(0)}kg × R\$ ${precoAtr.toStringAsFixed(4)})',
+            receitaRT,
+            100.0,
+            isHeader: true,
+            bgColor: const Color(0xFFEFF6FF),
+          ),
+          // (-) Formação Amortizada
+          ...linhasFormacao.map((r) => _dreRow(
+            '    (-) ${r.estagio}',
+            r.rT,
+            receitaRT > 0 ? (r.rT / receitaRT) * 100 : 0,
+            isNegative: true,
+          )),
+          // (-) Recorrentes
+          ...linhasRecorrentes.map((r) => _dreRow(
+            '    (-) ${r.estagio}',
+            r.rT,
+            receitaRT > 0 ? (r.rT / receitaRT) * 100 : 0,
+            isNegative: true,
+          )),
+          // (=) COE
+          _dreRow(
+            '(=) Custo Operacional Total',
+            resumo.totalOperacional.rT,
+            receitaRT > 0 ? (resumo.totalOperacional.rT / receitaRT) * 100 : 0,
+            isHeader: true,
+            bgColor: Colors.grey[100],
+          ),
+          // MARGEM FINAL
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: margemRT >= 0 ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+              border: Border(
+                top: BorderSide(
+                  color: margemRT >= 0 ? const Color(0xFF059669) : Colors.red,
+                  width: 2,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Text(
+                    'MARGEM LÍQUIDA FINAL',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: margemRT >= 0 ? const Color(0xFF065F46) : Colors.red[800],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    'R\$ ${margemRT.toStringAsFixed(2)}',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: margemRT >= 0 ? const Color(0xFF065F46) : Colors.red[800],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    '${margemPct.toStringAsFixed(1)}%',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: margemRT >= 0 ? const Color(0xFF065F46) : Colors.red[800],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dreRow(
+    String label,
+    double valorRT,
+    double percentual, {
+    bool isHeader = false,
+    bool isNegative = false,
+    Color? bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: const Border(bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: isHeader ? 12 : 11,
+                fontWeight: isHeader ? FontWeight.w700 : FontWeight.normal,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              isNegative
+                  ? valorRT.toStringAsFixed(2)
+                  : 'R\$ ${valorRT.toStringAsFixed(2)}',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: isHeader ? 12 : 11,
+                fontWeight: isHeader ? FontWeight.w700 : FontWeight.normal,
+                color: isNegative ? Colors.red[700] : null,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 70,
+            child: Text(
+              '${percentual.toStringAsFixed(1)}%',
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   CustoOperacionalCenario _resolverCenarioSelecionado(
     List<CustoOperacionalCenario> cenarios,
   ) {
@@ -345,62 +730,6 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
     }
 
     return cenarios.first;
-  }
-
-  Widget _buildCard({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildParametroRow(
-    String label,
-    String valor, {
-    Color? color,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
-          Text(
-            valor,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: color ?? AppColors.newTextPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _criarNovoCenario() async {
@@ -620,104 +949,6 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
     }
 
     return _service.getCenariosByPropriedade(widget.contexto.propriedade.id);
-  }
-
-  Widget _buildComposicaoCusto(CustoOperacionalCenario cenario) {
-    final resumo = _service.calcularResumoComTotais(cenario: cenario);
-    final longevidade = cenario.longevidade ?? DadosCustoOperacional.parametros.longevidade;
-    final linhasFormacao = resumo.linhasResumo.where((r) => r.ehFormacao).toList();
-    final linhasRecorrentes = resumo.linhasResumo.where((r) => !r.ehFormacao).toList();
-    final subtotalFormacao = linhasFormacao.fold<double>(0, (s, r) => s + r.rHaBruto);
-    final formacaoAmortizada = linhasFormacao.fold<double>(0, (s, r) => s + r.rHa);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Composição do Custo Operacional',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Valores iguais às operações. Formação amortizada por $longevidade safras.',
-              style: const TextStyle(fontSize: 10, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-            // Formação
-            ...linhasFormacao.map((r) => _buildParametroRow(
-              r.estagio,
-              'R\$ ${r.rHaBruto.toStringAsFixed(2)}/ha',
-            )),
-            const Divider(height: 16),
-            _buildParametroRow(
-              'Subtotal Formação',
-              'R\$ ${subtotalFormacao.toStringAsFixed(2)}/ha',
-              color: AppColors.primary,
-            ),
-            _buildParametroRow(
-              'Formação Amortizada (÷ $longevidade)',
-              'R\$ ${formacaoAmortizada.toStringAsFixed(2)}/ha',
-              color: Colors.green,
-            ),
-            const Divider(height: 16),
-            // Recorrentes
-            ...linhasRecorrentes.map((r) => _buildParametroRow(
-              r.estagio,
-              'R\$ ${r.rHaBruto.toStringAsFixed(2)}/ha',
-            )),
-            const Divider(height: 16),
-            _buildParametroRow(
-              'Total Anualizado',
-              'R\$ ${resumo.totalOperacional.rHa.toStringAsFixed(2)}/ha',
-              color: Colors.green,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResultadosEconomicos(CustoOperacionalCenario cenario) {
-    final resumo = _service.calcularResumoComTotais(cenario: cenario);
-    final totalRT = resumo.totalOperacional.rT;
-    final precoRT = resumo.precoRecebido.rT;
-    final margemRT = resumo.margemLucro.rT;
-
-    return _buildCard(
-      title: 'Resultados Economicos',
-      children: [
-        _buildParametroRow(
-          'Total Operacional',
-          'R\$ ${resumo.totalOperacional.rHa.toStringAsFixed(2)}/ha',
-          color: AppColors.primary,
-        ),
-        _buildParametroRow(
-          'Custo R\$/t',
-          'R\$ ${totalRT.toStringAsFixed(2)}/t',
-        ),
-        _buildParametroRow(
-          'Preço Recebido',
-          'R\$ ${precoRT.toStringAsFixed(2)}/t',
-        ),
-        _buildParametroRow(
-          'Margem R\$/t',
-          'R\$ ${margemRT.toStringAsFixed(2)}/t',
-          color: margemRT > 0 ? Colors.green : Colors.red,
-        ),
-        _buildParametroRow(
-          'Margem de Lucro',
-          '${resumo.margemPercentual.toStringAsFixed(2)}%',
-          color: resumo.margemPercentual > 0 ? Colors.green : Colors.red,
-        ),
-      ],
-    );
   }
 
   void _garantirTotais(CustoOperacionalCenario cenario) {
