@@ -21,6 +21,11 @@ class TratosCulturais {
   final DateTime? criadoEm;
   final DateTime? atualizadoEm;
 
+  // Campos desnormalizados (preenchidos no client-side)
+  final String? talhaoNumero;
+  final String? variedadeNome;
+  final double? areaHaTalhao;
+
   TratosCulturais({
     required this.id,
     required this.propriedadeId,
@@ -38,7 +43,39 @@ class TratosCulturais {
     this.observacoes,
     this.criadoEm,
     this.atualizadoEm,
+    this.talhaoNumero,
+    this.variedadeNome,
+    this.areaHaTalhao,
   });
+
+  String get nomeAmigavel {
+    if (talhaoNumero != null && variedadeNome != null) {
+      return '$talhaoNumero - $variedadeNome';
+    }
+    if (talhaoNumero != null) return 'Talhão $talhaoNumero';
+    return 'Talhão Desconhecido';
+  }
+
+  double get custoTotalInsumos {
+    double total = 0.0;
+    if (adubos != null) {
+      total += adubos!.fold(0.0, (sum, i) => sum + i.custoTotal);
+    }
+    if (herbicidas != null) {
+      total += herbicidas!.fold(0.0, (sum, i) => sum + i.custoTotal);
+    }
+    if (inseticidas != null) {
+      total += inseticidas!.fold(0.0, (sum, i) => sum + i.custoTotal);
+    }
+    if (maturadores != null) {
+      total += maturadores!.fold(0.0, (sum, i) => sum + i.custoTotal);
+    }
+    return total;
+  }
+
+  double get custoTotalCompleto {
+    return custoTotalInsumos;
+  }
 
   // Converter para JSON
   Map<String, dynamic> toJson() {
@@ -124,6 +161,9 @@ class TratosCulturais {
     String? observacoes,
     DateTime? criadoEm,
     DateTime? atualizadoEm,
+    String? talhaoNumero,
+    String? variedadeNome,
+    double? areaHaTalhao,
   }) {
     return TratosCulturais(
       id: id ?? this.id,
@@ -142,6 +182,9 @@ class TratosCulturais {
       observacoes: observacoes ?? this.observacoes,
       criadoEm: criadoEm ?? this.criadoEm,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,
+      talhaoNumero: talhaoNumero ?? this.talhaoNumero,
+      variedadeNome: variedadeNome ?? this.variedadeNome,
+      areaHaTalhao: areaHaTalhao ?? this.areaHaTalhao,
     );
   }
 
@@ -157,13 +200,36 @@ class Insumo {
   final double quantidade;
   final String unidade; // 'kg/ha' ou 'L/ha'
   final DateTime? dataAplicacao;
+  final double? doseMinima;
+  final double? doseMaxima;
+  final double? precoUnitario;
 
   Insumo({
     required this.nome,
     required this.quantidade,
     required this.unidade,
     this.dataAplicacao,
+    this.doseMinima,
+    this.doseMaxima,
+    this.precoUnitario,
   });
+
+  double get custoTotal {
+    if (precoUnitario == null) return 0.0;
+    return quantidade * precoUnitario!;
+  }
+
+  bool get doseEstaNoRange {
+    if (doseMinima == null || doseMaxima == null) return true;
+    return quantidade >= doseMinima! && quantidade <= doseMaxima!;
+  }
+
+  String get statusDose {
+    if (doseMinima == null || doseMaxima == null) return '✓ Sem recomendação';
+    if (doseEstaNoRange) return '✓ Dentro do intervalo';
+    if (quantidade < doseMinima!) return '⚠️ Abaixo do recomendado';
+    return '⚠️ Acima do recomendado';
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -171,6 +237,9 @@ class Insumo {
       'quantidade': quantidade,
       'unidade': unidade,
       'data_aplicacao': dataAplicacao?.toIso8601String(),
+      'dose_minima': doseMinima,
+      'dose_maxima': doseMaxima,
+      'preco_unitario': precoUnitario,
     };
   }
 
@@ -182,6 +251,15 @@ class Insumo {
       dataAplicacao: json['data_aplicacao'] != null
           ? DateTime.tryParse(json['data_aplicacao'].toString())
           : null,
+      doseMinima: json['dose_minima'] != null
+          ? (json['dose_minima'] as num).toDouble()
+          : null,
+      doseMaxima: json['dose_maxima'] != null
+          ? (json['dose_maxima'] as num).toDouble()
+          : null,
+      precoUnitario: json['preco_unitario'] != null
+          ? (json['preco_unitario'] as num).toDouble()
+          : null,
     );
   }
 
@@ -190,12 +268,18 @@ class Insumo {
     double? quantidade,
     String? unidade,
     DateTime? dataAplicacao,
+    double? doseMinima,
+    double? doseMaxima,
+    double? precoUnitario,
   }) {
     return Insumo(
       nome: nome ?? this.nome,
       quantidade: quantidade ?? this.quantidade,
       unidade: unidade ?? this.unidade,
       dataAplicacao: dataAplicacao ?? this.dataAplicacao,
+      doseMinima: doseMinima ?? this.doseMinima,
+      doseMaxima: doseMaxima ?? this.doseMaxima,
+      precoUnitario: precoUnitario ?? this.precoUnitario,
     );
   }
 

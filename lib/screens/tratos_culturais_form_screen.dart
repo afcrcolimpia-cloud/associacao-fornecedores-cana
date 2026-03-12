@@ -3,6 +3,8 @@ import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
+import '../services/tratos_culturais_service.dart';
+import '../widgets/insumo_selector_widget.dart';
 
 class TratosCulturaisFormScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -40,6 +42,11 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
   late TextEditingController _extraValor3Controller;
 
   int _selectedNavigationIndex = 0;
+  Talhao? _talhaoSelecionado;
+  int _anoSafra = DateTime.now().year;
+  bool _salvando = false;
+
+  final TratosCulturaisService _service = TratosCulturaisService();
 
   @override
   void initState() {
@@ -51,6 +58,13 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
       _herbicidas = List.from(widget.tratos!.herbicidas ?? []);
       _inseticidas = List.from(widget.tratos!.inseticidas ?? []);
       _maturadores = List.from(widget.tratos!.maturadores ?? []);
+      _anoSafra = int.tryParse(widget.tratos!.anoSafra) ?? DateTime.now().year;
+
+      // Selecionar talhão existente
+      if (widget.tratos!.talhaoId != null) {
+        final idx = widget.talhoes.indexWhere((t) => t.id == widget.tratos!.talhaoId);
+        if (idx >= 0) _talhaoSelecionado = widget.talhoes[idx];
+      }
     } else {
       _adubos = [];
       _herbicidas = [];
@@ -73,7 +87,7 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     _extraValor2Controller = TextEditingController();
     _extraNome3Controller = TextEditingController();
     _extraValor3Controller = TextEditingController();
-    
+
     if (widget.tratos?.camposExtras != null) {
       final chaves = widget.tratos!.camposExtras!.keys.toList();
       if (chaves.isNotEmpty) {
@@ -119,18 +133,13 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
 
     showDialog(
       context: context,
-      builder: (context) => _DialogAdicionarInsumo(
+      builder: (ctx) => _DialogAdicionarInsumoV2(
         categoria: categoria,
-        onSalvar: (nome, quantidade) {
+        onSalvar: (insumo) {
           setState(() {
-            lista.add(Insumo(
-              nome: nome,
-              quantidade: quantidade,
-              unidade: 'kg/ha',
-              dataAplicacao: DateTime.now(),
-            ));
+            lista.add(insumo);
           });
-          Navigator.pop(context);
+          Navigator.pop(ctx);
         },
       ),
     );
@@ -140,6 +149,88 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     setState(() {
       lista.removeAt(index);
     });
+  }
+
+  double get _custoTotalInsumos {
+    double total = 0.0;
+    for (final i in _adubos) { total += i.custoTotal; }
+    for (final i in _herbicidas) { total += i.custoTotal; }
+    for (final i in _inseticidas) { total += i.custoTotal; }
+    for (final i in _maturadores) { total += i.custoTotal; }
+    return total;
+  }
+
+  Future<void> _salvar() async {
+    if (_talhaoSelecionado == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione um talhão'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _salvando = true);
+
+    try {
+      // Montar campos extras
+      Map<String, double>? camposExtras;
+      final extras = <String, double>{};
+      if (_extraNome1Controller.text.isNotEmpty) {
+        extras[_extraNome1Controller.text] =
+            double.tryParse(_extraValor1Controller.text) ?? 0;
+      }
+      if (_extraNome2Controller.text.isNotEmpty) {
+        extras[_extraNome2Controller.text] =
+            double.tryParse(_extraValor2Controller.text) ?? 0;
+      }
+      if (_extraNome3Controller.text.isNotEmpty) {
+        extras[_extraNome3Controller.text] =
+            double.tryParse(_extraValor3Controller.text) ?? 0;
+      }
+      if (extras.isNotEmpty) camposExtras = extras;
+
+      final trato = TratosCulturais(
+        id: widget.tratos?.id ?? '',
+        propriedadeId: widget.propriedade.id,
+        talhaoId: _talhaoSelecionado!.id,
+        anoSafra: _anoSafra.toString(),
+        adubos: _adubos.isNotEmpty ? _adubos : null,
+        herbicidas: _herbicidas.isNotEmpty ? _herbicidas : null,
+        inseticidas: _inseticidas.isNotEmpty ? _inseticidas : null,
+        maturadores: _maturadores.isNotEmpty ? _maturadores : null,
+        calagem: double.tryParse(_calagemController.text),
+        gessagem: double.tryParse(_gessagemController.text),
+        oxidoDeCilcio: double.tryParse(_oxidoController.text),
+        camposExtras: camposExtras,
+        dataAplicacao: DateTime.now(),
+        talhaoNumero: _talhaoSelecionado!.numeroTalhao,
+        variedadeNome: _talhaoSelecionado!.variedade,
+        areaHaTalhao: _talhaoSelecionado!.areaHa,
+      );
+
+      if (widget.tratos != null) {
+        await _service.updateTratos(trato);
+      } else {
+        await _service.addTratos(trato);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trato salvo com sucesso!')),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
   }
 
   @override
@@ -153,6 +244,8 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
       },
       child: Column(
         children: [
+          // Cabeçalho: Talhão + Ano Safra
+          _buildCabecalhoForm(),
           // TabBar
           TabBar(
             controller: _tabController,
@@ -175,6 +268,130 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
               ],
             ),
           ),
+          // Resumo de custo + botão salvar
+          _buildRodapeForm(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCabecalhoForm() {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<Talhao>(
+                    decoration: const InputDecoration(
+                      labelText: 'Talhão',
+                      prefixIcon: Icon(Icons.grid_view),
+                      border: OutlineInputBorder(),
+                    ),
+                    value: _talhaoSelecionado,
+                    items: widget.talhoes.map((t) => DropdownMenuItem(
+                      value: t,
+                      child: Text(
+                        '${t.nome} — ${t.variedade ?? "sem variedade"} — ${t.areaHa?.toStringAsFixed(1) ?? "?"} ha',
+                      ),
+                    )).toList(),
+                    onChanged: (talhao) {
+                      setState(() => _talhaoSelecionado = talhao);
+                    },
+                    hint: const Text('Selecione o talhão'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    decoration: const InputDecoration(
+                      labelText: 'Ano Safra',
+                      prefixIcon: Icon(Icons.calendar_today),
+                      border: OutlineInputBorder(),
+                    ),
+                    value: _anoSafra,
+                    items: List.generate(5, (index) {
+                      final ano = DateTime.now().year - index;
+                      return DropdownMenuItem(value: ano, child: Text(ano.toString()));
+                    }),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _anoSafra = v);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            if (_talhaoSelecionado != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 16, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Área: ${_talhaoSelecionado!.areaHa?.toStringAsFixed(1) ?? "?"} ha  |  '
+                      'Variedade: ${_talhaoSelecionado!.variedade ?? "Não informada"}  |  '
+                      'Corte: ${_talhaoSelecionado!.corte ?? "-"}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRodapeForm() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        border: Border(top: BorderSide(color: Colors.grey[300]!)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.monetization_on, color: Colors.green[700], size: 20),
+          const SizedBox(width: 8),
+          Text(
+            'Custo total insumos: R\$ ${_custoTotalInsumos.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.green[800],
+            ),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: _salvando ? null : () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _salvando ? null : _salvar,
+            icon: _salvando
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save),
+            label: Text(_salvando ? 'Salvando...' : 'Salvar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.newPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -185,23 +402,28 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
     return Column(
       children: [
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: lista.length,
-            itemBuilder: (context, index) {
-              final insumo = lista[index];
-              return Card(
-                child: ListTile(
-                  title: Text(insumo.nome),
-                  subtitle: Text('${insumo.quantidade.toStringAsFixed(2)} $unidade'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _removerInsumo(lista, index),
+          child: lista.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inbox, size: 48, color: Colors.grey[400]),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Nenhum $categoria adicionado',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ],
                   ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: lista.length,
+                  itemBuilder: (context, index) {
+                    final insumo = lista[index];
+                    return _buildInsumoCard(insumo, lista, index, unidade);
+                  },
                 ),
-              );
-            },
-          ),
         ),
         Padding(
           padding: const EdgeInsets.all(16),
@@ -216,24 +438,69 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
       ],
     );
   }
+
+  Widget _buildInsumoCard(Insumo insumo, List<Insumo> lista, int index, String unidade) {
+    final temDose = insumo.doseMinima != null && insumo.doseMaxima != null;
+    final statusColor = !temDose
+        ? Colors.grey
+        : insumo.doseEstaNoRange
+            ? Colors.green
+            : Colors.orange;
+
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          temDose
+              ? (insumo.doseEstaNoRange ? Icons.check_circle : Icons.warning)
+              : Icons.circle_outlined,
+          color: statusColor,
+        ),
+        title: Text(insumo.nome),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${insumo.quantidade.toStringAsFixed(2)} ${insumo.unidade}'),
+            if (temDose)
+              Text(
+                'Dose: ${insumo.doseMinima!.toStringAsFixed(2)} - ${insumo.doseMaxima!.toStringAsFixed(2)} ${insumo.unidade}  •  ${insumo.statusDose}',
+                style: TextStyle(fontSize: 11, color: statusColor),
+              ),
+            if (insumo.precoUnitario != null && insumo.precoUnitario! > 0)
+              Text(
+                'Custo: R\$ ${insumo.custoTotal.toStringAsFixed(2)} (R\$ ${insumo.precoUnitario!.toStringAsFixed(2)}/${insumo.unidade})',
+                style: TextStyle(fontSize: 11, color: Colors.green[700]),
+              ),
+          ],
+        ),
+        isThreeLine: true,
+        trailing: IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () => _removerInsumo(lista, index),
+        ),
+      ),
+    );
+  }
 }
 
-class _DialogAdicionarInsumo extends StatefulWidget {
+/// Dialog v2 para adicionar insumo — com InsumoSelectorWidget integrado
+class _DialogAdicionarInsumoV2 extends StatefulWidget {
   final String categoria;
-  final Function(String nome, double quantidade) onSalvar;
+  final Function(Insumo insumo) onSalvar;
 
-  const _DialogAdicionarInsumo({
+  const _DialogAdicionarInsumoV2({
     required this.categoria,
     required this.onSalvar,
   });
 
   @override
-  State<_DialogAdicionarInsumo> createState() => _DialogAdicionarInsumoState();
+  State<_DialogAdicionarInsumoV2> createState() => _DialogAdicionarInsumoV2State();
 }
 
-class _DialogAdicionarInsumoState extends State<_DialogAdicionarInsumo> {
+class _DialogAdicionarInsumoV2State extends State<_DialogAdicionarInsumoV2> {
   final _nomeController = TextEditingController();
   final _quantidadeController = TextEditingController();
+  InsumoComDose? _insumoSelecionado;
+  bool _usarCatalogo = true;
 
   @override
   void dispose() {
@@ -243,58 +510,117 @@ class _DialogAdicionarInsumoState extends State<_DialogAdicionarInsumo> {
   }
 
   void _salvar() {
-    if (_nomeController.text.isEmpty || _quantidadeController.text.isEmpty) {
+    final nome = _usarCatalogo && _insumoSelecionado != null
+        ? _insumoSelecionado!.produto
+        : _nomeController.text;
+
+    if (nome.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Preencha todos os campos'),
+          content: Text('Informe o nome do insumo'),
           backgroundColor: AppColors.error,
         ),
       );
       return;
     }
 
-    final quantidade = double.tryParse(_quantidadeController.text);
-    if (quantidade == null) {
+    final quantidadeText = _quantidadeController.text.replaceAll(',', '.');
+    final quantidade = double.tryParse(quantidadeText);
+    if (quantidade == null || quantidade <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Quantidade invalida'),
+          content: Text('Quantidade inválida'),
           backgroundColor: AppColors.error,
         ),
       );
       return;
     }
 
-    widget.onSalvar(_nomeController.text, quantidade);
+    widget.onSalvar(Insumo(
+      nome: nome,
+      quantidade: quantidade,
+      unidade: _insumoSelecionado?.unidade ?? 'kg/ha',
+      dataAplicacao: DateTime.now(),
+      doseMinima: _insumoSelecionado?.doseMinima,
+      doseMaxima: _insumoSelecionado?.doseMaxima,
+      precoUnitario: _insumoSelecionado?.precoUnitario,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Adicionar ${widget.categoria}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nomeController,
-            decoration: const InputDecoration(
-              labelText: 'Nome do Insumo',
-              hintText: 'Ex: Adubo NPK 4-14-8',
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _quantidadeController,
-            decoration: const InputDecoration(
-              labelText: 'Quantidade',
-              suffixText: 'kg/ha ou L/ha',
-            ),
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+      content: SizedBox(
+        width: 500,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Toggle: Catálogo x Manual
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Catálogo'),
+                      selected: _usarCatalogo,
+                      onSelected: (v) => setState(() => _usarCatalogo = true),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: const Text('Manual'),
+                      selected: !_usarCatalogo,
+                      onSelected: (v) => setState(() => _usarCatalogo = false),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              if (_usarCatalogo) ...[
+                InsumoSelectorWidget(
+                  onInsumoSelecionado: (insumo) {
+                    setState(() => _insumoSelecionado = insumo);
+                    if (insumo != null) {
+                      // Sugerir dose média
+                      final doseSugerida = (insumo.doseMinima + insumo.doseMaxima) / 2;
+                      _quantidadeController.text = doseSugerida.toStringAsFixed(2);
+                    }
+                  },
+                ),
+              ] else ...[
+                TextField(
+                  controller: _nomeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome do Insumo',
+                    hintText: 'Ex: Adubo NPK 4-14-8',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 16),
+              TextField(
+                controller: _quantidadeController,
+                decoration: InputDecoration(
+                  labelText: 'Quantidade (dose)',
+                  suffixText: _insumoSelecionado?.unidade ?? 'kg/ha ou L/ha',
+                  border: const OutlineInputBorder(),
+                  helperText: _insumoSelecionado != null
+                      ? 'Recomendado: ${_insumoSelecionado!.doseMinima} - ${_insumoSelecionado!.doseMaxima} ${_insumoSelecionado!.unidade}'
+                      : null,
+                ),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                ],
+              ),
             ],
           ),
-        ],
+        ),
       ),
       actions: [
         TextButton(
@@ -303,7 +629,7 @@ class _DialogAdicionarInsumoState extends State<_DialogAdicionarInsumo> {
         ),
         ElevatedButton(
           onPressed: _salvar,
-          child: const Text('Salvar'),
+          child: const Text('Adicionar'),
         ),
       ],
     );

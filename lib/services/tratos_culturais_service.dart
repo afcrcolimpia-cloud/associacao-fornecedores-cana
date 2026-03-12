@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/tratos_culturais.dart';
+import '../models/insumo_com_dose.dart';
 
 class TratosCulturaisService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -125,6 +126,58 @@ class TratosCulturaisService {
       };
     } catch (e) {
       throw Exception('Erro ao calcular estatísticas: $e');
+    }
+  }
+
+  /// Buscar tratos agrupados por talhão
+  Future<Map<String, List<TratosCulturais>>> buscarTratosPorPropriedadeAgrupado(
+      String propriedadeId) async {
+    try {
+      final tratos = await getTratosByPropriedade(propriedadeId);
+
+      final Map<String, List<TratosCulturais>> agrupado = {};
+
+      for (final trato in tratos) {
+        final chave = trato.talhaoId ?? 'desconhecido';
+        agrupado.putIfAbsent(chave, () => []).add(trato);
+      }
+
+      return agrupado;
+    } catch (e) {
+      throw Exception('Erro ao agrupar tratos: $e');
+    }
+  }
+
+  /// Calcular custo total por talhão
+  Future<double> custoTotalTalhao(String talhaoId) async {
+    try {
+      final tratos = await getTratosByTalhao(talhaoId);
+      return tratos.fold<double>(0.0, (sum, t) => sum + t.custoTotalCompleto);
+    } catch (e) {
+      throw Exception('Erro ao calcular custo: $e');
+    }
+  }
+
+  /// Buscar insumos com doses da tabela de referência
+  Future<List<InsumoComDose>> buscarInsumosComDoses({
+    String? categoria,
+    String? tipo,
+  }) async {
+    try {
+      var query = _supabase
+          .from('insumos_com_doses')
+          .select('id, categoria, tipo, produto, situacao, dose_minima, dose_maxima, unidade, preco_unitario, observacoes, data_criacao');
+
+      if (categoria != null) query = query.eq('categoria', categoria);
+      if (tipo != null) query = query.eq('tipo', tipo);
+
+      final response = await query.order('produto');
+
+      return (response as List)
+          .map((json) => InsumoComDose.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Erro ao buscar insumos: $e');
     }
   }
 }

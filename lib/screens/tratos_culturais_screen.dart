@@ -150,16 +150,6 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
     return StreamBuilder<List<TratosCulturais>>(
       stream: _service.getTratosByPropriedadeStream(widget.contexto.propriedade.id),
       builder: (context, snapshot) {
-        debugPrint('🟡 Stream State: ${snapshot.connectionState}');
-        debugPrint('🟡 Has Data: ${snapshot.hasData}');
-        debugPrint('🟡 Has Error: ${snapshot.hasError}');
-        if (snapshot.hasError) {
-          debugPrint('🔴 Stream Error: ${snapshot.error}');
-        }
-        if (snapshot.hasData) {
-          debugPrint('🟢 Data recebida: ${snapshot.data?.length ?? 0} registros');
-        }
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -178,11 +168,9 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
         }
 
         var tratos = snapshot.data ?? [];
-        debugPrint('🟢 Total de tratos antes do filtro: ${tratos.length}');
 
         tratos = tratos.where((t) => t.anoSafra == _filtroAnoSafra.toString()).toList();
         _tratosAtuais = tratos;
-        debugPrint('🟢 Total de tratos depois do filtro: ${tratos.length}');
 
         if (tratos.isEmpty) {
           return Center(
@@ -203,69 +191,129 @@ class _TratosCulturaisScreenState extends State<TratosCulturaisScreen> {
           );
         }
 
-        return Card(
-          margin: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(AppColors.surfaceDark),
-                columns: const [
-                  DataColumn(label: Text('Talhão', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Ano Safra', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Adubos', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Herbicidas', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Inseticidas', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Maturadores', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Calagem', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Ações', style: TextStyle(fontWeight: FontWeight.bold))),
-                ],
-                rows: tratos.map((trato) {
-                  final talhao = _talhoes.firstWhere(
-                    (t) => t.id == trato.talhaoId,
-                    orElse: () => Talhao(
-                      id: '',
-                      propriedadeId: '',
-                      numeroTalhao: 'N/A',
-                      areaHa: 0,
-                      cultura: '',
-                      criadoEm: DateTime.now(),
-                      atualizadoEm: DateTime.now(),
-                    ),
-                  );
+        // Agrupar por talhão
+        final agrupado = <String, List<TratosCulturais>>{};
+        for (final trato in tratos) {
+          final chave = trato.talhaoId ?? 'desconhecido';
+          agrupado.putIfAbsent(chave, () => []).add(trato);
+        }
 
-                  return DataRow(
-                    cells: [
-                      DataCell(Text(talhao.numeroTalhao)),
-                      DataCell(Text(trato.anoSafra.toString())),
-                      DataCell(Text('${trato.adubos?.length ?? 0}')),
-                      DataCell(Text('${trato.herbicidas?.length ?? 0}')),
-                      DataCell(Text('${trato.inseticidas?.length ?? 0}')),
-                      DataCell(Text('${trato.maturadores?.length ?? 0}')),
-                      DataCell(Text(trato.calagem?.toStringAsFixed(2) ?? '-')),
-                      DataCell(
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () => _abrirFormulario(trato: trato),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                              onPressed: () => _confirmarExclusao(trato),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: agrupado.entries.map((entry) {
+              return _buildTalhaoAgrupado(entry.key, entry.value);
+            }).toList(),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTalhaoAgrupado(String talhaoId, List<TratosCulturais> tratos) {
+    if (tratos.isEmpty) return const SizedBox.shrink();
+
+    final talhao = _talhoes.firstWhere(
+      (t) => t.id == talhaoId,
+      orElse: () => Talhao(
+        id: '',
+        propriedadeId: '',
+        numeroTalhao: 'N/A',
+        areaHa: 0,
+        cultura: '',
+        criadoEm: DateTime.now(),
+        atualizadoEm: DateTime.now(),
+      ),
+    );
+
+    final custoTotal = tratos.fold(0.0, (sum, t) => sum + t.custoTotalCompleto);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Cabeçalho do grupo — talhão
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            color: Colors.green[50],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.grid_view, color: Colors.green[700], size: 20),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          talhao.nome,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        Text(
+                          '${talhao.variedade ?? "Sem variedade"} — ${talhao.areaHa?.toStringAsFixed(1) ?? "?"} ha',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                if (custoTotal > 0)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text('Custo Total:', style: TextStyle(fontSize: 11)),
+                      Text(
+                        'R\$ ${custoTotal.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.green[800],
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          // Tratos do talhão
+          ...tratos.map((trato) => _buildTratoListTile(trato, talhao)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTratoListTile(TratosCulturais trato, Talhao talhao) {
+    final totalInsumos = (trato.adubos?.length ?? 0) +
+        (trato.herbicidas?.length ?? 0) +
+        (trato.inseticidas?.length ?? 0) +
+        (trato.maturadores?.length ?? 0);
+
+    return ListTile(
+      title: Text('Safra ${trato.anoSafra}'),
+      subtitle: Text(
+        '$totalInsumos insumos  •  '
+        '${trato.adubos?.length ?? 0} adubos  •  '
+        '${trato.herbicidas?.length ?? 0} herb.  •  '
+        '${trato.inseticidas?.length ?? 0} inset.  •  '
+        '${trato.maturadores?.length ?? 0} mat.'
+        '${trato.custoTotalInsumos > 0 ? "  •  R\$ ${trato.custoTotalInsumos.toStringAsFixed(2)}" : ""}',
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit, size: 20),
+            onPressed: () => _abrirFormulario(trato: trato),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+            onPressed: () => _confirmarExclusao(trato),
+          ),
+        ],
+      ),
     );
   }
 

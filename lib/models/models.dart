@@ -11,6 +11,7 @@ export 'variedade.dart';
 export 'operacao_custos.dart';
 export 'contexto_propriedade.dart';
 export 'analise_solo.dart';
+export 'insumo_com_dose.dart';
 // ============================================
 // MODELO: Produtividade
 // ADICIONAR NO FINAL DE lib/models/models.dart
