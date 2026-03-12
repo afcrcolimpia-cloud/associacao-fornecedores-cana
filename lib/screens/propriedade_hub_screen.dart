@@ -14,6 +14,7 @@ import 'anexos_screen.dart';
 import 'formularios_pdf_screen.dart';
 import 'analise_solo_screen.dart';
 import 'censo_varietal_screen.dart';
+import 'central_relatorios_screen.dart';
 import 'dashboard_analitico_screen.dart';
 
 /// Tela central (Hub) de uma propriedade
@@ -148,6 +149,12 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
                       title: 'Dashboard Analítico',
                       subtitle: 'Gráficos de produtividade, precipitação, custos e variedades',
                       onTap: () => _navegarParaDashboardAnalitico(),
+                    ),
+                    _buildModuleItem(
+                      icon: Icons.picture_as_pdf,
+                      title: 'Central de Relatórios',
+                      subtitle: 'Gerar relatórios PDF de todas as categorias',
+                      onTap: () => _navegarParaCentralRelatorios(),
                     ),
                     _buildModuleItem(
                       icon: Icons.attach_file,
@@ -289,6 +296,17 @@ class _PropriedadeHubScreenState extends State<PropriedadeHubScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => DashboardAnaliticoScreen(
+          contexto: widget.contexto,
+        ),
+      ),
+    );
+  }
+
+  void _navegarParaCentralRelatorios() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CentralRelatoriosScreen(
           contexto: widget.contexto,
         ),
       ),
