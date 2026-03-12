@@ -1,6 +1,7 @@
 // lib/widgets/variedade_dropdown_widget.dart
 
 import 'package:flutter/material.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import '../models/models.dart';
 import '../services/variedade_service.dart';
 import '../screens/variedade_form_screen.dart';
@@ -16,7 +17,8 @@ class VariedadeDropdownWidget extends StatefulWidget {
   });
 
   @override
-  State<VariedadeDropdownWidget> createState() => _VariedadeDropdownWidgetState();
+  State<VariedadeDropdownWidget> createState() =>
+      _VariedadeDropdownWidgetState();
 }
 
 class _VariedadeDropdownWidgetState extends State<VariedadeDropdownWidget> {
@@ -59,6 +61,8 @@ class _VariedadeDropdownWidgetState extends State<VariedadeDropdownWidget> {
     }
   }
 
+  String _labelVariedade(Variedade v) => '${v.codigo} — ${v.destaque}';
+
   @override
   Widget build(BuildContext context) {
     if (_carregando) {
@@ -68,40 +72,48 @@ class _VariedadeDropdownWidgetState extends State<VariedadeDropdownWidget> {
       );
     }
 
-    // Verificar se o valor selecionado existe na lista
-    final valorValido = _variedades.any((v) => v.id == widget.variedadeSelecionada)
-        ? widget.variedadeSelecionada
-        : null;
+    // Encontrar a variedade selecionada pelo ID
+    final variedadeSelecionada = _variedades
+        .where((v) => v.id == widget.variedadeSelecionada)
+        .firstOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<String>(
-          value: valorValido,
-          decoration: InputDecoration(
-            labelText: 'Variedade',
-            prefixIcon: const Icon(Icons.grass),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+        DropdownSearch<Variedade>(
+          selectedItem: variedadeSelecionada,
+          // Na v6 do dropdown_search, items é uma função que retorna a lista
+          items: (filtro, _) {
+            final f = filtro.toLowerCase();
+            if (f.isEmpty) return _variedades;
+            return _variedades.where((v) =>
+                v.codigo.toLowerCase().contains(f) ||
+                v.destaque.toLowerCase().contains(f)).toList();
+          },
+          // Na v6 não há filterFn separado — o filtro é feito dentro da função items
+          itemAsString: _labelVariedade,
+          compareFn: (a, b) => a.id == b.id,
+          decoratorProps: const DropDownDecoratorProps(
+            decoration: InputDecoration(
+              labelText: 'Variedade',
+              prefixIcon: Icon(Icons.grass),
+              border: OutlineInputBorder(),
+              hintText: 'Selecione uma variedade...',
             ),
           ),
-          isExpanded: true,
-          items: [
-            const DropdownMenuItem<String>(
-              value: null,
-              child: Text('Selecione uma variedade...'),
+          popupProps: const PopupProps.menu(
+            showSearchBox: true,
+            searchFieldProps: TextFieldProps(
+              decoration: InputDecoration(
+                hintText: 'Digite o código ou nome (ex: 75, RB867515)...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
             ),
-            ..._variedades.map((variedade) {
-              return DropdownMenuItem<String>(
-                value: variedade.id,
-                child: Text(
-                  '${variedade.codigo} — ${variedade.destaque}',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              );
-            }),
-          ],
-          onChanged: widget.onChanged,
+          ),
+          onChanged: (variedade) {
+            widget.onChanged(variedade?.id);
+          },
         ),
         const SizedBox(height: 8),
         Align(

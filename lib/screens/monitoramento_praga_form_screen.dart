@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../widgets/app_shell.dart';
@@ -155,25 +156,37 @@ class _MonitoramentoPragaFormScreenState
                             children: [
                               // Talhão
                               Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  value: _talhaoId,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Talhão *',
-                                    border: OutlineInputBorder(),
-                                    prefixIcon: Icon(Icons.agriculture),
+                                child: DropdownSearch<String>(
+                                  selectedItem: _talhaoId,
+                                  items: (filtro, _) {
+                                    final f = filtro.toLowerCase();
+                                    final ids = _talhoes.map((t) => t.id).toList();
+                                    if (f.isEmpty) return ids;
+                                    return _talhoes.where((t) =>
+                                      t.numeroTalhao.toString().contains(f) ||
+                                      (t.areaHa?.toStringAsFixed(1) ?? '').contains(f)
+                                    ).map((t) => t.id).toList();
+                                  },
+                                  itemAsString: (id) {
+                                    final t = _talhoes.where((talhao) => talhao.id == id).firstOrNull;
+                                    if (t == null) return id;
+                                    return 'Talhão ${t.numeroTalhao}${t.areaHa != null ? ' (${t.areaHa!.toStringAsFixed(1)} ha)' : ''}';
+                                  },
+                                  decoratorProps: const DropDownDecoratorProps(
+                                    decoration: InputDecoration(
+                                      labelText: 'Talhão *',
+                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icon(Icons.agriculture),
+                                    ),
                                   ),
-                                  items: _talhoes
-                                      .map((t) => DropdownMenuItem(
-                                            value: t.id,
-                                            child: Text(
-                                                'Talhão ${t.numeroTalhao}${t.areaHa != null ? ' (${t.areaHa!.toStringAsFixed(1)} ha)' : ''}'),
-                                          ))
-                                      .toList(),
-                                  onChanged: (v) =>
-                                      setState(() => _talhaoId = v),
-                                  validator: (v) => v == null
-                                      ? 'Selecione o talhão'
-                                      : null,
+                                  onChanged: (v) => setState(() => _talhaoId = v),
+                                  validator: (v) => v == null ? 'Selecione o talhão' : null,
+                                  popupProps: const PopupProps.menu(
+                                    showSearchBox: true,
+                                    searchFieldProps: TextFieldProps(
+                                      decoration: InputDecoration(hintText: 'Buscar talhão...'),
+                                    ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -215,27 +228,29 @@ class _MonitoramentoPragaFormScreenState
                               // Praga
                               Expanded(
                                 flex: 2,
-                                child: DropdownButtonFormField<String>(
-                                  value: _praga,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Praga *',
-                                    border: OutlineInputBorder(),
-                                    prefixIcon: Icon(Icons.bug_report),
+                                child: DropdownSearch<String>(
+                                  selectedItem: _praga,
+                                  items: (filtro, _) {
+                                    final f = filtro.toLowerCase();
+                                    if (f.isEmpty) return MonitoramentoPraga.pragasDisponiveis;
+                                    return MonitoramentoPraga.pragasDisponiveis
+                                        .where((p) => p.toLowerCase().contains(f)).toList();
+                                  },
+                                  decoratorProps: const DropDownDecoratorProps(
+                                    decoration: InputDecoration(
+                                      labelText: 'Praga *',
+                                      border: OutlineInputBorder(),
+                                      prefixIcon: Icon(Icons.bug_report),
+                                    ),
                                   ),
-                                  items: MonitoramentoPraga
-                                      .pragasDisponiveis
-                                      .map((p) => DropdownMenuItem(
-                                            value: p,
-                                            child: Text(p,
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ))
-                                      .toList(),
-                                  onChanged: (v) =>
-                                      setState(() => _praga = v),
-                                  validator: (v) => v == null
-                                      ? 'Selecione a praga'
-                                      : null,
+                                  onChanged: (v) => setState(() => _praga = v),
+                                  validator: (v) => v == null ? 'Selecione a praga' : null,
+                                  popupProps: const PopupProps.menu(
+                                    showSearchBox: true,
+                                    searchFieldProps: TextFieldProps(
+                                      decoration: InputDecoration(hintText: 'Buscar praga...'),
+                                    ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -279,17 +294,18 @@ class _MonitoramentoPragaFormScreenState
                             children: [
                               // Data
                               Expanded(
-                                child: InkWell(
+                                child: GestureDetector(
                                   onTap: _selecionarData,
-                                  child: InputDecorator(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Data do Monitoramento *',
-                                      border: OutlineInputBorder(),
-                                      prefixIcon:
-                                          Icon(Icons.calendar_today),
+                                  child: AbsorbPointer(
+                                    child: TextFormField(
+                                      readOnly: true,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Data do Monitoramento *',
+                                        border: OutlineInputBorder(),
+                                        prefixIcon: Icon(Icons.calendar_today),
+                                      ),
+                                      controller: TextEditingController(text: _formatarData(_dataMonitoramento)),
                                     ),
-                                    child: Text(_formatarData(
-                                        _dataMonitoramento)),
                                   ),
                                 ),
                               ),

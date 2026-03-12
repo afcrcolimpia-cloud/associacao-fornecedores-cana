@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
+import '../widgets/campo_data_widget.dart';
 import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/analise_solo_service.dart';
@@ -225,21 +227,39 @@ class _AnaliseSoloFormScreenState extends State<AnaliseSoloFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildTituloSecao('Dados Gerais', Icons.info_outline),
-            DropdownButtonFormField<String?>(
-              value: _talhaoId,
-              decoration: const InputDecoration(
-                labelText: 'Talhão *',
-                prefixIcon: Icon(Icons.agriculture),
+            DropdownSearch<Talhao>(
+              selectedItem: _talhaoId != null
+                  ? widget.talhoes.where((t) => t.id == _talhaoId).firstOrNull
+                  : null,
+              items: (filtro, _) {
+                final f = filtro.toLowerCase();
+                if (f.isEmpty) return widget.talhoes;
+                return widget.talhoes.where((t) =>
+                    t.nome.toLowerCase().contains(f) ||
+                    t.numeroTalhao.toLowerCase().contains(f)).toList();
+              },
+              itemAsString: (t) => t.nome,
+              compareFn: (a, b) => a.id == b.id,
+              decoratorProps: const DropDownDecoratorProps(
+                decoration: InputDecoration(
+                  labelText: 'Talhão *',
+                  prefixIcon: Icon(Icons.agriculture),
+                  border: OutlineInputBorder(),
+                  hintText: 'Selecione um talhão',
+                ),
               ),
-              validator: (value) =>
-                  value == null ? 'Selecione um talhão' : null,
-              items: widget.talhoes
-                  .map((t) => DropdownMenuItem<String?>(
-                        value: t.id,
-                        child: Text(t.nome),
-                      ))
-                  .toList(),
-              onChanged: (value) => setState(() => _talhaoId = value),
+              popupProps: const PopupProps.menu(
+                showSearchBox: true,
+                searchFieldProps: TextFieldProps(
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por número ou nome...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              validator: (value) => value == null ? 'Selecione um talhão' : null,
+              onChanged: (talhao) => setState(() => _talhaoId = talhao?.id),
             ),
             const SizedBox(height: 12),
             Row(
@@ -268,11 +288,25 @@ class _AnaliseSoloFormScreenState extends State<AnaliseSoloFormScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildCampoData('Data Coleta', _dataColeta,
-                    (d) => setState(() => _dataColeta = d))),
+                Expanded(
+                  child: CampoDataWidget(
+                    label: 'Data Coleta',
+                    valor: _dataColeta,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2030),
+                    onChanged: (d) => setState(() => _dataColeta = d),
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildCampoData('Data Resultado', _dataResultado,
-                    (d) => setState(() => _dataResultado = d))),
+                Expanded(
+                  child: CampoDataWidget(
+                    label: 'Data Resultado',
+                    valor: _dataResultado,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2030),
+                    onChanged: (d) => setState(() => _dataResultado = d),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -294,36 +328,6 @@ class _AnaliseSoloFormScreenState extends State<AnaliseSoloFormScreen> {
     );
   }
 
-  Widget _buildCampoData(
-      String label, DateTime? data, ValueChanged<DateTime> onChanged) {
-    return InkWell(
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: data ?? DateTime.now(),
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2030),
-        );
-        if (picked != null) onChanged(picked);
-      },
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: const Icon(Icons.calendar_today),
-        ),
-        child: Text(
-          data != null
-              ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}'
-              : 'Selecionar',
-          style: TextStyle(
-            color: data != null
-                ? AppColors.newTextPrimary
-                : AppColors.newTextMuted,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildSecaoMacronutrientes() {
     return Card(

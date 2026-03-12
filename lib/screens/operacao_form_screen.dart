@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import '../widgets/app_shell.dart';
 import '../models/models.dart';
 import '../services/operacao_cultivo_service.dart';
@@ -259,35 +260,57 @@ class _OperacaoFormScreenState extends State<OperacaoFormScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: _talhaoSelecionado,
-              decoration: const InputDecoration(
-                labelText: 'Selecione o talhão *',
-                border: OutlineInputBorder(),
+            DropdownSearch<Talhao>(
+              selectedItem: _talhaoSelecionado != null
+                  ? _talhoes.where((t) => t.id == _talhaoSelecionado).firstOrNull
+                  : null,
+              items: (filtro, _) {
+                final f = filtro.toLowerCase();
+                if (f.isEmpty) return _talhoes;
+                return _talhoes.where((t) =>
+                    t.numeroTalhao.toLowerCase().contains(f) ||
+                    _nomeVariedade(t.variedade).toLowerCase().contains(f) ||
+                    (t.cultura ?? '').toLowerCase().contains(f)).toList();
+              },
+              enabled: !isEdicao,
+              itemAsString: (talhao) =>
+                  '${talhao.numeroTalhao}'
+                  '${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}'
+                  '${talhao.cultura != null ? ' (${talhao.cultura})' : ''}',
+              compareFn: (a, b) => a.id == b.id,
+              decoratorProps: const DropDownDecoratorProps(
+                decoration: InputDecoration(
+                  labelText: 'Selecione o talhão *',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.landscape),
+                ),
               ),
-              items: _talhoes.map((talhao) {
-                return DropdownMenuItem(
-                  value: talhao.id,
-                  child: Text(
-                    '${talhao.numeroTalhao}${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}${talhao.cultura != null ? ' (${talhao.cultura})' : ''}',
+              popupProps: const PopupProps.menu(
+                showSearchBox: true,
+                searchFieldProps: TextFieldProps(
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por número ou variedade...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
                   ),
-                );
-              }).toList(),
-              onChanged: isEdicao ? null : (value) {
+                ),
+              ),
+              validator: (value) => value == null ? 'Selecione um talhão' : null,
+              onChanged: isEdicao ? null : (talhao) {
                 setState(() {
-                  _talhaoSelecionado = value;
-                  if (value != null) {
-                    _mostrarDadosTalhao(value);
+                  _talhaoSelecionado = talhao?.id;
+                  if (talhao != null) {
+                    _mostrarDadosTalhao(talhao.id);
                   }
                 });
               },
-              validator: (value) => value == null ? 'Selecione um talhão' : null,
             ),
           ],
         ),
       ),
     );
   }
+
 
   Widget _buildDatasOperacoes() {
     return Card(

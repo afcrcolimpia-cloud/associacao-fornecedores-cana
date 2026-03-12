@@ -5,6 +5,7 @@ import '../models/models.dart';
 import '../services/produtividade_service.dart';
 import '../services/talhao_service.dart';
 import '../services/variedade_service.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 
 class ProdutividadeFormScreen extends StatefulWidget {
   final Propriedade propriedade;
@@ -200,36 +201,52 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
   }
 
   Widget _buildTalhaoField() {
-    return DropdownButtonFormField<String>(
-      value: _talhaoSelecionado?.isNotEmpty ?? false ? _talhaoSelecionado : null,
-      decoration: const InputDecoration(
-        labelText: 'Talhão *',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.landscape),
-        hintText: 'Selecione um talhão',
+    return DropdownSearch<Talhao>(
+      selectedItem: _talhaoSelecionado != null
+          ? _talhoes.where((t) => t.id == _talhaoSelecionado).firstOrNull
+          : null,
+      items: (filtro, _) {
+        final f = filtro.toLowerCase();
+        if (f.isEmpty) return _talhoes;
+        return _talhoes.where((t) =>
+            t.nome.toLowerCase().contains(f) ||
+            (t.variedade ?? '').toLowerCase().contains(f)).toList();
+      },
+      itemAsString: (talhao) {
+        return '${talhao.nome}${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}';
+      },
+      compareFn: (a, b) => a.id == b.id,
+      decoratorProps: const DropDownDecoratorProps(
+        decoration: InputDecoration(
+          labelText: 'Talhão *',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.landscape),
+          hintText: 'Selecione um talhão',
+        ),
       ),
-      items: _talhoes.map((talhao) {
-        return DropdownMenuItem(
-          value: talhao.id,
-          child: Text(
-            '${talhao.nome}${talhao.variedade != null ? ' - ${_nomeVariedade(talhao.variedade)}' : ''}',
-          ),
-        );
-      }).toList(),
-      onChanged: (value) {
+      onChanged: (talhao) {
         setState(() {
-          _talhaoSelecionado = value;
-          if (value != null && value.isNotEmpty) {
-            _carregarDadosTalhao(value);
+          _talhaoSelecionado = talhao?.id;
+          if (talhao != null) {
+            _carregarDadosTalhao(talhao.id);
           }
         });
       },
       validator: (value) {
-        if (value == null || value.isEmpty) {
+        if (value == null) {
           return 'Selecione um talhão antes de salvar';
         }
         return null;
       },
+      popupProps: const PopupProps.menu(
+        showSearchBox: true,
+        searchFieldProps: TextFieldProps(
+          decoration: InputDecoration(
+            labelText: 'Buscar talhão',
+            prefixIcon: Icon(Icons.search),
+          ),
+        ),
+      ),
     );
   }
 
@@ -247,22 +264,34 @@ class _ProdutividadeFormScreenState extends State<ProdutividadeFormScreen> {
   }
 
   Widget _buildMesField() {
-    return DropdownButtonFormField<int>(
-      value: _mesSelecionado,
-      decoration: const InputDecoration(
-        labelText: 'Mês de Colheita',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.calendar_month),
+    return DropdownSearch<int>(
+      selectedItem: _mesSelecionado,
+      items: (filtro, _) {
+        final meses = List.generate(_meses.length, (i) => i + 1);
+        final f = filtro.toLowerCase();
+        if (f.isEmpty) return meses;
+        return meses.where((m) => _meses[m - 1].toLowerCase().contains(f)).toList();
+      },
+      itemAsString: (mes) => mes > 0 && mes <= _meses.length ? _meses[mes - 1] : '',
+      decoratorProps: const DropDownDecoratorProps(
+        decoration: InputDecoration(
+          labelText: 'Mês de Colheita',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.calendar_month),
+        ),
       ),
-      items: List.generate(_meses.length, (index) {
-        return DropdownMenuItem(
-          value: index + 1,
-          child: Text(_meses[index]),
-        );
-      }).toList(),
       onChanged: (value) {
         setState(() => _mesSelecionado = value);
       },
+      popupProps: const PopupProps.menu(
+        showSearchBox: true,
+        searchFieldProps: TextFieldProps(
+          decoration: InputDecoration(
+            labelText: 'Buscar mês',
+            prefixIcon: Icon(Icons.search),
+          ),
+        ),
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
+import '../widgets/campo_data_widget.dart';
 import '../models/models.dart';
 import '../services/safra_service.dart';
 
@@ -181,27 +182,32 @@ class _SafraFormScreenState extends State<SafraFormScreen> {
   Widget _buildLinhaDataPeriodo() {
     return Row(
       children: [
-        Expanded(child: _buildDateField('Data Início *', _dataInicio, true)),
+        Expanded(
+          child: CampoDataWidget(
+            label: 'Data Início *',
+            valor: _dataInicio,
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+            obrigatorio: true,
+            onChanged: (data) {
+              if (data != null) setState(() => _dataInicio = data);
+            },
+          ),
+        ),
         const SizedBox(width: 16),
-        Expanded(child: _buildDateField('Data Fim *', _dataFim, false)),
+        Expanded(
+          child: CampoDataWidget(
+            label: 'Data Fim *',
+            valor: _dataFim,
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+            obrigatorio: true,
+            onChanged: (data) {
+              if (data != null) setState(() => _dataFim = data);
+            },
+          ),
+        ),
       ],
-    );
-  }
-
-  Widget _buildDateField(String label, DateTime data, bool isInicio) {
-    return InkWell(
-      onTap: () => _selecionarData(isInicio),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(isInicio ? Icons.play_arrow : Icons.stop),
-          border: const OutlineInputBorder(),
-        ),
-        child: Text(
-          _formatarData(data),
-          style: const TextStyle(fontSize: 16),
-        ),
-      ),
     );
   }
 
@@ -318,27 +324,6 @@ class _SafraFormScreenState extends State<SafraFormScreen> {
     );
   }
 
-  // ── Ações ───────────────────────────────────────────────────
-
-  Future<void> _selecionarData(bool isInicio) async {
-    final dataAtual = isInicio ? _dataInicio : _dataFim;
-    final selecionada = await showDatePicker(
-      context: context,
-      initialDate: dataAtual,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      locale: const Locale('pt', 'BR'),
-    );
-    if (selecionada != null) {
-      setState(() {
-        if (isInicio) {
-          _dataInicio = selecionada;
-        } else {
-          _dataFim = selecionada;
-        }
-      });
-    }
-  }
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
@@ -400,9 +385,5 @@ class _SafraFormScreenState extends State<SafraFormScreen> {
     } finally {
       if (mounted) setState(() => _salvando = false);
     }
-  }
-
-  String _formatarData(DateTime data) {
-    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
   }
 }

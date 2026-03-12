@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import '../widgets/app_shell.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
@@ -287,23 +288,40 @@ class _TratosCulturaisFormScreenState extends State<TratosCulturaisFormScreen>
               children: [
                 Expanded(
                   flex: 2,
-                  child: DropdownButtonFormField<Talhao>(
-                    decoration: const InputDecoration(
-                      labelText: 'Talhão',
-                      prefixIcon: Icon(Icons.grid_view),
-                      border: OutlineInputBorder(),
-                    ),
-                    value: _talhaoSelecionado,
-                    items: widget.talhoes.map((t) => DropdownMenuItem(
-                      value: t,
-                      child: Text(
+                  child: DropdownSearch<Talhao>(
+                    selectedItem: _talhaoSelecionado,
+                    items: (filtro, _) {
+                      final f = filtro.toLowerCase();
+                      if (f.isEmpty) return widget.talhoes;
+                      return widget.talhoes.where((t) =>
+                          t.nome.toLowerCase().contains(f) ||
+                          (t.variedade ?? '').toLowerCase().contains(f) ||
+                          t.numeroTalhao.toLowerCase().contains(f)).toList();
+                    },
+                    itemAsString: (t) =>
                         '${t.nome} — ${t.variedade ?? "sem variedade"} — ${t.areaHa?.toStringAsFixed(1) ?? "?"} ha',
+                    compareFn: (a, b) => a.id == b.id,
+                    decoratorProps: const DropDownDecoratorProps(
+                      decoration: InputDecoration(
+                        labelText: 'Talhão',
+                        prefixIcon: Icon(Icons.grid_view),
+                        border: OutlineInputBorder(),
+                        hintText: 'Selecione o talhão',
                       ),
-                    )).toList(),
+                    ),
+                    popupProps: const PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: 'Buscar por número, nome ou variedade...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
                     onChanged: (talhao) {
                       setState(() => _talhaoSelecionado = talhao);
                     },
-                    hint: const Text('Selecione o talhão'),
                   ),
                 ),
                 const SizedBox(width: 16),
