@@ -250,6 +250,22 @@ Municipio  → lista em utils/municipios_sp.dart
 - O gerador PDF aceita `List<Model>` — quando recebe 1 item, gera PDF individual; quando recebe N itens, gera PDF completo + página comparativa
 - Este padrão se aplica a: Análise de Solo, Produtividade, Precipitação, Operações, Tratos, Custo Operacional
 
+### Checklist ao criar nova operação/módulo com PDF — OBRIGATÓRIO
+
+Sempre que criar um novo módulo operacional (nova entidade com lista de registros e geração de PDF), seguir TODOS os passos:
+
+1. **Criar o gerador PDF** em `services/pdf_generators/pdf_[nome].dart` — aceitar `List<Model>` como parâmetro
+2. **Na tela operacional** (screen do módulo):
+   - Botão **"PDF Todas"** no cabeçalho da lista (gera PDF com TODOS os registros)
+   - Botão/ícone **PDF individual** em cada card/linha do histórico (gera PDF de 1 registro)
+3. **Na Central de Relatórios** (`central_relatorios_screen.dart`):
+   - Adicionar nova entrada no `enum _Categoria`
+   - Criar método `_carregar[Nome]()` com item **"Todas as [entidades] (N)"** no topo + registros individuais abaixo
+   - Adicionar `case` no `_gerarPdf()` tratando tanto a opção "todas" quanto individual
+4. **Quando `List` tem N > 1 itens**, incluir página comparativa no final do PDF
+5. **Atualizar a lista de geradores** nesta seção do AGENTS.md e CLAUDE.md
+6. **Rodar `flutter analyze`** e corrigir erros antes de commitar
+
 ---
 
 ## 🌐 Flutter Web — Atenção
