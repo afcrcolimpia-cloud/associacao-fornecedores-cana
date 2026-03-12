@@ -18,6 +18,7 @@ import '../services/pdf_generators/pdf_precipitacao.dart';
 import '../services/pdf_generators/pdf_produtividade.dart';
 import '../services/pdf_generators/pdf_talhoes.dart';
 import '../services/pdf_generators/pdf_tratos.dart';
+import '../services/pdf_generators/pdf_analise_solo.dart';
 import '../services/pdf_generators/pdf_censo_varietal.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/header_propriedade.dart';
@@ -431,16 +432,14 @@ class _CentralRelatoriosScreenState extends State<CentralRelatoriosScreen> {
           break;
 
         case _Categoria.analiseSolo:
-          // Análise de solo — sem PDF generator dedicado ainda
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                    'Gerador de PDF para Análise de Solo ainda não implementado. '
-                    'Consulte os dados na tela de Análise de Solo.'),
-              ),
-            );
-          }
+          final analise = _itemSelecionado!.dados as AnaliseSolo;
+          final talhoesSolo = await _talhaoService.getTalhoesPorPropriedade(_propId);
+          final bytes = await PdfAnaliseSolo.gerar(
+            propriedade: propriedade,
+            analises: [analise],
+            talhoes: talhoesSolo,
+          );
+          await _exibirPdf(bytes, 'Analise_Solo');
           break;
       }
     } catch (e) {

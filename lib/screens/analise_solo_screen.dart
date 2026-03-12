@@ -6,6 +6,9 @@ import '../constants/app_colors.dart';
 import '../models/models.dart';
 import '../services/analise_solo_service.dart';
 import '../services/talhao_service.dart';
+import '../services/pdf_generators/pdf_analise_solo.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import 'analise_solo_graficos_screen.dart';
 
 class AnaliseSoloScreen extends StatefulWidget {
@@ -694,6 +697,20 @@ class _AnaliseSoloScreenState extends State<AnaliseSoloScreen>
             Text('${_historico.length} análise(s) salva(s)',
                 style: const TextStyle(fontSize: 13, color: AppColors.newTextSecondary)),
             const Spacer(),
+            if (_historico.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ElevatedButton.icon(
+                  onPressed: _gerarPdfAnalises,
+                  icon: const Icon(Icons.picture_as_pdf, size: 18),
+                  label: const Text('Gerar PDF'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.newPrimary,
+                    foregroundColor: AppColors.bgDark,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                ),
+              ),
             ElevatedButton.icon(
               onPressed: _novaAnalise,
               icon: const Icon(Icons.add, size: 18),
@@ -1052,6 +1069,27 @@ class _AnaliseSoloScreenState extends State<AnaliseSoloScreen>
     _prntCtrl.text = '100';
     setState(() {});
     _tabController.animateTo(0);
+  }
+
+  Future<void> _gerarPdfAnalises() async {
+    try {
+      final pdfBytes = await PdfAnaliseSolo.gerar(
+        propriedade: widget.contexto.propriedade,
+        analises: _historico,
+        talhoes: _talhoes,
+      );
+      if (!mounted) return;
+      await Printing.layoutPdf(
+        onLayout: (_) => pdfBytes,
+        name: 'Analise_Solo_${widget.contexto.nomePropriedade}.pdf',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao gerar PDF: $e')),
+      );
+    }
   }
 
   Future<void> _confirmarExclusao(AnaliseSolo a) async {
