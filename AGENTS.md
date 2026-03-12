@@ -106,7 +106,17 @@ lib/
 │   └── pdf_generators/
 │       ├── pdf_broca_cigarrinha.dart
 │       ├── pdf_broca_infestacao.dart
-│       └── pdf_sphenophorus.dart
+│       ├── pdf_sphenophorus.dart
+│       ├── pdf_cabecalho.dart
+│       ├── pdf_talhoes.dart
+│       ├── pdf_produtividade.dart
+│       ├── pdf_precipitacao.dart
+│       ├── pdf_operacoes.dart
+│       ├── pdf_tratos.dart
+│       ├── pdf_custo.dart
+│       ├── pdf_censo_varietal.dart
+│       ├── pdf_lancamentos_custo.dart
+│       └── pdf_analise_solo.dart
 ├── sql/
 │   └── custo_operacional_supabase.pgsql   # Migrations SQL versionadas aqui
 ├── utils/
@@ -212,12 +222,33 @@ Municipio  → lista em utils/municipios_sp.dart
 ## 📄 PDF e Relatórios
 
 - Base: `ExportacaoPdfService`
+- Cabeçalho universal: `pdf_cabecalho.dart` — importar em TODOS os geradores, NUNCA duplicar
 - Relatórios de pragas em `services/pdf_generators/`:
   - `pdf_broca_cigarrinha.dart`
   - `pdf_broca_infestacao.dart`
   - `pdf_sphenophorus.dart`
+- Relatórios operacionais em `services/pdf_generators/`:
+  - `pdf_talhoes.dart`
+  - `pdf_produtividade.dart`
+  - `pdf_precipitacao.dart`
+  - `pdf_operacoes.dart`
+  - `pdf_tratos.dart`
+  - `pdf_custo.dart`
+  - `pdf_lancamentos_custo.dart`
+  - `pdf_censo_varietal.dart`
+  - `pdf_analise_solo.dart`
 - Novos relatórios: criar em `services/pdf_generators/` seguindo padrão existente
 - Preview/impressão no browser: usar `Printing.layoutPdf()`
+
+### Padrão de seleção em dropdowns/listas de PDF — OBRIGATÓRIO
+
+- Sempre oferecer **duas opções** ao gerar PDF de registros múltiplos:
+  1. **"Todas" / "PDF Todas"** — gera o PDF com TODOS os registros de uma vez (com tabela comparativa quando aplicável)
+  2. **Individual** — botão PDF em cada linha/card da lista, gera o PDF de UM registro específico
+- Na **Central de Relatórios**: dropdown com item "Todas as análises (N)" no topo + cada registro individual abaixo
+- Na **tela operacional** (ex: AnaliseSoloScreen): botão "PDF Todas" no cabeçalho da lista + ícone PDF em cada card do histórico
+- O gerador PDF aceita `List<Model>` — quando recebe 1 item, gera PDF individual; quando recebe N itens, gera PDF completo + página comparativa
+- Este padrão se aplica a: Análise de Solo, Produtividade, Precipitação, Operações, Tratos, Custo Operacional
 
 ---
 
