@@ -125,7 +125,7 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
                           Container(
                             width: 20, height: 20,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2E7D32).withAlpha(50),
+                              color: const Color(0xFF2E7D32).withAlpha(100),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -139,7 +139,7 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
                           Container(
                             width: 20, height: 20,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF9A825).withAlpha(50),
+                              color: const Color(0xFFF9A825).withAlpha(100),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -153,7 +153,7 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
                           Container(
                             width: 20, height: 20,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFC62828).withAlpha(50),
+                              color: const Color(0xFFC62828).withAlpha(100),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -253,14 +253,14 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
                         final Color cor;
                         final Color textColor;
                         if (margem > 15) {
-                          cor = const Color(0xFF2E7D32).withAlpha(50);
-                          textColor = const Color(0xFF2E7D32);
+                          cor = const Color(0xFF2E7D32).withAlpha(100);
+                          textColor = const Color(0xFF66BB6A);
                         } else if (margem >= 0) {
-                          cor = const Color(0xFFF9A825).withAlpha(50);
-                          textColor = const Color(0xFFF57F17);
+                          cor = const Color(0xFFF9A825).withAlpha(100);
+                          textColor = const Color(0xFFFDD835);
                         } else {
-                          cor = const Color(0xFFC62828).withAlpha(50);
-                          textColor = const Color(0xFFC62828);
+                          cor = const Color(0xFFC62828).withAlpha(100);
+                          textColor = const Color(0xFFEF5350);
                         }
 
                         return Container(
@@ -338,19 +338,19 @@ class _MatrizSensibilidadeScreenState extends State<MatrizSensibilidadeScreen> {
             _buildInfoRow(
               'Lucrativo (> R\$ 15/t)',
               '$lucrativo de 81',
-              const Color(0xFF2E7D32),
+              const Color(0xFF66BB6A),
             ),
             const SizedBox(height: 6),
             _buildInfoRow(
               'Atenção (R\$ 0–15/t)',
               '$atencao de 81',
-              const Color(0xFFF57F17),
+              const Color(0xFFFDD835),
             ),
             const SizedBox(height: 6),
             _buildInfoRow(
               'Prejuízo (< R\$ 0/t)',
               '$prejuizo de 81',
-              const Color(0xFFC62828),
+              const Color(0xFFEF5350),
             ),
             const SizedBox(height: 6),
             _buildInfoRow(

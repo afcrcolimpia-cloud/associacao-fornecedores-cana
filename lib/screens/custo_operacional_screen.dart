@@ -196,9 +196,10 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                colors: [Color(0xFF1B5E20), Color(0xFF388E3C)],
               ),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF4CAF50).withAlpha(80)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -293,11 +294,13 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1B5E20),
-                    borderRadius: BorderRadius.circular(12),
-                    border: const Border(
-                      left: BorderSide(color: Color(0xFFFDD835), width: 4),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF4CAF50).withAlpha(80)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,7 +339,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
                       const SizedBox(height: 8),
                       const Text(
                         'Produtividade mínima para cobrir custos + arrendamento.',
-                        style: TextStyle(color: Colors.white54, fontSize: 9),
+                        style: TextStyle(color: Colors.white70, fontSize: 9),
                       ),
                     ],
                   ),
@@ -357,7 +360,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: Colors.grey,
+                            color: AppColors.newTextSecondary,
                             letterSpacing: 1,
                           ),
                         ),
@@ -490,7 +493,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(fontSize: 10, color: Colors.grey),
+              style: const TextStyle(fontSize: 10, color: AppColors.newTextSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -505,7 +508,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.newTextSecondary)),
           Text(valor, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
         ],
       ),
@@ -580,7 +583,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             receitaRT,
             100.0,
             isHeader: true,
-            bgColor: const Color(0xFFEFF6FF),
+            bgColor: const Color(0xFF172554),
           ),
           // (-) Formação Amortizada
           ...linhasFormacao.map((r) => _dreRow(
@@ -602,20 +605,21 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             resumo.totalOperacional.rT,
             receitaRT > 0 ? (resumo.totalOperacional.rT / receitaRT) * 100 : 0,
             isHeader: true,
-            bgColor: Colors.grey[100],
+            bgColor: const Color(0xFF2A3347),
           ),
           // MARGEM FINAL
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: margemRT >= 0 ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+              color: margemRT >= 0 ? const Color(0xFF0D3320) : const Color(0xFF3B1111),
               border: Border(
                 top: BorderSide(
-                  color: margemRT >= 0 ? const Color(0xFF059669) : Colors.red,
+                  color: margemRT >= 0 ? AppColors.newPrimary : AppColors.newDanger,
                   width: 2,
                 ),
               ),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
             ),
             child: Row(
               children: [
@@ -626,7 +630,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: margemRT >= 0 ? const Color(0xFF065F46) : Colors.red[800],
+                      color: margemRT >= 0 ? AppColors.newPrimary : AppColors.newDanger,
                     ),
                   ),
                 ),
@@ -638,7 +642,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: margemRT >= 0 ? const Color(0xFF065F46) : Colors.red[800],
+                      color: margemRT >= 0 ? AppColors.newPrimary : AppColors.newDanger,
                     ),
                   ),
                 ),
@@ -650,7 +654,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
-                      color: margemRT >= 0 ? const Color(0xFF065F46) : Colors.red[800],
+                      color: margemRT >= 0 ? AppColors.newPrimary : AppColors.newDanger,
                     ),
                   ),
                 ),
@@ -674,7 +678,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        border: const Border(bottom: BorderSide(color: Color(0xFFE5E7EB), width: 0.5)),
+        border: const Border(bottom: BorderSide(color: Color(0xFF2A3347), width: 0.5)),
       ),
       child: Row(
         children: [
@@ -698,7 +702,7 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
               style: TextStyle(
                 fontSize: isHeader ? 12 : 11,
                 fontWeight: isHeader ? FontWeight.w700 : FontWeight.normal,
-                color: isNegative ? Colors.red[700] : null,
+                color: isNegative ? const Color(0xFFEF5350) : AppColors.newTextPrimary,
               ),
             ),
           ),
@@ -707,9 +711,9 @@ class _CustoOperacionalScreenState extends State<CustoOperacionalScreen> {
             child: Text(
               '${percentual.toStringAsFixed(1)}%',
               textAlign: TextAlign.right,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10,
-                color: Colors.grey[600],
+                color: AppColors.newTextMuted,
               ),
             ),
           ),

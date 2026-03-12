@@ -187,9 +187,9 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
   Color _obterCorBarra(double valor, double maxValue) {
     if (_tipoGrafico == 0) {
       // 3 níveis: lucrativo > 15, atenção 0-15, prejuízo < 0
-      if (valor > 15) return const Color(0xFF2E7D32);
-      if (valor >= 0) return const Color(0xFFF9A825);
-      return const Color(0xFFC62828);
+      if (valor > 15) return const Color(0xFF66BB6A);
+      if (valor >= 0) return const Color(0xFFFDD835);
+      return const Color(0xFFEF5350);
     } else {
       final opacity = (valor / maxValue).clamp(0.4, 1.0);
       return ChartStyles.barPrimary.withValues(alpha: opacity);
@@ -270,10 +270,10 @@ class _GraficosComparativoScreenState extends State<GraficosComparativoScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: margens[index] > 15
-                            ? const Color(0xFF2E7D32)
+                            ? const Color(0xFF66BB6A)
                             : margens[index] >= 0
-                                ? const Color(0xFFF57F17)
-                                : const Color(0xFFC62828),
+                                ? const Color(0xFFFDD835)
+                                : const Color(0xFFEF5350),
                       ),
                     ),
                   ),
