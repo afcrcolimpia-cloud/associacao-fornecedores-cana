@@ -186,8 +186,8 @@ lib/
 - Policy mínima: usuário autenticado acessa apenas seus próprios dados
 
 ### Migrations
-- SQL fica em `lib/sql/` — nomear: `[numero]_[descricao].pgsql`
-- Ex: `002_tabela_pragas.pgsql`
+ - SQL fica em `lib/sql/` — nomear: `[numero]_[descricao].pgsql`
+ - Ex: `002_tabela_pragas.pgsql`, `005_tratos_culturais_add_campos.pgsql` (colunas extras tratos culturais)
 - **Nunca** alterar tabelas direto no Dashboard em produção
 - **SQL SEMPRE seguro e idempotente** — toda migration DEVE poder ser executada mais de uma vez sem erro:
   - `ADD COLUMN IF NOT EXISTS` — nunca `ADD COLUMN` direto
@@ -302,7 +302,7 @@ Sempre que criar um novo módulo operacional (nova entidade com lista de registr
 - [ ] `flutter analyze` sem erros
 - [ ] Credenciais fora do código
 - [ ] RLS ativa em tabelas novas
-- [ ] Migration SQL salva em `lib/sql/`
+- [ ] Migration SQL salva em `lib/sql/` (ex: `005_tratos_culturais_add_campos.pgsql` para campos extras de tratos culturais)
 - [ ] Novos PDFs em `services/pdf_generators/`
 - [ ] Novo model exportado em `models/models.dart`
 
